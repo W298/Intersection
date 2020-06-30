@@ -24,6 +24,9 @@ public class Isometric_Movement : MonoBehaviour
         UnityEngine.Debug.Log("Movement Script Init Complete");
         tr = GetComponent<Transform>();
         cm = GetComponentInChildren<Camera>();
+
+        cm.transform.rotation = Quaternion.Euler(45, 45, 0);
+        cm.orthographic = true;
     }
 
     void Update()
