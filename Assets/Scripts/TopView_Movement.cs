@@ -4,12 +4,14 @@ using UnityEngine;
 
 public class TopView_Movement : MonoBehaviour
 {
+    public float zoom_speed = 5000;
+    public float move_speed = 50;
+
     private float zoom;
 
     private Transform tr;
     private Camera cm;
 
-    // Start is called before the first frame update
     void Start()
     {
         tr = GetComponent<Transform>();
@@ -19,13 +21,14 @@ public class TopView_Movement : MonoBehaviour
         cm.orthographic = false;
     }
 
-    // Update is called once per frame
     void Update()
     {
         zoom = Mathf.Lerp(zoom, Input.GetAxis("Zoom"), Time.deltaTime * 10);
 
         Vector3 dir = Vector3.forward * Input.GetAxis("Vertical") + 
                       Vector3.right * Input.GetAxis("Horizontal");
-        tr.Translate(dir * 20 * Time.deltaTime, Space.Self);
+        tr.Translate(dir * move_speed * Time.deltaTime, Space.Self);
+
+        tr.Translate(Vector3.up * zoom * zoom_speed * Time.deltaTime, Space.Self);
     }
 }

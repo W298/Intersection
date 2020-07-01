@@ -8,7 +8,7 @@ public class CreatePathManager : MonoBehaviour
     public enum MODE { BUILD, APPEND, REMOVE, NONE };
 
     private Camera cm;
-    public SplineComputer spline;
+    private SplineComputer spline;
     public SplineComputer SplinePreFab;
     public GameObject debugobj;
     public int snapsize = 5;
@@ -22,14 +22,6 @@ public class CreatePathManager : MonoBehaviour
     private int new_index = 0;
 
     private Vector3 pos;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        cm = GetComponentInChildren<Camera>();
-
-        // new_index = spline.pointCount;
-    }
 
     float SnapGrid(float value, int snapsize)
     {
@@ -45,27 +37,19 @@ public class CreatePathManager : MonoBehaviour
 
     void SpawnPath()
     {
+        if (spline)
+        {
+            spline = null;
+            new_index = 0;
+        }
+
         spline = Instantiate(SplinePreFab, pos, Quaternion.identity);
     }
 
     void AppendPath()
     {
-        Ray ray = cm.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hitData;
-
-        if (Physics.Raycast(ray, out hitData, 10000))
-        {
-            pos = hitData.point;
-
-            UnityEngine.Debug.LogWarning(hitData.collider.gameObject.ToString());
-        }
-
-        debugobj.GetComponent<Transform>().position = new Vector3(SnapGrid(pos.x, snapsize), 0, SnapGrid(pos.z, snapsize));
-
         if (last_x != SnapGrid(pos.x, snapsize) || last_z != SnapGrid(pos.z, snapsize))
         {
-            UnityEngine.Debug.LogWarning(new_index.ToString() + " Point Created!");
-
             spline.SetPointNormal(new_index, def_normal);
             spline.SetPointSize(new_index, 1);
             spline.SetPointPosition(new_index, new Vector3(SnapGrid(pos.x, snapsize), def_y, SnapGrid(pos.z, snapsize)));
@@ -75,9 +59,28 @@ public class CreatePathManager : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
+    void RayTrace()
+    {
+        Ray ray = cm.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hitData;
+
+        if (Physics.Raycast(ray, out hitData, 10000))
+        {
+            pos = hitData.point;
+        }
+    }
+
+    void Start()
+    {
+        cm = GetComponentInChildren<Camera>();
+    }
+
     void Update()
     {
+        RayTrace();
+
+        debugobj.GetComponent<Transform>().position = new Vector3(SnapGrid(pos.x, snapsize), 0, SnapGrid(pos.z, snapsize));
+
         if (Input.GetKeyDown(KeyCode.B))
         {
             UnityEngine.Debug.LogWarning("Build Mode Enabled!");
@@ -88,15 +91,12 @@ public class CreatePathManager : MonoBehaviour
         {
             if (Input.GetMouseButtonDown(0))
             {
-                Ray ray = cm.ScreenPointToRay(Input.mousePosition);
-                RaycastHit hitData;
-
-                if (Physics.Raycast(ray, out hitData, 10000))
-                {
-                    pos = hitData.point;
-                }
-
                 SpawnPath();
+
+                if (spline)
+                {
+                    spline.Rebuild(true);
+                }
 
                 AppendPath();
                 new_index++;
@@ -109,6 +109,11 @@ public class CreatePathManager : MonoBehaviour
             if (Input.GetMouseButton(0))
             {
                 AppendPath();
+
+                if (spline)
+                {
+                    spline.Rebuild(true);
+                }
             }
             else if (Input.GetMouseButtonUp(0))
             {
