@@ -6,7 +6,7 @@ using System.Security.Policy;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class Junction : MonoBehaviour
+public class PathFollower : MonoBehaviour
 {
     private SplineFollower sf;
 

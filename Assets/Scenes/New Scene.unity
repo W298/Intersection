@@ -592,7 +592,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 372d12fac049242489cd0f0ec536657f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SplinePreFab: {fileID: 6116054877780924671, guid: 47c287b27c75fff43bb5a3ea1389c9ba,
+  SplinePrefab: {fileID: 6116054877780924671, guid: 47c287b27c75fff43bb5a3ea1389c9ba,
     type: 3}
   debugobj: {fileID: 1518576004}
   snapsize: 5
