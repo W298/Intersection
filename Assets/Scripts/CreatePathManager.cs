@@ -11,19 +11,19 @@ public class CreatePathManager : MonoBehaviour
 
     private Camera cm;
     private SplineComputer spline_computer;
+
     public SplineComputer SplinePrefab;
     public GameObject debugobj;
-    public int snapsize = 5;
+    public int snapsize = 10;
     public MODE current_mode = MODE.NONE;
 
     private Vector3 def_normal = new Vector3(0, 1, 0);
     private float def_y = 0.0f;
-
     private float last_x;
     private float last_z;
     private int new_index = 0;
-
     private Vector3 pos;
+    private Vector3 snap_pos;
 
     float SnapGrid(float value, int snapsize)
     {
@@ -48,17 +48,23 @@ public class CreatePathManager : MonoBehaviour
         spline_computer = Instantiate(SplinePrefab, pos, Quaternion.identity);
     }
 
-    void AppendPath()
+    bool AppendPath()
     {
         if (last_x != SnapGrid(pos.x, snapsize) || last_z != SnapGrid(pos.z, snapsize))
         {
+            UnityEngine.Debug.LogWarning("Snap!");
+
             spline_computer.SetPointNormal(new_index, def_normal);
             spline_computer.SetPointSize(new_index, 1);
             spline_computer.SetPointPosition(new_index, new Vector3(SnapGrid(pos.x, snapsize), def_y, SnapGrid(pos.z, snapsize)));
 
             last_x = SnapGrid(pos.x, snapsize);
             last_z = SnapGrid(pos.z, snapsize);
+
+            return true;
         }
+        
+        return false;
     }
 
     void RemovePoint(int index)
@@ -78,6 +84,19 @@ public class CreatePathManager : MonoBehaviour
         {
             UnityEngine.Debug.LogError("Out of Index! (RemovePoint)");
         }
+
+        if (spline_computer)
+        {
+            spline_computer.Rebuild(true);
+        }
+    }
+
+    void RemovePoint(SplinePoint point)
+    {
+        SplinePoint[] p = spline_computer.spline.points;
+        
+        ArrayUtility.RemoveAt(ref p, ArrayUtility.IndexOf(p, point));
+        spline_computer.spline.points = p;
 
         if (spline_computer)
         {
@@ -113,6 +132,102 @@ public class CreatePathManager : MonoBehaviour
         }
     }
 
+    void runAppendMode()
+    {
+        if (Input.GetMouseButton(0))
+        {
+            AppendPath();
+
+            if (spline_computer)
+            {
+                spline_computer.Rebuild(true);
+            }
+        }
+        else if (Input.GetMouseButtonUp(0))
+        {
+            new_index++;
+        }
+        else if (Input.GetMouseButton(1))
+        {
+            if (Input.GetMouseButtonDown(1))
+            {
+                UnityEngine.Debug.LogWarning("Undo Last Point Creation");
+
+                RemovePoint(new_index - 1);
+                new_index--;
+            }
+
+            if (spline_computer)
+            {
+                spline_computer.Rebuild(true);
+            }
+        }
+    }
+    void runAppendModeGrid()
+    {
+        if (Input.GetMouseButton(0))
+        {
+            if (AppendPath())
+            {
+                new_index++;
+            }
+
+            if (spline_computer)
+            {
+                spline_computer.Rebuild(true);
+            }
+        }
+        else if (Input.GetMouseButtonUp(0))
+        {
+            current_mode = MODE.BUILD;
+        }
+        else if (Input.GetMouseButton(1))
+        {
+            if (Input.GetMouseButtonDown(1))
+            {
+                UnityEngine.Debug.LogWarning("Undo Last Point Creation");
+
+                RemovePoint(new_index - 1);
+                new_index--;
+            }
+
+            if (spline_computer)
+            {
+                spline_computer.Rebuild(true);
+            }
+        }
+    }
+
+    SplinePoint GetPoint(Vector3 pos)
+    {
+        SplinePoint[] points = spline_computer.GetPoints();
+
+        for (int i = 0; i < points.Length; i++)
+        {
+            if (points[i].position == snap_pos)
+            {
+                return points[i];
+            }
+        }
+
+        return new SplinePoint();
+    }
+
+    int GetPointIndex(Vector3 pos)
+    {
+        SplinePoint[] points = spline_computer.GetPoints();
+
+        for (int i = 0; i < points.Length; i++)
+        {
+            if (points[i].position == snap_pos)
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
     void Start()
     {
         cm = GetComponentInChildren<Camera>();
@@ -122,7 +237,9 @@ public class CreatePathManager : MonoBehaviour
     {
         RayTrace();
 
-        debugobj.GetComponent<Transform>().position = new Vector3(SnapGrid(pos.x, snapsize), 0, SnapGrid(pos.z, snapsize));
+        snap_pos = new Vector3(SnapGrid(pos.x, snapsize), 0, SnapGrid(pos.z, snapsize));
+
+        debugobj.GetComponent<Transform>().position = snap_pos;
 
         // Change MODE
         if (Input.GetKeyDown(KeyCode.B))
@@ -136,9 +253,10 @@ public class CreatePathManager : MonoBehaviour
             current_mode = MODE.REMOVE;
         }
 
-        // MODE BEHAVIOR
+
         if (current_mode == MODE.BUILD)
         {
+            // BUILD MODE
             if (Input.GetMouseButtonDown(0))
             {
                 SpawnPath();
@@ -156,52 +274,19 @@ public class CreatePathManager : MonoBehaviour
         }
         else if (current_mode == MODE.APPEND)
         {
-            if (Input.GetMouseButton(0))
-            {
-                AppendPath();
-
-                if (spline_computer)
-                {
-                    spline_computer.Rebuild(true);
-                }
-            }
-            else if (Input.GetMouseButtonUp(0))
-            {
-                new_index++;
-            }
-            else if (Input.GetMouseButton(1))
-            {
-                if (Input.GetMouseButtonDown(1))
-                {
-                    UnityEngine.Debug.LogWarning("Undo Last Point Creation");
-
-                    RemovePoint(new_index - 1);
-                    new_index--;
-                }
-
-                if (spline_computer)
-                {
-                    spline_computer.Rebuild(true);
-                }
-            }
+            // APPEND MODE
+            runAppendModeGrid();
         }
         else if (current_mode == MODE.REMOVE)
         {
-            if (Input.GetMouseButtonDown(0))
+            // REMOVE MODE
+            if (Input.GetMouseButton(0))
             {
-                DebugPoints();
-
-                SplinePoint[] p = spline_computer.GetPoints();
-
-                for (int i = 0; i < p.Length; i++)
-                {
-                    UnityEngine.Debug.LogWarning(Vector3.Distance(p[i].position, pos).ToString());
-                    if (Vector3.Distance(p[i].position, pos) < 1)
-                    {
-                        RemovePoint(i);
-                    }
-                }
+                int index = GetPointIndex(snap_pos);
+                RemovePoint(index - 1);
             }
+
+            //TODO - Remove points in the middle of spline
         }
     }
 }
