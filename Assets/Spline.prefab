@@ -72,7 +72,7 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    sampleRate: 20
+    sampleRate: 500
   _rawSamples: []
   _transformedSamples: []
   sampleCollection:
@@ -925,7 +925,7 @@ MonoBehaviour:
     _overrideNormal: 0
     _customNormal: {x: 0, y: 1, z: 0}
     _type: 0
-    _count: 5
+    _count: 10
     _autoCount: 1
     _spacing: 0
     _randomRotation: 0
@@ -1627,7 +1627,7 @@ MonoBehaviour:
     _overrideNormal: 0
     _customNormal: {x: 0, y: 1, z: 0}
     _type: 0
-    _count: 1
+    _count: 10
     _autoCount: 1
     _spacing: 0
     _randomRotation: 0
@@ -2329,7 +2329,7 @@ MonoBehaviour:
     _overrideNormal: 0
     _customNormal: {x: 0, y: 1, z: 0}
     _type: 0
-    _count: 1
+    _count: 10
     _autoCount: 1
     _spacing: 0
     _randomRotation: 0
@@ -3031,7 +3031,7 @@ MonoBehaviour:
     _overrideNormal: 0
     _customNormal: {x: 0, y: 1, z: 0}
     _type: 0
-    _count: 1
+    _count: 10
     _autoCount: 1
     _spacing: 0
     _randomRotation: 0
