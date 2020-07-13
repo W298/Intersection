@@ -1,5 +1,6 @@
 ﻿using Dreamteck;
 using Dreamteck.Splines;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,7 @@ public class CreatePathManager : MonoBehaviour
 
     public SplineComputer SplinePrefab;
     public GameObject debugobj;
+    public GameObject debugobj2;
     public int snapsize = 10;
     public MODE current_mode = MODE.NONE;
 
@@ -46,6 +48,12 @@ public class CreatePathManager : MonoBehaviour
         }
 
         spline_computer = Instantiate(SplinePrefab, pos, Quaternion.identity);
+    }
+
+
+    SplineComputer InsPath(Vector3 pos)
+    {
+        return Instantiate(SplinePrefab, pos, Quaternion.identity);
     }
 
     bool AppendPath()
@@ -132,6 +140,21 @@ public class CreatePathManager : MonoBehaviour
         }
     }
 
+    void runBuildMode()
+    {
+        SpawnPath();
+
+        if (spline_computer)
+        {
+            spline_computer.Rebuild(true);
+        }
+
+        AppendPath();
+        new_index++;
+
+        current_mode = MODE.APPEND;
+    }
+
     void runAppendMode()
     {
         if (Input.GetMouseButton(0))
@@ -176,6 +199,12 @@ public class CreatePathManager : MonoBehaviour
             {
                 spline_computer.Rebuild(true);
             }
+            
+            foreach (SplineComputer com in GameObject.FindObjectsOfType<SplineComputer>())
+            {
+                com.Rebuild(true);
+            }
+
         }
         else if (Input.GetMouseButtonUp(0))
         {
@@ -228,6 +257,74 @@ public class CreatePathManager : MonoBehaviour
         return -1;
     }
 
+    SplinePoint getSplinePoint(Vector3 pos)
+    {
+        SplineComputer[] spline_list = GameObject.FindObjectsOfType<SplineComputer>();
+
+        foreach (SplineComputer spline in spline_list)
+        {
+            SplinePoint[] points = spline.GetPoints();
+
+            for (int i = 0; i < points.Length; i++)
+            {
+                if (pos == points[i].position)
+                {
+                    return points[i];
+                }
+            }
+        }
+
+        return new SplinePoint();
+    }
+
+    SplineComputer getSplineComputer(Vector3 pos)
+    {
+        SplineComputer[] spline_list = GameObject.FindObjectsOfType<SplineComputer>();
+
+        foreach (SplineComputer spline in spline_list)
+        {
+            SplinePoint[] points = spline.GetPoints();
+
+            for (int i = 0; i < points.Length; i++)
+            {
+                if (pos == points[i].position)
+                {
+                    return spline;
+                }
+            }
+        }
+
+        return new SplineComputer();
+    }
+
+    SplineComputer SplitSpline(int index, SplineComputer spline)
+    {
+        SplinePoint[] originPoints = spline.GetPoints();
+
+        List<SplinePoint> old_points = new List<SplinePoint>();
+        List<SplinePoint> new_points = new List<SplinePoint>();
+
+        for (int j = 0; j <= index; j++)
+        {
+            old_points.Add(originPoints[j]);
+        }
+
+        for (int j = index; j < originPoints.Length; j++)
+        {
+            new_points.Add(originPoints[j]);
+        }
+
+        spline.SetPoints(old_points.ToArray());
+
+        SplineComputer newSpline = InsPath(new_points[0].position);
+        newSpline.SetPoints(new_points.ToArray());
+
+        spline.Rebuild(true);
+        newSpline.Rebuild(true);
+
+        return newSpline;
+    }
+
     void Start()
     {
         cm = GetComponentInChildren<Camera>();
@@ -238,7 +335,6 @@ public class CreatePathManager : MonoBehaviour
         RayTrace();
 
         snap_pos = new Vector3(SnapGrid(pos.x, snapsize), 0, SnapGrid(pos.z, snapsize));
-
         debugobj.GetComponent<Transform>().position = snap_pos;
 
         // Change MODE
@@ -259,17 +355,35 @@ public class CreatePathManager : MonoBehaviour
             // BUILD MODE
             if (Input.GetMouseButtonDown(0))
             {
-                SpawnPath();
+                SplineComputer[] spline_list = GameObject.FindObjectsOfType<SplineComputer>();
 
-                if (spline_computer)
+                // Check Mouse Position Value
+                bool isJoin = false;
+
+                if (spline_list.Length != 0)
                 {
-                    spline_computer.Rebuild(true);
+                    foreach (SplineComputer spline in spline_list)
+                    {
+                        SplinePoint[] points = spline.GetPoints();
+
+                        for (int i = 0; i < points.Length; i++)
+                        {
+                            if (snap_pos == points[i].position)
+                            {
+                                isJoin = true;
+
+                                SplitSpline(i, spline);
+
+                                runBuildMode();
+                            }
+                        }
+                    }
                 }
 
-                AppendPath();
-                new_index++;
-
-                current_mode = MODE.APPEND;
+                if (!isJoin)
+                {
+                    runBuildMode();
+                }
             }
         }
         else if (current_mode == MODE.APPEND)
