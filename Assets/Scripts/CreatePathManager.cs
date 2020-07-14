@@ -461,6 +461,8 @@ public class CreatePathManager : MonoBehaviour
                                     new_index = spline.GetPoints().Length;
                                     spline_computer = spline;
 
+                                    current_mode = MODE.APPEND;
+
                                     break;
                                 }
 
