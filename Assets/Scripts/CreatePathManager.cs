@@ -453,15 +453,30 @@ public class CreatePathManager : MonoBehaviour
                         {
                             if (snap_pos == points[i].position)
                             {
-                                _isJoin = true;
-                                isJoin = true;
+                                // Change to Append Mode.
+                                if (snap_pos == points.Last().position || snap_pos == points.First().position)
+                                {
+                                    _isJoin = true;
 
-                                old_spline = spline;
-                                new_spline = SplitSpline(i, spline);
+                                    new_index = spline.GetPoints().Length;
+                                    spline_computer = spline;
 
-                                runBuildMode();
-                                isFound = true;
-                                break;
+                                    break;
+                                }
+
+                                // Split and Join.
+                                else
+                                {
+                                    _isJoin = true;
+                                    isJoin = true;
+
+                                    old_spline = spline;
+                                    new_spline = SplitSpline(i, spline);
+
+                                    runBuildMode();
+                                    isFound = true;
+                                    break;
+                                }
                             }
                         }
 
