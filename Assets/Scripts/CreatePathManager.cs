@@ -28,8 +28,9 @@ public class CreatePathManager : MonoBehaviour
     private Vector3 snap_pos;
     private bool isJoin = false;
 
-    private SplineComputer old_spline;
-    private SplineComputer new_spline;
+    private SplineComputer cross_old_spline;
+    private SplineComputer cross_new_spline;
+    private SplineComputer cross_current_spline;
 
     float SnapGrid(float value, int snapsize)
     {
@@ -48,7 +49,6 @@ public class CreatePathManager : MonoBehaviour
     // Spawn SplineComputer and Apply to spline_computer variable.
     void SpawnPath()
     {
-        
         if (spline_computer)
         {
             spline_computer = null;
@@ -66,6 +66,7 @@ public class CreatePathManager : MonoBehaviour
     }
 
     // Append path when snapping event on. Return true when snapping event on.
+    // TODO - Prevent Reversing Append Behavior
     bool AppendPath()
     {
         if (last_x != SnapGrid(pos.x, snapsize) || last_z != SnapGrid(pos.z, snapsize))
@@ -81,6 +82,14 @@ public class CreatePathManager : MonoBehaviour
         }
         
         return false;
+    }
+
+    // Append Point at desire position.
+    void AppendPath(Vector3 pos)
+    {
+        spline_computer.SetPointNormal(new_index, def_normal);
+        spline_computer.SetPointSize(new_index, 1);
+        spline_computer.SetPointPosition(new_index, pos);
     }
 
     // WARNING - To make this function work, I changed below thing.
@@ -135,13 +144,15 @@ public class CreatePathManager : MonoBehaviour
     // Spawn SplineComputer and Change mode to Append.
     void runBuildMode()
     {
+        new_index = 0;
+
         SpawnPath();
 
         if (spline_computer)
         {
             spline_computer.Rebuild(true);
         }
-
+        
         AppendPath();
         new_index++;
 
@@ -190,10 +201,18 @@ public class CreatePathManager : MonoBehaviour
                 if (isJoin)
                 {
                     CleanLines();
+
+                    new_index = 0;
+                    SpawnPath();
+                    AppendPath(new Vector3(SnapGrid(pos.x, snapsize), def_y, SnapGrid(pos.z, snapsize)));
+                    new_index++;
+
                     isJoin = false;
                 }
-
-                new_index++;
+                else
+                {
+                    new_index++;
+                }
             }
 
             if (spline_computer)
@@ -349,60 +368,71 @@ public class CreatePathManager : MonoBehaviour
         }
     }
 
+    float CalcPercentLine(SplineComputer spline, float percent, int snapsize)
+    {
+        if (spline.CalculateLength() != 0)
+        {
+            return (percent * snapsize) / spline.CalculateLength();
+        }
+
+        return percent;
+    }
+
     // Clean Joined Path Line.
     void CleanLines()
     {
-        // PROBLEM : Clip from-to Method uses percent, it stretched out.
-        // TODO - Recalculate percent or use another method for setting range of line.
-
         Vector3 dir = spline_computer.GetPoint(1).position - spline_computer.GetPoint(0).position;
         dir.y = 0;
 
         Vector3 find_pos = spline_computer.GetPoint(0).position - dir;
 
-        int old_length = old_spline.GetPoints().Length;
-        Vector3 from = old_spline.GetPoint(old_length - 1).position - old_spline.GetPoint(old_length - 2).position;
-        Vector3 to = new_spline.GetPoint(1).position - new_spline.GetPoint(0).position;
+        int old_length = cross_old_spline.GetPoints().Length;
+        Vector3 from = cross_old_spline.GetPoint(old_length - 1).position - cross_old_spline.GetPoint(old_length - 2).position;
+        Vector3 to = cross_new_spline.GetPoint(1).position - cross_new_spline.GetPoint(0).position;
 
         from.y = 0;
         to.y = 0;
 
-        if (getSplineComputer(find_pos) == old_spline)
+        if (getSplineComputer(find_pos) == cross_old_spline)
         {
             // When Old Spline is parallel to Current spline
             if (isVectorGoClockwise(from, to))
             {
-                old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 0.8;
-                spline_computer.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.2;
-                new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.192;
-                new_spline.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.192;
+                cross_old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 0.8f;
+                spline_computer.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.2f;
+                cross_new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.192f;
+                cross_new_spline.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.192f;
             }
             else
             {
-                old_spline.GetComponent<SplineMesh>().GetChannel(3).clipTo = 0.8;
+                cross_old_spline.GetComponent<SplineMesh>().GetChannel(3).clipTo = 0.8;
                 spline_computer.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.2;
-                new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.192;
-                new_spline.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.192;
+                cross_new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.192;
+                cross_new_spline.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.192;
             }
             
         }
-        else if (getSplineComputer(find_pos) == new_spline)
+        else if (getSplineComputer(find_pos) == cross_new_spline)
         {
             // When New Spline is parallel to Current spline
             if (isVectorGoClockwise(from, to))
             {
-                new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.2;
+                cross_new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.2;
                 spline_computer.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.2;
-                old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 0.808;
-                old_spline.GetComponent<SplineMesh>().GetChannel(3).clipTo = 0.808;
+                cross_old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 0.808;
+                cross_old_spline.GetComponent<SplineMesh>().GetChannel(3).clipTo = 0.808;
             }
             else
             {
-                new_spline.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.2;
+                cross_new_spline.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.2;
                 spline_computer.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.2;
-                old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 0.808;
-                old_spline.GetComponent<SplineMesh>().GetChannel(3).clipTo = 0.808;
+                cross_old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 0.808;
+                cross_old_spline.GetComponent<SplineMesh>().GetChannel(3).clipTo = 0.808;
             }    
+        }
+        else
+        {
+            // TODO - 90 degree Joinning Code
         }
     }
 
@@ -412,7 +442,7 @@ public class CreatePathManager : MonoBehaviour
     }
 
     void Update()
-    {
+    {  
         RayTrace();
 
         snap_pos = new Vector3(SnapGrid(pos.x, snapsize), 0, SnapGrid(pos.z, snapsize));
@@ -472,11 +502,15 @@ public class CreatePathManager : MonoBehaviour
                                     _isJoin = true;
                                     isJoin = true;
 
-                                    old_spline = spline;
-                                    new_spline = SplitSpline(i, spline);
+                                    SplineComputer temp_spline = SplitSpline(i, spline);
+                                    SplitSpline(1, temp_spline);
+
+                                    cross_new_spline = temp_spline;
+                                    cross_old_spline = SplitSpline(i - 1, spline);
 
                                     runBuildMode();
                                     isFound = true;
+
                                     break;
                                 }
                             }
