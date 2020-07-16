@@ -11,7 +11,7 @@ public class CreatePathManager : MonoBehaviour
     public enum MODE { BUILD, APPEND, REMOVE, NONE };
 
     private Camera cm;
-    private SplineComputer spline_computer;
+    public SplineComputer spline_computer;
 
     public SplineComputer SplinePrefab;
     public GameObject debugobj;
@@ -28,8 +28,8 @@ public class CreatePathManager : MonoBehaviour
     private Vector3 snap_pos;
     private bool isJoin = false;
 
-    private SplineComputer cross_old_spline;
-    private SplineComputer cross_new_spline;
+    public SplineComputer cross_old_spline;
+    public SplineComputer cross_new_spline;
     private SplineComputer cross_current_spline;
 
     float SnapGrid(float value, int snapsize)
@@ -43,6 +43,158 @@ public class CreatePathManager : MonoBehaviour
         else
         {
             return Mathf.Round(value / snapsize) * snapsize;
+        }
+    }
+
+    Vector3 SnapToGrid(Vector3 pos, int snapsize)
+    {
+        int x;
+        int z;
+
+        if (pos.x < 0)
+        {
+            if (pos.z < 0)
+            {
+                x = Mathf.RoundToInt(Mathf.Abs(pos.x / snapsize)) * snapsize * -1;
+                z = Mathf.RoundToInt(Mathf.Abs(pos.z / snapsize)) * snapsize * -1;
+            }
+            else
+            {
+                x = Mathf.RoundToInt(Mathf.Abs(pos.x / snapsize)) * snapsize * -1;
+                z = Mathf.RoundToInt(pos.z / snapsize) * snapsize;
+            }
+        }
+        else
+        {
+            if (pos.z < 0)
+            {
+                x = Mathf.RoundToInt(pos.x / snapsize) * snapsize;
+                z = Mathf.RoundToInt(Mathf.Abs(pos.z / snapsize)) * snapsize * -1;
+            }
+            else
+            {
+                x = Mathf.RoundToInt(pos.x / snapsize) * snapsize;
+                z = Mathf.RoundToInt(pos.z / snapsize) * snapsize;
+            }
+        }
+
+        return new Vector3(x, 0, z);
+    }
+
+    void debugPoint(Vector3 pos)
+    {
+        Instantiate(debugobj2, pos, Quaternion.identity);
+    }
+
+    Vector3 Snap(Vector3 pos)
+    {
+        int x;
+        int z;
+
+        float dx;
+        float dz;
+
+        if (pos.x < 0)
+        {
+            if (pos.z < 0)
+            {
+                x = Mathf.RoundToInt(Mathf.Abs(pos.x / snapsize)) * snapsize * -1;
+                z = Mathf.RoundToInt(Mathf.Abs(pos.z / snapsize)) * snapsize * -1;
+
+                dx = pos.x - Mathf.FloorToInt(Mathf.Abs(pos.x / snapsize)) * snapsize * -1;
+                dz = pos.z - Mathf.FloorToInt(Mathf.Abs(pos.z / snapsize)) * snapsize * -1;
+            }
+            else
+            {
+                x = Mathf.RoundToInt(Mathf.Abs(pos.x / snapsize)) * snapsize * -1;
+                z = Mathf.RoundToInt(pos.z / snapsize) * snapsize;
+
+                dx = pos.x - Mathf.FloorToInt(Mathf.Abs(pos.x / snapsize)) * snapsize * -1;
+                dz = pos.z - Mathf.FloorToInt(pos.z / snapsize) * snapsize;
+            }
+        }
+        else
+        {
+            if (pos.z < 0)
+            {
+                x = Mathf.RoundToInt(pos.x / snapsize) * snapsize;
+                z = Mathf.RoundToInt(Mathf.Abs(pos.z / snapsize)) * snapsize * -1;
+
+                dx = pos.x - Mathf.FloorToInt(pos.x / snapsize) * snapsize;
+                dz = pos.z - Mathf.FloorToInt(Mathf.Abs(pos.z / snapsize)) * snapsize * -1;
+            }
+            else
+            {
+                x = Mathf.RoundToInt(pos.x / snapsize) * snapsize;
+                z = Mathf.RoundToInt(pos.z / snapsize) * snapsize;
+
+                dx = pos.x - Mathf.FloorToInt(pos.x / snapsize) * snapsize;
+                dz = pos.z - Mathf.FloorToInt(pos.z / snapsize) * snapsize;
+            }
+        }
+
+        if (Mathf.Abs(dx - dz) <= 2.5 && dx + dz >= 5 && dx + dz <= 7.5)
+        {
+            if (last_x == x)
+            {
+                x += snapsize;
+            }
+
+            if (last_z == z)
+            {
+                z += snapsize;
+            }
+
+            UnityEngine.Debug.LogWarning("Cross!");
+        }
+
+        last_x = x;
+        last_z = z;
+
+        return new Vector3(x, 0, z);
+    }
+
+    Vector3 SnapGrid(Vector3 pos)
+    {
+        int nx;
+        int nz;
+
+        if (pos.x < 0)
+        {
+            nx = Mathf.FloorToInt(Mathf.Abs(pos.x / snapsize)) * -1;
+        }
+        else
+        {
+            nx = Mathf.FloorToInt(pos.x / snapsize);
+        }
+
+        if (pos.z < 0)
+        {
+            nz = Mathf.FloorToInt(Mathf.Abs(pos.z / snapsize)) * -1;
+        }
+        else
+        {
+            nz = Mathf.FloorToInt(pos.z / snapsize);
+        }
+
+        if ((nx * snapsize + 2.5 <= pos.x && pos.x <= nx * snapsize + 7.5)
+            && (nz * snapsize - 2.5 <= pos.z && pos.z <= nz * snapsize + 2.5))
+        {
+            return new Vector3(nx * snapsize + snapsize, 0, nz * snapsize);
+        }
+        else if ((nz * snapsize + 2.5 <= pos.z && pos.z <= nz * snapsize + 7.5)
+            && (nx * snapsize - 2.5 <= pos.x && pos.x <= nx * snapsize + 2.5))
+        {
+            return new Vector3(nx * snapsize, 0, nz * snapsize + snapsize);
+        }
+        else if ((nx * snapsize + 2.5 <= pos.x && pos.x <= nx * snapsize + 7.5)
+            && (nz * snapsize + 2.5 <= pos.z && pos.z <= nz * snapsize + 7.5))
+        {
+            return new Vector3(nx * snapsize + snapsize, 0, nz * snapsize + snapsize);
+        }
+        else
+        {
+            return new Vector3(nx * snapsize, 0, nz * snapsize);
         }
     }
 
@@ -213,6 +365,8 @@ public class CreatePathManager : MonoBehaviour
                 {
                     new_index++;
                 }
+
+
             }
 
             if (spline_computer)
@@ -390,6 +544,13 @@ public class CreatePathManager : MonoBehaviour
         Vector3 from = cross_old_spline.GetPoint(old_length - 1).position - cross_old_spline.GetPoint(old_length - 2).position;
         Vector3 to = cross_new_spline.GetPoint(1).position - cross_new_spline.GetPoint(0).position;
 
+        Vector3 cross_old_spline_dir = cross_old_spline.GetPoint(1).position - cross_old_spline.GetPoint(0).position;
+        Vector3 cross_new_spline_dir = cross_new_spline.GetPoint(1).position - cross_new_spline.GetPoint(0).position;
+
+        UnityEngine.Debug.LogWarning(dir);
+        UnityEngine.Debug.LogWarning(cross_old_spline_dir);
+        UnityEngine.Debug.LogWarning(cross_new_spline_dir);
+
         from.y = 0;
         to.y = 0;
 
@@ -398,6 +559,7 @@ public class CreatePathManager : MonoBehaviour
             // When Old Spline is parallel to Current spline
             if (isVectorGoClockwise(from, to))
             {
+                UnityEngine.Debug.LogWarning("CASE1");
                 cross_old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 0.8f;
                 spline_computer.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.2f;
                 cross_new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.192f;
@@ -405,6 +567,7 @@ public class CreatePathManager : MonoBehaviour
             }
             else
             {
+                UnityEngine.Debug.LogWarning("CASE2");
                 cross_old_spline.GetComponent<SplineMesh>().GetChannel(3).clipTo = 0.8;
                 spline_computer.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.2;
                 cross_new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.192;
@@ -417,6 +580,7 @@ public class CreatePathManager : MonoBehaviour
             // When New Spline is parallel to Current spline
             if (isVectorGoClockwise(from, to))
             {
+                UnityEngine.Debug.LogWarning("CASE3");
                 cross_new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.2;
                 spline_computer.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.2;
                 cross_old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 0.808;
@@ -424,6 +588,7 @@ public class CreatePathManager : MonoBehaviour
             }
             else
             {
+                UnityEngine.Debug.LogWarning("CASE4");
                 cross_new_spline.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.2;
                 spline_computer.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.2;
                 cross_old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 0.808;
@@ -433,6 +598,7 @@ public class CreatePathManager : MonoBehaviour
         else
         {
             // TODO - 90 degree Joinning Code
+            UnityEngine.Debug.LogWarning("90 degree Joinning Code");
         }
     }
 
@@ -445,8 +611,11 @@ public class CreatePathManager : MonoBehaviour
     {  
         RayTrace();
 
-        snap_pos = new Vector3(SnapGrid(pos.x, snapsize), 0, SnapGrid(pos.z, snapsize));
+        // snap_pos = new Vector3(SnapGrid(pos.x, snapsize), 0, SnapGrid(pos.z, snapsize));
+        snap_pos = SnapToGrid(pos, snapsize);
         debugobj.GetComponent<Transform>().position = snap_pos;
+
+        Snap(pos);
 
         // Change MODE
         if (Input.GetKeyDown(KeyCode.B))
@@ -484,7 +653,7 @@ public class CreatePathManager : MonoBehaviour
                             if (snap_pos == points[i].position)
                             {
                                 // Change to Append Mode.
-                                if (snap_pos == points.Last().position || snap_pos == points.First().position)
+                                if (snap_pos == points.Last().position)
                                 {
                                     _isJoin = true;
 
@@ -495,10 +664,23 @@ public class CreatePathManager : MonoBehaviour
 
                                     break;
                                 }
+                                else if (snap_pos == points.First().position)
+                                {
+                                    _isJoin = true;
+
+                                    new_index = 0;
+                                    spline_computer = spline;
+
+                                    current_mode = MODE.APPEND;
+
+                                    break;
+                                }
 
                                 // Split and Join.
                                 else
                                 {
+                                    UnityEngine.Debug.LogWarning("Split");
+
                                     _isJoin = true;
                                     isJoin = true;
 
