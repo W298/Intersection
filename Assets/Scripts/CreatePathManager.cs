@@ -1,5 +1,6 @@
 ﻿using Dreamteck;
 using Dreamteck.Splines;
+using JetBrains.Annotations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -23,6 +24,7 @@ public class CreatePathManager : MonoBehaviour
     private float def_y = 0.0f;
     private float last_x;
     private float last_z;
+    private Vector3 last_pos;
     private int new_index = 0;
     private Vector3 pos;
     private Vector3 snap_pos;
@@ -44,6 +46,70 @@ public class CreatePathManager : MonoBehaviour
         {
             return Mathf.Round(value / snapsize) * snapsize;
         }
+    }
+
+    Vector3 SnapToGridPoint(Vector3 pos, int _snapsize)
+    {
+        float snapsize = (float)_snapsize;
+
+        if (isVectorInXZArea(pos, snapsize / 2 + last_pos.x, snapsize + last_pos.x,
+            last_pos.z - snapsize / 4, last_pos.z + snapsize / 4))
+        {
+            last_pos = last_pos + new Vector3(snapsize, 0, 0);
+            return last_pos;
+        }
+        else if (isVectorInXZArea(pos, last_pos.x - snapsize, last_pos.x - snapsize / 2,
+            last_pos.z - snapsize / 4, last_pos.z + snapsize / 4))
+        {
+            last_pos = last_pos - new Vector3(snapsize, 0, 0);
+            return last_pos;
+        }
+        else if (isVectorInXZArea(pos, last_pos.x - snapsize / 4, last_pos.x + snapsize / 4,
+            last_pos.z + snapsize / 2, last_pos.z + snapsize))
+        {
+            last_pos = last_pos + new Vector3(0, 0, snapsize);
+            return last_pos;
+        }
+        else if (isVectorInXZArea(pos, last_pos.x - snapsize / 4, last_pos.x + snapsize / 4,
+            last_pos.z - snapsize, last_pos.z - snapsize / 2))
+        {
+            last_pos = last_pos - new Vector3(0, 0, snapsize);
+            return last_pos;
+        }
+        else if (isVectorInXZArea(pos, last_pos.x + snapsize / 2, last_pos.x + snapsize,
+            last_pos.z + snapsize / 2, last_pos.z + snapsize))
+        {
+            last_pos = last_pos + new Vector3(snapsize, 0, snapsize);
+            return last_pos;
+        }
+        else if (isVectorInXZArea(pos, last_pos.x - snapsize, last_pos.x - snapsize / 2,
+            last_pos.z + snapsize / 2, last_pos.z + snapsize))
+        {
+            last_pos = last_pos + new Vector3(-snapsize, 0, snapsize);
+            return last_pos;
+        }
+        else if (isVectorInXZArea(pos, last_pos.x + snapsize / 2, last_pos.x + snapsize,
+            last_pos.z - snapsize, last_pos.z - snapsize / 2))
+        {
+            last_pos = last_pos + new Vector3(snapsize, 0, -snapsize);
+            return last_pos;
+        }
+        else if (isVectorInXZArea(pos, last_pos.x - snapsize, last_pos.x - snapsize / 2,
+            last_pos.z - snapsize, last_pos.z - snapsize / 2))
+        {
+            last_pos = last_pos - new Vector3(snapsize, 0, snapsize);
+            return last_pos;
+        }
+
+        return last_pos;
+    }
+
+    bool isVectorInXZArea(Vector3 pos, float x_from, float x_to, float z_from, float z_to)
+    {
+        bool cond_1 = x_from <= pos.x && pos.x <= x_to;
+        bool cond_2 = z_from <= pos.z && pos.z <= z_to;
+
+        return cond_1 && cond_2;
     }
 
     Vector3 SnapToGrid(Vector3 pos, int snapsize)
@@ -612,10 +678,8 @@ public class CreatePathManager : MonoBehaviour
         RayTrace();
 
         // snap_pos = new Vector3(SnapGrid(pos.x, snapsize), 0, SnapGrid(pos.z, snapsize));
-        snap_pos = SnapToGrid(pos, snapsize);
+        snap_pos = SnapToGridPoint(pos, snapsize);
         debugobj.GetComponent<Transform>().position = snap_pos;
-
-        Snap(pos);
 
         // Change MODE
         if (Input.GetKeyDown(KeyCode.B))
