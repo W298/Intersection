@@ -112,156 +112,9 @@ public class CreatePathManager : MonoBehaviour
         return cond_1 && cond_2;
     }
 
-    Vector3 SnapToGrid(Vector3 pos, int snapsize)
-    {
-        int x;
-        int z;
-
-        if (pos.x < 0)
-        {
-            if (pos.z < 0)
-            {
-                x = Mathf.RoundToInt(Mathf.Abs(pos.x / snapsize)) * snapsize * -1;
-                z = Mathf.RoundToInt(Mathf.Abs(pos.z / snapsize)) * snapsize * -1;
-            }
-            else
-            {
-                x = Mathf.RoundToInt(Mathf.Abs(pos.x / snapsize)) * snapsize * -1;
-                z = Mathf.RoundToInt(pos.z / snapsize) * snapsize;
-            }
-        }
-        else
-        {
-            if (pos.z < 0)
-            {
-                x = Mathf.RoundToInt(pos.x / snapsize) * snapsize;
-                z = Mathf.RoundToInt(Mathf.Abs(pos.z / snapsize)) * snapsize * -1;
-            }
-            else
-            {
-                x = Mathf.RoundToInt(pos.x / snapsize) * snapsize;
-                z = Mathf.RoundToInt(pos.z / snapsize) * snapsize;
-            }
-        }
-
-        return new Vector3(x, 0, z);
-    }
-
     void debugPoint(Vector3 pos)
     {
         Instantiate(debugobj2, pos, Quaternion.identity);
-    }
-
-    Vector3 Snap(Vector3 pos)
-    {
-        int x;
-        int z;
-
-        float dx;
-        float dz;
-
-        if (pos.x < 0)
-        {
-            if (pos.z < 0)
-            {
-                x = Mathf.RoundToInt(Mathf.Abs(pos.x / snapsize)) * snapsize * -1;
-                z = Mathf.RoundToInt(Mathf.Abs(pos.z / snapsize)) * snapsize * -1;
-
-                dx = pos.x - Mathf.FloorToInt(Mathf.Abs(pos.x / snapsize)) * snapsize * -1;
-                dz = pos.z - Mathf.FloorToInt(Mathf.Abs(pos.z / snapsize)) * snapsize * -1;
-            }
-            else
-            {
-                x = Mathf.RoundToInt(Mathf.Abs(pos.x / snapsize)) * snapsize * -1;
-                z = Mathf.RoundToInt(pos.z / snapsize) * snapsize;
-
-                dx = pos.x - Mathf.FloorToInt(Mathf.Abs(pos.x / snapsize)) * snapsize * -1;
-                dz = pos.z - Mathf.FloorToInt(pos.z / snapsize) * snapsize;
-            }
-        }
-        else
-        {
-            if (pos.z < 0)
-            {
-                x = Mathf.RoundToInt(pos.x / snapsize) * snapsize;
-                z = Mathf.RoundToInt(Mathf.Abs(pos.z / snapsize)) * snapsize * -1;
-
-                dx = pos.x - Mathf.FloorToInt(pos.x / snapsize) * snapsize;
-                dz = pos.z - Mathf.FloorToInt(Mathf.Abs(pos.z / snapsize)) * snapsize * -1;
-            }
-            else
-            {
-                x = Mathf.RoundToInt(pos.x / snapsize) * snapsize;
-                z = Mathf.RoundToInt(pos.z / snapsize) * snapsize;
-
-                dx = pos.x - Mathf.FloorToInt(pos.x / snapsize) * snapsize;
-                dz = pos.z - Mathf.FloorToInt(pos.z / snapsize) * snapsize;
-            }
-        }
-
-        if (Mathf.Abs(dx - dz) <= 2.5 && dx + dz >= 5 && dx + dz <= 7.5)
-        {
-            if (last_x == x)
-            {
-                x += snapsize;
-            }
-
-            if (last_z == z)
-            {
-                z += snapsize;
-            }
-
-            UnityEngine.Debug.LogWarning("Cross!");
-        }
-
-        last_x = x;
-        last_z = z;
-
-        return new Vector3(x, 0, z);
-    }
-
-    Vector3 SnapGrid(Vector3 pos)
-    {
-        int nx;
-        int nz;
-
-        if (pos.x < 0)
-        {
-            nx = Mathf.FloorToInt(Mathf.Abs(pos.x / snapsize)) * -1;
-        }
-        else
-        {
-            nx = Mathf.FloorToInt(pos.x / snapsize);
-        }
-
-        if (pos.z < 0)
-        {
-            nz = Mathf.FloorToInt(Mathf.Abs(pos.z / snapsize)) * -1;
-        }
-        else
-        {
-            nz = Mathf.FloorToInt(pos.z / snapsize);
-        }
-
-        if ((nx * snapsize + 2.5 <= pos.x && pos.x <= nx * snapsize + 7.5)
-            && (nz * snapsize - 2.5 <= pos.z && pos.z <= nz * snapsize + 2.5))
-        {
-            return new Vector3(nx * snapsize + snapsize, 0, nz * snapsize);
-        }
-        else if ((nz * snapsize + 2.5 <= pos.z && pos.z <= nz * snapsize + 7.5)
-            && (nx * snapsize - 2.5 <= pos.x && pos.x <= nx * snapsize + 2.5))
-        {
-            return new Vector3(nx * snapsize, 0, nz * snapsize + snapsize);
-        }
-        else if ((nx * snapsize + 2.5 <= pos.x && pos.x <= nx * snapsize + 7.5)
-            && (nz * snapsize + 2.5 <= pos.z && pos.z <= nz * snapsize + 7.5))
-        {
-            return new Vector3(nx * snapsize + snapsize, 0, nz * snapsize + snapsize);
-        }
-        else
-        {
-            return new Vector3(nx * snapsize, 0, nz * snapsize);
-        }
     }
 
     // Spawn SplineComputer and Apply to spline_computer variable.
@@ -279,7 +132,6 @@ public class CreatePathManager : MonoBehaviour
     // Spawn SplineComputer independently.
     SplineComputer InsPath(Vector3 pos)
     {
-        
         return Instantiate(SplinePrefab, pos, Quaternion.identity);
     }
 
@@ -287,14 +139,14 @@ public class CreatePathManager : MonoBehaviour
     // TODO - Prevent Reversing Append Behavior
     bool AppendPath()
     {
-        if (last_x != SnapGrid(pos.x, snapsize) || last_z != SnapGrid(pos.z, snapsize))
+        if (last_x != SnapToGridPoint(pos, snapsize).x || last_z != SnapToGridPoint(pos, snapsize).z)
         {
             spline_computer.SetPointNormal(new_index, def_normal);
             spline_computer.SetPointSize(new_index, 1);
-            spline_computer.SetPointPosition(new_index, new Vector3(SnapGrid(pos.x, snapsize), def_y, SnapGrid(pos.z, snapsize)));
+            spline_computer.SetPointPosition(new_index, new Vector3(SnapToGridPoint(pos, snapsize).x, def_y, SnapToGridPoint(pos, snapsize).z));
 
-            last_x = SnapGrid(pos.x, snapsize);
-            last_z = SnapGrid(pos.z, snapsize);
+            last_x = SnapToGridPoint(pos, snapsize).x;
+            last_z = SnapToGridPoint(pos, snapsize).z;
 
             return true;
         }
@@ -677,7 +529,7 @@ public class CreatePathManager : MonoBehaviour
     {  
         RayTrace();
 
-        // snap_pos = new Vector3(SnapGrid(pos.x, snapsize), 0, SnapGrid(pos.z, snapsize));
+        /// snap_pos = new Vector3(SnapGrid(pos.x, snapsize), 0, SnapGrid(pos.z, snapsize));
         snap_pos = SnapToGridPoint(pos, snapsize);
         debugobj.GetComponent<Transform>().position = snap_pos;
 
