@@ -36,8 +36,6 @@ public class CreatePathManager : MonoBehaviour
 
     float SnapGrid(float value, int snapsize)
     {
-        // TODO - Make Snapping to cross possible.
-
         if (value < 0)
         {
             return Mathf.Round(Mathf.Abs(value / snapsize)) * snapsize * -1;
@@ -52,56 +50,85 @@ public class CreatePathManager : MonoBehaviour
     {
         float snapsize = (float)_snapsize;
 
-        if (isVectorInXZArea(pos, snapsize / 2 + last_pos.x, snapsize + last_pos.x,
+        if (!isVectorInXZArea(pos, -snapsize + last_pos.x, snapsize + last_pos.x, 
+            -snapsize + last_pos.z, snapsize + +last_pos.z))
+        {
+            UnityEngine.Debug.LogWarning("Out of range!");
+        }
+        else
+        {
+            if (isVectorInXZArea(pos, snapsize / 2 + last_pos.x, snapsize + last_pos.x,
             last_pos.z - snapsize / 4, last_pos.z + snapsize / 4))
-        {
-            last_pos = last_pos + new Vector3(snapsize, 0, 0);
-            return last_pos;
-        }
-        else if (isVectorInXZArea(pos, last_pos.x - snapsize, last_pos.x - snapsize / 2,
-            last_pos.z - snapsize / 4, last_pos.z + snapsize / 4))
-        {
-            last_pos = last_pos - new Vector3(snapsize, 0, 0);
-            return last_pos;
-        }
-        else if (isVectorInXZArea(pos, last_pos.x - snapsize / 4, last_pos.x + snapsize / 4,
-            last_pos.z + snapsize / 2, last_pos.z + snapsize))
-        {
-            last_pos = last_pos + new Vector3(0, 0, snapsize);
-            return last_pos;
-        }
-        else if (isVectorInXZArea(pos, last_pos.x - snapsize / 4, last_pos.x + snapsize / 4,
-            last_pos.z - snapsize, last_pos.z - snapsize / 2))
-        {
-            last_pos = last_pos - new Vector3(0, 0, snapsize);
-            return last_pos;
-        }
-        else if (isVectorInXZArea(pos, last_pos.x + snapsize / 2, last_pos.x + snapsize,
-            last_pos.z + snapsize / 2, last_pos.z + snapsize))
-        {
-            last_pos = last_pos + new Vector3(snapsize, 0, snapsize);
-            return last_pos;
-        }
-        else if (isVectorInXZArea(pos, last_pos.x - snapsize, last_pos.x - snapsize / 2,
-            last_pos.z + snapsize / 2, last_pos.z + snapsize))
-        {
-            last_pos = last_pos + new Vector3(-snapsize, 0, snapsize);
-            return last_pos;
-        }
-        else if (isVectorInXZArea(pos, last_pos.x + snapsize / 2, last_pos.x + snapsize,
-            last_pos.z - snapsize, last_pos.z - snapsize / 2))
-        {
-            last_pos = last_pos + new Vector3(snapsize, 0, -snapsize);
-            return last_pos;
-        }
-        else if (isVectorInXZArea(pos, last_pos.x - snapsize, last_pos.x - snapsize / 2,
-            last_pos.z - snapsize, last_pos.z - snapsize / 2))
-        {
-            last_pos = last_pos - new Vector3(snapsize, 0, snapsize);
-            return last_pos;
+            {
+                last_pos = last_pos + new Vector3(snapsize, 0, 0);
+                return last_pos;
+            }
+            else if (isVectorInXZArea(pos, last_pos.x - snapsize, last_pos.x - snapsize / 2,
+                last_pos.z - snapsize / 4, last_pos.z + snapsize / 4))
+            {
+                last_pos = last_pos - new Vector3(snapsize, 0, 0);
+                return last_pos;
+            }
+            else if (isVectorInXZArea(pos, last_pos.x - snapsize / 4, last_pos.x + snapsize / 4,
+                last_pos.z + snapsize / 2, last_pos.z + snapsize))
+            {
+                last_pos = last_pos + new Vector3(0, 0, snapsize);
+                return last_pos;
+            }
+            else if (isVectorInXZArea(pos, last_pos.x - snapsize / 4, last_pos.x + snapsize / 4,
+                last_pos.z - snapsize, last_pos.z - snapsize / 2))
+            {
+                last_pos = last_pos - new Vector3(0, 0, snapsize);
+                return last_pos;
+            }
+            else if (isVectorInXZArea(pos, last_pos.x + snapsize / 2, last_pos.x + snapsize,
+                last_pos.z + snapsize / 2, last_pos.z + snapsize))
+            {
+                last_pos = last_pos + new Vector3(snapsize, 0, snapsize);
+                return last_pos;
+            }
+            else if (isVectorInXZArea(pos, last_pos.x - snapsize, last_pos.x - snapsize / 2,
+                last_pos.z + snapsize / 2, last_pos.z + snapsize))
+            {
+                last_pos = last_pos + new Vector3(-snapsize, 0, snapsize);
+                return last_pos;
+            }
+            else if (isVectorInXZArea(pos, last_pos.x + snapsize / 2, last_pos.x + snapsize,
+                last_pos.z - snapsize, last_pos.z - snapsize / 2))
+            {
+                last_pos = last_pos + new Vector3(snapsize, 0, -snapsize);
+                return last_pos;
+            }
+            else if (isVectorInXZArea(pos, last_pos.x - snapsize, last_pos.x - snapsize / 2,
+                last_pos.z - snapsize, last_pos.z - snapsize / 2))
+            {
+                last_pos = last_pos - new Vector3(snapsize, 0, snapsize);
+                return last_pos;
+            }
         }
 
         return last_pos;
+    }
+
+
+    // Check Append Point is at Valid Position.
+    bool CheckAppendValid(Vector3 addPoint)
+    {
+        int last_id = spline_computer.GetPoints().Length - 1;
+
+        Vector3 dir = spline_computer.GetPoint(last_id).position - 
+            spline_computer.GetPoint(last_id - 1).position;
+
+        Vector3 dirAppend = addPoint - spline_computer.GetPoint(last_id).position;
+
+        if (Vector3.Angle(dir, dirAppend) <= 90)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     bool isVectorInXZArea(Vector3 pos, float x_from, float x_to, float z_from, float z_to)
@@ -136,19 +163,28 @@ public class CreatePathManager : MonoBehaviour
     }
 
     // Append path when snapping event on. Return true when snapping event on.
-    // TODO - Prevent Reversing Append Behavior
     bool AppendPath()
     {
         if (last_x != SnapToGridPoint(pos, snapsize).x || last_z != SnapToGridPoint(pos, snapsize).z)
         {
-            spline_computer.SetPointNormal(new_index, def_normal);
-            spline_computer.SetPointSize(new_index, 1);
-            spline_computer.SetPointPosition(new_index, new Vector3(SnapToGridPoint(pos, snapsize).x, def_y, SnapToGridPoint(pos, snapsize).z));
+            float x = SnapToGridPoint(pos, snapsize).x;
+            float z = SnapToGridPoint(pos, snapsize).z;
 
-            last_x = SnapToGridPoint(pos, snapsize).x;
-            last_z = SnapToGridPoint(pos, snapsize).z;
+            if (CheckAppendValid(new Vector3(x, 0, z)) || spline_computer.GetPoints().Length == 1)
+            {
+                spline_computer.SetPointNormal(new_index, def_normal);
+                spline_computer.SetPointSize(new_index, 1);
+                spline_computer.SetPointPosition(new_index, new Vector3(x, def_y, z));
 
-            return true;
+                last_x = x;
+                last_z = z;
+
+                return true;
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning("Point is out of range!");
+            }
         }
         
         return false;
@@ -529,8 +565,8 @@ public class CreatePathManager : MonoBehaviour
     {  
         RayTrace();
 
-        /// snap_pos = new Vector3(SnapGrid(pos.x, snapsize), 0, SnapGrid(pos.z, snapsize));
-        snap_pos = SnapToGridPoint(pos, snapsize);
+        snap_pos = new Vector3(SnapGrid(pos.x, snapsize), 0, SnapGrid(pos.z, snapsize));
+        last_pos = snap_pos;
         debugobj.GetComponent<Transform>().position = snap_pos;
 
         // Change MODE
