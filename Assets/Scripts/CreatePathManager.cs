@@ -310,7 +310,10 @@ public class CreatePathManager : MonoBehaviour
 
                     new_index = 0;
                     SpawnPath();
-                    AppendPath(new Vector3(SnapGrid(pos.x, snapsize), def_y, SnapGrid(pos.z, snapsize)));
+                    AppendPath(new Vector3(
+                        SnapToGridPoint(pos, snapsize).x, 
+                        def_y, 
+                        SnapToGridPoint(pos, snapsize).z));
                     new_index++;
 
                     isJoin = false;
@@ -320,22 +323,18 @@ public class CreatePathManager : MonoBehaviour
                     new_index++;
                 }
 
-
+                // TODO - Change rebuild update time interval.
+                // Rebuild All Splines at appending update.
+                foreach (SplineComputer com in GameObject.FindObjectsOfType<SplineComputer>())
+                {
+                    com.Rebuild(true);
+                }
             }
 
             if (spline_computer)
             {
                 spline_computer.Rebuild(true);
             }
-
-
-            // TODO - Change rebuild update time interval.
-            // Rebuild All Splines at each update.
-            foreach (SplineComputer com in GameObject.FindObjectsOfType<SplineComputer>())
-            {
-                com.Rebuild(true);
-            }
-
         }
         else if (Input.GetMouseButtonUp(0))
         {
@@ -508,16 +507,20 @@ public class CreatePathManager : MonoBehaviour
         from.y = 0;
         to.y = 0;
 
-        if (getSplineComputer(find_pos) == cross_old_spline)
+        if (Vector3.Angle(cross_old_spline_dir, dir) == 0 || Vector3.Angle(cross_old_spline_dir, dir) == 180)
         {
             // When Old Spline is parallel to Current spline
-            if (isVectorGoClockwise(from, to))
+            if (isVectorGoClockwise(cross_old_spline_dir, cross_new_spline_dir))
             {
                 UnityEngine.Debug.LogWarning("CASE1");
                 cross_old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 0.8f;
                 spline_computer.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.2f;
                 cross_new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.192f;
                 cross_new_spline.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.192f;
+
+                cross_old_spline.GetComponent<SplineMesh>().GetChannel(1).clipTo = 0.808;
+                cross_new_spline.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+                spline_computer.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
             }
             else
             {
@@ -526,19 +529,27 @@ public class CreatePathManager : MonoBehaviour
                 spline_computer.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.2;
                 cross_new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.192;
                 cross_new_spline.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.192;
+
+                cross_old_spline.GetComponent<SplineMesh>().GetChannel(1).clipTo = 0.808;
+                cross_new_spline.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+                spline_computer.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
             }
             
         }
-        else if (getSplineComputer(find_pos) == cross_new_spline)
+        else if (Vector3.Angle(cross_new_spline_dir, dir) == 0 || Vector3.Angle(cross_new_spline_dir, dir) == 180)
         {
             // When New Spline is parallel to Current spline
-            if (isVectorGoClockwise(from, to))
+            if (isVectorGoClockwise(cross_old_spline_dir, cross_new_spline_dir))
             {
                 UnityEngine.Debug.LogWarning("CASE3");
                 cross_new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.2;
                 spline_computer.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.2;
                 cross_old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 0.808;
                 cross_old_spline.GetComponent<SplineMesh>().GetChannel(3).clipTo = 0.808;
+
+                cross_old_spline.GetComponent<SplineMesh>().GetChannel(1).clipTo = 0.808;
+                cross_new_spline.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+                spline_computer.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
             }
             else
             {
@@ -547,12 +558,42 @@ public class CreatePathManager : MonoBehaviour
                 spline_computer.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.2;
                 cross_old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 0.808;
                 cross_old_spline.GetComponent<SplineMesh>().GetChannel(3).clipTo = 0.808;
+
+                cross_old_spline.GetComponent<SplineMesh>().GetChannel(1).clipTo = 0.808;
+                cross_new_spline.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+                spline_computer.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
             }    
+        }
+        else if (Vector3.Angle(cross_old_spline_dir, cross_new_spline_dir) == 0)
+        {
+            UnityEngine.Debug.LogWarning("90 degree Joinning Code");
+
+            if (isVectorGoClockwise(cross_old_spline_dir, dir))
+            {
+                cross_old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 0.808;
+                cross_new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.192;
+                spline_computer.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.2;
+                spline_computer.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.2;
+
+                cross_old_spline.GetComponent<SplineMesh>().GetChannel(1).clipTo = 0.808;
+                cross_new_spline.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+                spline_computer.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+            }
+            else
+            {
+                cross_old_spline.GetComponent<SplineMesh>().GetChannel(3).clipTo = 0.808;
+                cross_new_spline.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.192;
+                spline_computer.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.2;
+                spline_computer.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.2;
+
+                cross_old_spline.GetComponent<SplineMesh>().GetChannel(1).clipTo = 0.808;
+                cross_new_spline.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+                spline_computer.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+            }         
         }
         else
         {
-            // TODO - 90 degree Joinning Code
-            UnityEngine.Debug.LogWarning("90 degree Joinning Code");
+            UnityEngine.Debug.LogWarning("Cross");
         }
     }
 
