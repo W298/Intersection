@@ -665,14 +665,16 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2135375420}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5a7e1b5914ee0e0418a85531640e9b69, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  camera_move_speed: 10
-  camera_zoom_speed: 2.5
+  camera_move_speed: 15
+  camera_zoom_speed: 2
   camera_zoom_breaker: 10
+  minZoom: 2
+  maxZoom: 20
 --- !u!114 &2135375423
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -701,7 +703,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2135375420}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7eb5c974f52444a4ba8315c5c46097ba, type: 3}
   m_Name: 

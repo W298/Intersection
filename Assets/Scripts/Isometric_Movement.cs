@@ -12,9 +12,12 @@ public class Isometric_Movement : MonoBehaviour
     private Vector3 movedir;
     private float zoom;
 
-    public float camera_move_speed = 5.0f;
-    public float camera_zoom_speed = 1.5f;
+    public float camera_move_speed = 15.0f;
+    public float camera_zoom_speed = 2.0f;
     public float camera_zoom_breaker = 10.0f;
+
+    public float minZoom = 2.0f;
+    public float maxZoom = 20.0f;
 
     private Transform tr;
     private Camera cm;
@@ -41,13 +44,13 @@ public class Isometric_Movement : MonoBehaviour
         tr.Translate(movedir * camera_move_speed * Time.deltaTime, Space.Self);
 
         cm.orthographicSize += zoom * camera_zoom_speed;
-        if (cm.orthographicSize < 2)
+        if (cm.orthographicSize < minZoom)
         {
-            cm.orthographicSize = 2;
+            cm.orthographicSize = minZoom;
         }
-        else if (cm.orthographicSize > 10)
+        else if (cm.orthographicSize > maxZoom)
         {
-            cm.orthographicSize = 10;
+            cm.orthographicSize = maxZoom;
         }
     }
 }
