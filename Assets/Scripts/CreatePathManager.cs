@@ -475,6 +475,31 @@ public class CreatePathManager : MonoBehaviour
         }
     }
 
+    // Check two vector is Parallel.
+    bool isVectorParallel(Vector3 v1, Vector3 v2)
+    {
+        if (Vector3.Angle(v1, v2) == 0 || Vector3.Angle(v1, v2) == 180)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    bool isVectorVertical(Vector3 v1, Vector3 v2)
+    {
+        if (Vector3.Dot(v1, v2) == 0)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     float CalcPercentLine(SplineComputer spline, float percent, int snapsize)
     {
         if (spline.CalculateLength() != 0)
@@ -500,13 +525,109 @@ public class CreatePathManager : MonoBehaviour
         Vector3 cross_old_spline_dir = cross_old_spline.GetPoint(1).position - cross_old_spline.GetPoint(0).position;
         Vector3 cross_new_spline_dir = cross_new_spline.GetPoint(1).position - cross_new_spline.GetPoint(0).position;
 
-        UnityEngine.Debug.LogWarning(dir);
-        UnityEngine.Debug.LogWarning(cross_old_spline_dir);
-        UnityEngine.Debug.LogWarning(cross_new_spline_dir);
-
         from.y = 0;
         to.y = 0;
 
+        if (isVectorParallel(cross_old_spline_dir, cross_new_spline_dir))
+        {
+            if (isVectorVertical(cross_old_spline_dir, dir))
+            {
+                if (isVectorGoClockwise(cross_old_spline_dir, dir))
+                {
+                    UnityEngine.Debug.LogWarning("90 DEG C");
+                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 0.808;
+                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.192;
+                    spline_computer.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.2;
+                    spline_computer.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.2;
+
+                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(1).clipTo = 0.808;
+                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+                    spline_computer.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+                }
+                else
+                {
+                    UnityEngine.Debug.LogWarning("90 DEG CC");
+                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(3).clipTo = 0.808;
+                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.192;
+                    spline_computer.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.2;
+                    spline_computer.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.2;
+
+                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(1).clipTo = 0.808;
+                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+                    spline_computer.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+                }
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning("DIR CROSS JOIN");
+            }
+        }
+        else
+        {
+            if (isVectorParallel(cross_old_spline_dir, dir))
+            {
+                if (isVectorGoClockwise(cross_old_spline_dir, dir))
+                {
+                    UnityEngine.Debug.LogWarning("CASE 1");
+                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(3).clipTo = 0.8;
+                    spline_computer.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.2;
+                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.192;
+                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.192;
+
+                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(1).clipTo = 0.808;
+                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+                    spline_computer.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+                }
+                else
+                {
+                    UnityEngine.Debug.LogWarning("CASE 2");
+                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 0.8f;
+                    spline_computer.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.2f;
+                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.192f;
+                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.192f;
+
+                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(1).clipTo = 0.808;
+                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+                    spline_computer.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+                }
+            }
+            else
+            {
+                if (isVectorParallel(cross_new_spline_dir, dir))
+                {
+                    if (isVectorGoClockwise(cross_old_spline_dir, dir))
+                    {
+                        UnityEngine.Debug.LogWarning("CASE 3");
+                        cross_new_spline.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.2;
+                        spline_computer.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.2;
+                        cross_old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 0.808;
+                        cross_old_spline.GetComponent<SplineMesh>().GetChannel(3).clipTo = 0.808;
+
+                        cross_old_spline.GetComponent<SplineMesh>().GetChannel(1).clipTo = 0.808;
+                        cross_new_spline.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+                        spline_computer.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+                    }
+                    else
+                    {
+                        UnityEngine.Debug.LogWarning("CASE 4");
+                        cross_new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = 0.2;
+                        spline_computer.GetComponent<SplineMesh>().GetChannel(3).clipFrom = 0.2;
+                        cross_old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 0.808;
+                        cross_old_spline.GetComponent<SplineMesh>().GetChannel(3).clipTo = 0.808;
+
+                        cross_old_spline.GetComponent<SplineMesh>().GetChannel(1).clipTo = 0.808;
+                        cross_new_spline.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+                        spline_computer.GetComponent<SplineMesh>().GetChannel(1).clipFrom = 0.2;
+                    }
+                }
+                else
+                {
+                    UnityEngine.Debug.LogWarning("3 CROSS JOIN");
+                }
+            }
+        }
+
+        /*
         if (Vector3.Angle(cross_old_spline_dir, dir) == 0 || Vector3.Angle(cross_old_spline_dir, dir) == 180)
         {
             // When Old Spline is parallel to Current spline
@@ -595,6 +716,7 @@ public class CreatePathManager : MonoBehaviour
         {
             UnityEngine.Debug.LogWarning("Cross");
         }
+        */
     }
 
     void Start()
