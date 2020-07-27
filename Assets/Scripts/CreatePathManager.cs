@@ -25,7 +25,7 @@ public class CreatePathManager : MonoBehaviour
     private float last_x;
     private float last_z;
     private Vector3 last_pos;
-    private int new_index = 0;
+    public int new_index = 0;
     private Vector3 pos;
     private Vector3 snap_pos;
     private bool isJoin = false;
@@ -250,6 +250,8 @@ public class CreatePathManager : MonoBehaviour
     // Spawn SplineComputer and Change mode to Append.
     void runBuildMode()
     {
+        UnityEngine.Debug.LogWarning("RunBuild!");
+        
         new_index = 0;
 
         SpawnPath();
@@ -304,6 +306,11 @@ public class CreatePathManager : MonoBehaviour
         else if (Input.GetMouseButtonUp(0))
         {
             spline_computer = null;
+
+            new_index = 0;
+            last_x = 0;
+            last_z = 0;
+
             current_mode = MODE.BUILD;
         }
         else if (Input.GetMouseButton(1))
