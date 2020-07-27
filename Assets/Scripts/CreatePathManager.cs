@@ -29,6 +29,7 @@ public class CreatePathManager : MonoBehaviour
     private Vector3 pos;
     private Vector3 snap_pos;
     private bool isJoin = false;
+    private bool needSplit = false;
 
     public SplineComputer cross_old_spline;
     public SplineComputer cross_new_spline;
@@ -284,6 +285,13 @@ public class CreatePathManager : MonoBehaviour
                     spline_computer.Fixed = true;
 
                     isJoin = false;
+                    needSplit = true;
+                }
+                else if (needSplit)
+                {
+                    spline_computer = SplitSpline(1, spline_computer);
+
+                    needSplit = false;
                 }
                 else
                 {
