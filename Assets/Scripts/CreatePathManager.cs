@@ -30,6 +30,8 @@ public class CreatePathManager : MonoBehaviour
     private Vector3 snap_pos;
     private bool isJoin = false;
     private bool needSplit = false;
+    private SplineComputer selected_spline;
+    private int selected_index = 0;
 
     public SplineComputer cross_old_spline;
     public SplineComputer cross_new_spline;
@@ -191,6 +193,21 @@ public class CreatePathManager : MonoBehaviour
         return false;
     }
 
+    // Return true when snapping event on. Also return Direction.
+    // Same feature with AppendPath()
+    bool CheckSnap()
+    {
+        if (last_x != SnapToGridPoint(pos, snapsize).x || last_z != SnapToGridPoint(pos, snapsize).z)
+        {
+            last_x = SnapToGridPoint(pos, snapsize).x;
+            last_z = SnapToGridPoint(pos, snapsize).z;
+
+            return true;
+        }
+
+        return false;
+    }
+
     // Append Point at desire position.
     void AppendPath(Vector3 pos)
     {
@@ -277,12 +294,34 @@ public class CreatePathManager : MonoBehaviour
             {
                 if (isJoin)
                 {
+                    SplineComputer temp_spline = SplitSpline(selected_index, selected_spline);
+
+                    if (temp_spline.GetPoints().Length >= 3)
+                    {
+                        SplitSpline(1, temp_spline);
+                    }
+
+                    cross_new_spline = temp_spline;
+
+                    if (selected_spline.GetPoints().Length >= 3)
+                    {
+                        cross_old_spline = SplitSpline(selected_index - 1, selected_spline);
+                    }
+                    else
+                    {
+                        cross_old_spline = selected_spline;
+                    }
+
                     CleanLines();
                     new_index++;
 
                     cross_new_spline.Fixed = true;
                     cross_old_spline.Fixed = true;
                     spline_computer.Fixed = true;
+
+                    cross_new_spline.mode = SplineComputer.RoadMode.Cro3;
+                    cross_old_spline.mode = SplineComputer.RoadMode.Cro3;
+                    spline_computer.mode = SplineComputer.RoadMode.Cro3;
 
                     isJoin = false;
                     needSplit = true;
@@ -423,24 +462,6 @@ public class CreatePathManager : MonoBehaviour
         newSpline.Rebuild(true);
 
         return newSpline;
-    }
-
-    // Return true when snapping event on. Also return Direction.
-    // Same feature with AppendPath()
-    bool CheckSnap(out Vector3 dir)
-    {
-        if (last_x != SnapGrid(pos.x, snapsize) || last_z != SnapGrid(pos.z, snapsize))
-        {
-            dir = new Vector3(SnapGrid(pos.x, snapsize) - last_x, 0, SnapGrid(pos.z, snapsize) - last_z);
-
-            last_x = SnapGrid(pos.x, snapsize);
-            last_z = SnapGrid(pos.z, snapsize);
-
-            return true;
-        }
-
-        dir = new Vector3();
-        return false;
     }
 
     // Check two vector create Clockwise or Counterclockwise.
@@ -678,23 +699,8 @@ public class CreatePathManager : MonoBehaviour
                                         _isJoin = true;
                                         isJoin = true;
 
-                                        SplineComputer temp_spline = SplitSpline(i, spline);
-
-                                        if (temp_spline.GetPoints().Length >= 3)
-                                        {
-                                            SplitSpline(1, temp_spline);
-                                        }
-
-                                        cross_new_spline = temp_spline;
-
-                                        if (spline.GetPoints().Length >= 3)
-                                        {
-                                            cross_old_spline = SplitSpline(i - 1, spline);
-                                        }
-                                        else
-                                        {
-                                            cross_old_spline = spline;
-                                        }
+                                        selected_spline = spline;
+                                        selected_index = i;
 
                                         runBuildMode();
                                         isFound = true;
@@ -703,6 +709,10 @@ public class CreatePathManager : MonoBehaviour
                                     }
                                 }
                             }
+                        }
+                        else if (spline.mode == SplineComputer.RoadMode.Cro3)
+                        {
+
                         }
 
                         if (isFound) { break; }
