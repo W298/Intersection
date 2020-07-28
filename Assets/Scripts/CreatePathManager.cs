@@ -67,8 +67,6 @@ public class CreatePathManager : MonoBehaviour
     public SplineComputer cross_old_spline;
     public SplineComputer cross_new_spline;
 
-    public SplineComputer debugSpline;
-
     float SnapGrid(float value, int snapsize)
     {
         if (value < 0)
@@ -684,10 +682,6 @@ public class CreatePathManager : MonoBehaviour
     void Update()
     {  
         RayTrace();
-
-        UnityEngine.Debug.LogWarning(debugSpline.Project(pos).percent);
-
-        debugSpline.GetComponent<PathGenerator>().clipTo = debugSpline.Project(pos).percent;
 
         snap_pos = new Vector3(SnapGrid(pos.x, snapsize), 0, SnapGrid(pos.z, snapsize));
         last_pos = snap_pos;
