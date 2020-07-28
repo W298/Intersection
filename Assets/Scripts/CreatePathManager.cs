@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using UnityEngine;
 
@@ -66,6 +67,8 @@ public class CreatePathManager : MonoBehaviour
 
     public SplineComputer cross_old_spline;
     public SplineComputer cross_new_spline;
+
+    public SplineComputer debugSpline;
 
     float SnapGrid(float value, int snapsize)
     {
@@ -323,10 +326,35 @@ public class CreatePathManager : MonoBehaviour
         {
             if (AppendPath())
             {
+                SplineComputer check_spline = null;
+
+                foreach (SplineComputer spline in getSplineComputers(snap_pos))
+                {
+                    if (spline != spline_computer)
+                    {
+                        check_spline = spline;
+                    }
+                }
+
+                // CHECK
+                if (check_spline != null && check_spline != spline_computer)
+                {
+                    if (check_spline.GetPoints().First().position == snap_pos ||
+                        check_spline.GetPoints().Last().position == snap_pos)
+                    {
+                        UnityEngine.Debug.LogWarning("Join 2-crossroad!");
+                    }
+                    else
+                    {
+                        UnityEngine.Debug.LogWarning("Join 3-crossroad!");
+                    }
+                }
+
                 if (isJoin)
                 {
                     if (joinmode == JOINMODE.TO3)
                     {
+                        // Spliting Start
                         SplineComputer temp_spline = SplitSpline(selected_index, selected_spline);
 
                         if (temp_spline.GetPoints().Length >= 3)
@@ -344,6 +372,7 @@ public class CreatePathManager : MonoBehaviour
                         {
                             cross_old_spline = selected_spline;
                         }
+                        // Spliting End
 
                         CleanLines();
                         new_index++;
@@ -488,6 +517,43 @@ public class CreatePathManager : MonoBehaviour
         return new SplineComputer();
     }
 
+    List<SplineComputer> getSplineComputers(Vector3 pos)
+    {
+        SplineComputer[] spline_list = GameObject.FindObjectsOfType<SplineComputer>();
+        List<SplineComputer> return_list = new List<SplineComputer>();
+
+        foreach (SplineComputer spline in spline_list)
+        {
+            SplinePoint[] points = spline.GetPoints();
+
+            for (int i = 0; i < points.Length; i++)
+            {
+                if (pos == points[i].position)
+                {
+                    return_list.Add(spline);
+                    break;
+                }
+            }
+        }
+
+        return return_list;
+    }
+
+    int getSplinePointIndex(SplineComputer spline, SplinePoint point)
+    {
+        SplinePoint[] points = spline.GetPoints();
+
+        for (int i = 0; i < points.Length; i++)
+        {
+            if (points[i].position == point.position)
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
     // Split Spline and return newly spawned SplineComputer.
     SplineComputer SplitSpline(int index, SplineComputer spline)
     {
@@ -553,16 +619,6 @@ public class CreatePathManager : MonoBehaviour
         {
             return false;
         }
-    }
-
-    float CalcPercentLine(SplineComputer spline, float percent, int snapsize)
-    {
-        if (spline.CalculateLength() != 0)
-        {
-            return (percent * snapsize) / spline.CalculateLength();
-        }
-
-        return percent;
     }
 
     // Clean Joined Path Line.
@@ -686,7 +742,7 @@ public class CreatePathManager : MonoBehaviour
         snap_pos = new Vector3(SnapGrid(pos.x, snapsize), 0, SnapGrid(pos.z, snapsize));
         last_pos = snap_pos;
         debugobj.GetComponent<Transform>().position = snap_pos;
-        
+
         // Change MODE
         if (Input.GetKeyDown(KeyCode.B))
         {
@@ -698,7 +754,6 @@ public class CreatePathManager : MonoBehaviour
             UnityEngine.Debug.LogWarning("Remove Mode Enabled!");
             current_mode = MODE.REMOVE;
         }
-
 
         if (current_mode == MODE.BUILD)
         {
