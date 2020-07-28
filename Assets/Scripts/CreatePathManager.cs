@@ -326,8 +326,8 @@ public class CreatePathManager : MonoBehaviour
         {
             if (AppendPath())
             {
+                // Check Joining is needed during APPEND.
                 SplineComputer check_spline = null;
-
                 foreach (SplineComputer spline in getSplineComputers(snap_pos))
                 {
                     if (spline != spline_computer)
@@ -336,17 +336,31 @@ public class CreatePathManager : MonoBehaviour
                     }
                 }
 
-                // CHECK
                 if (check_spline != null && check_spline != spline_computer)
                 {
                     if (check_spline.GetPoints().First().position == snap_pos ||
                         check_spline.GetPoints().Last().position == snap_pos)
                     {
                         UnityEngine.Debug.LogWarning("Join 2-crossroad!");
+
+                        MergeSplines(check_spline, spline_computer);
                     }
                     else
                     {
                         UnityEngine.Debug.LogWarning("Join 3-crossroad!");
+
+                        SplinePoint[] points = check_spline.GetPoints();
+                        int index = 0;
+
+                        for (int i = 0; i < points.Length; i++)
+                        {
+                            if (points[i].position == snap_pos)
+                            {
+                                index = i;
+                            }
+                        }
+
+                        SplineComputer new_spline = SplitSpline(index, check_spline);
                     }
                 }
 
@@ -618,6 +632,48 @@ public class CreatePathManager : MonoBehaviour
         else
         {
             return false;
+        }
+    }
+
+    SplineComputer MergeSplines(SplineComputer s1, SplineComputer s2)
+    {
+        if (s1.GetPoints().Last().position == s2.GetPoints().Last().position)
+        {
+            // Reverse Merge
+            UnityEngine.Debug.LogWarning("Reverse Merge");
+            int index = s1.GetPoints().Length;
+
+            SplinePoint[] points = s2.GetPoints();
+            for (int i = points.Length - 2; i >= 0; i--)
+            {
+                UnityEngine.Debug.LogWarning(i);
+                s1.SetPoint(index, points[i]);
+                index++;
+            }
+
+            Destroy(s2.gameObject);
+
+            return s1;
+        }
+        else if (s1.GetPoints().Last().position == s2.GetPoints().First().position)
+        {
+            // Straight Merge
+            UnityEngine.Debug.LogWarning("Straight Merge");
+            int index = s1.GetPoints().Length;
+
+            SplinePoint[] points = s2.GetPoints();
+            for (int i = 1; i < points.Length; i++)
+            {
+                s1.SetPoint(index, points[i]);
+                index++;
+            }
+
+            return s1;
+        }
+        else
+        {
+            UnityEngine.Debug.LogWarning("NONE");
+            return null;
         }
     }
 
