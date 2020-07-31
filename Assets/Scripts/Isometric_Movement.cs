@@ -28,7 +28,7 @@ public class Isometric_Movement : MonoBehaviour
         tr = GetComponent<Transform>();
         cm = GetComponentInChildren<Camera>();
 
-        cm.transform.rotation = Quaternion.Euler(45, 45, 0);
+        cm.transform.rotation = Quaternion.Euler(55, 45, 0);
         cm.orthographic = true;
     }
 

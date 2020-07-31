@@ -50,18 +50,18 @@ public class CreatePathManager : MonoBehaviour
 
     private Vector3 def_normal = new Vector3(0, 1, 0);
     private float def_y = 0.0f;
-    private float last_x;
-    private float last_z;
-    private Vector3 last_pos;
+    public float last_x;
+    public float last_z;
+    public Vector3 last_pos;
     public int new_index = 0;
     private Vector3 pos;
-    private Vector3 snap_pos;
+    public Vector3 snap_pos;
     private bool isJoin = false;
     private JOINMODE joinmode = JOINMODE.NONE;
     private bool needSplit = false;
-    private SplineComputer selected_spline;
-    private int selected_index = 0;
-    private Crossroad selected_crossroad;
+    public SplineComputer selected_spline;
+    public int selected_index = 0;
+    public Crossroad selected_crossroad;
 
     public float clean_value = 0.139f;
 
@@ -177,11 +177,6 @@ public class CreatePathManager : MonoBehaviour
         return cond_1 && cond_2;
     }
 
-    void debugPoint(Vector3 pos)
-    {
-        Instantiate(debugobj2, pos, Quaternion.identity);
-    }
-
     // Spawn SplineComputer and Apply to spline_computer variable.
     void SpawnPath()
     {
@@ -242,14 +237,6 @@ public class CreatePathManager : MonoBehaviour
         }
 
         return false;
-    }
-
-    // Append Point at desire position.
-    void AppendPath(Vector3 pos)
-    {
-        spline_computer.SetPointNormal(new_index, def_normal);
-        spline_computer.SetPointSize(new_index, 1);
-        spline_computer.SetPointPosition(new_index, pos);
     }
 
     // WARNING - To make this function work, I changed below thing.
@@ -326,6 +313,7 @@ public class CreatePathManager : MonoBehaviour
     {
         if (Input.GetMouseButton(0))
         {
+            // Head Join.
             if (joinmode == JOINMODE.HEAD)
             {
                 if (CheckSnap())
@@ -338,7 +326,7 @@ public class CreatePathManager : MonoBehaviour
                     }
 
                     selected_spline.SetPointNormal(0, def_normal);
-                    selected_spline.SetPointSize(0, 1);
+                    selected_spline.SetPointSize(new_index, 1);
                     selected_spline.SetPointPosition(0, snap_pos);
                 }
             }
@@ -358,8 +346,9 @@ public class CreatePathManager : MonoBehaviour
 
                     if (check_spline != null && check_spline != spline_computer)
                     {
-                        if (check_spline.GetPoints().First().position == snap_pos ||
-                            check_spline.GetPoints().Last().position == snap_pos)
+                        if ((check_spline.GetPoints().First().position == snap_pos ||
+                            check_spline.GetPoints().Last().position == snap_pos) &&
+                            !check_spline.Fixed)
                         {
                             UnityEngine.Debug.LogWarning("Join 2-crossroad!");
 
@@ -409,6 +398,7 @@ public class CreatePathManager : MonoBehaviour
                             // Spliting End
 
                             CleanLines();
+
                             new_index++;
 
                             cross_new_spline.Fixed = true;
@@ -503,7 +493,9 @@ public class CreatePathManager : MonoBehaviour
             last_x = 0;
             last_z = 0;
 
+            joinmode = JOINMODE.NONE;
             current_mode = MODE.BUILD;
+            isJoin = false;
         }
         else if (Input.GetMouseButton(1))
         {
@@ -944,6 +936,18 @@ public class CreatePathManager : MonoBehaviour
                                     else if (snap_pos == points.First().position)
                                     {
                                         UnityEngine.Debug.LogWarning("Head Append");
+
+                                        _isJoin = true;
+                                        isFound = true;
+
+                                        selected_spline = spline;
+                                        current_mode = MODE.APPEND;
+
+                                        isJoin = true;
+                                        joinmode = JOINMODE.HEAD;
+
+                                        last_x = snap_pos.x;
+                                        last_z = snap_pos.z;
 
                                         break;
                                     }
