@@ -813,7 +813,7 @@ MonoBehaviour:
   clean_value: 0.139
   cross_old_spline: {fileID: 0}
   cross_new_spline: {fileID: 0}
-  divider: 6
+  divider: 7.2
 --- !u!114 &2135375424
 MonoBehaviour:
   m_ObjectHideFlags: 0
