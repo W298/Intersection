@@ -64,7 +64,6 @@ public class CreatePathManager : MonoBehaviour
     public Vector3 snap_pos;
     private bool isJoin = false;
     private JOINMODE joinmode = JOINMODE.NONE;
-    private bool needSplit = false;
     public SplineComputer selected_spline;
     public int selected_index = 0;
     public Crossroad selected_crossroad;
@@ -437,33 +436,13 @@ public class CreatePathManager : MonoBehaviour
                     {
                         if (joinmode == JOINMODE.TO3)
                         {
-                            // Spliting Start
+                            UnityEngine.Debug.LogWarning("JOIN 3");
+                            // Split
                             SplineComputer temp_spline = SplitSpline(selected_index, selected_spline);
-
-                            if (temp_spline.GetPoints().Length >= 3)
-                            {
-                                SplitSpline(1, temp_spline);
-                            }
-
                             cross_new_spline = temp_spline;
-
-                            if (selected_spline.GetPoints().Length >= 3)
-                            {
-                                cross_old_spline = SplitSpline(selected_index - 1, selected_spline);
-                            }
-                            else
-                            {
-                                cross_old_spline = selected_spline;
-                            }
-                            // Spliting End
-
-                            // CleanLines();
+                            cross_old_spline = selected_spline;
 
                             new_index++;
-
-                            cross_new_spline.Fixed = true;
-                            cross_old_spline.Fixed = true;
-                            spline_computer.Fixed = true;
 
                             Crossroad crossroad = new Crossroad();
                             crossroad.addRoad(cross_new_spline);
@@ -473,9 +452,11 @@ public class CreatePathManager : MonoBehaviour
 
                             crossroads.Add(crossroad);
 
+                            Instantiate(debugobj2, crossroad.getPosition(), Quaternion.identity);
+
                             isJoin = false;
                             joinmode = JOINMODE.NONE;
-                            needSplit = true;
+                            selected_spline = null;
                         }
                         else if (joinmode == JOINMODE.TO4)
                         {
@@ -509,18 +490,9 @@ public class CreatePathManager : MonoBehaviour
 
                             new_index++;
 
-                            spline_computer.Fixed = true;
-
                             isJoin = false;
                             joinmode = JOINMODE.NONE;
-                            needSplit = true;
                         }
-                    }
-                    else if (needSplit)
-                    {
-                        spline_computer = SplitSpline(1, spline_computer);
-
-                        needSplit = false;
                     }
                     else
                     {
@@ -949,23 +921,28 @@ public class CreatePathManager : MonoBehaviour
             {
                 if (spl.GetPoints().Last().position == cros.getPosition())
                 {
+                    UnityEngine.Debug.LogWarning("1");
                     int last_index = spl.GetPoints().Length - 1;
+
+                    Instantiate(debugobj2, spl.GetPoint(last_index - 1).position, Quaternion.identity);
 
                     Vector3 dir = spl.GetPoint(last_index - 1).position - cros.getPosition();
                     dirs.Add(dir);
-
-                    Vector3 proj_loc = cros.getPosition() + dir / divider;
-
-                    Instantiate(debugobj2, proj_loc, Quaternion.identity);
                 }
                 else if (spl.GetPoints().First().position == cros.getPosition())
                 {
+                    UnityEngine.Debug.LogWarning("2");
+
+                    Instantiate(debugobj2, spl.GetPoint(1).position, Quaternion.identity);
+
                     Vector3 dir = spl.GetPoint(1).position - cros.getPosition();
                     dirs.Add(dir);
+                }
+                else
+                {
+                    UnityEngine.Debug.LogWarning("ERROR");
 
-                    Vector3 proj_loc = cros.getPosition() + dir / divider;
-
-                    Instantiate(debugobj2, proj_loc, Quaternion.identity);
+                    Instantiate(debugobj, spl.GetPoints().Last().position, Quaternion.identity);
                 }
             }
 
