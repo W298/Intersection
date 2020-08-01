@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 
 public class Crossroad
 {
@@ -31,6 +32,11 @@ public class Crossroad
     public void setPosition(Vector3 pos)
     {
         position = pos;
+    }
+
+    public void Update()
+    {
+
     }
 }
 
@@ -70,7 +76,7 @@ public class CreatePathManager : MonoBehaviour
     public SplineComputer cross_old_spline;
     public SplineComputer cross_new_spline;
 
-    public SplineComputer debugSpline;
+    public float divider = 7.2f;
 
     float SnapGrid(float value, int snapsize)
     {
@@ -241,7 +247,7 @@ public class CreatePathManager : MonoBehaviour
 
     // Return true when snapping event on.
     // Same feature with AppendPath()
-    bool CheckSnap()
+    public bool CheckSnap()
     {
         if (last_x != SnapToGridPoint(pos, snapsize).x || last_z != SnapToGridPoint(pos, snapsize).z)
         {
@@ -451,7 +457,7 @@ public class CreatePathManager : MonoBehaviour
                             }
                             // Spliting End
 
-                            CleanLines();
+                            // CleanLines();
 
                             new_index++;
 
@@ -935,6 +941,122 @@ public class CreatePathManager : MonoBehaviour
         last_pos = snap_pos;
         debugobj.GetComponent<Transform>().position = snap_pos;
 
+        foreach (Crossroad cros in crossroads)
+        {
+            List<Vector3> dirs = new List<Vector3>();
+
+            foreach (SplineComputer spl in cros.getRoads())
+            {
+                if (spl.GetPoints().Last().position == cros.getPosition())
+                {
+                    int last_index = spl.GetPoints().Length - 1;
+
+                    Vector3 dir = spl.GetPoint(last_index - 1).position - cros.getPosition();
+                    dirs.Add(dir);
+
+                    Vector3 proj_loc = cros.getPosition() + dir / divider;
+
+                    Instantiate(debugobj2, proj_loc, Quaternion.identity);
+                }
+                else if (spl.GetPoints().First().position == cros.getPosition())
+                {
+                    Vector3 dir = spl.GetPoint(1).position - cros.getPosition();
+                    dirs.Add(dir);
+
+                    Vector3 proj_loc = cros.getPosition() + dir / divider;
+
+                    Instantiate(debugobj2, proj_loc, Quaternion.identity);
+                }
+            }
+
+            List<SplineComputer> roads = cros.getRoads();
+
+            for (int i = 0; i < roads.Count; i++)
+            {
+                bool isRight = false;
+                bool isLeft = false;
+
+                if (roads[i].GetPoints().Last().position == cros.getPosition())
+                {
+                    foreach (Vector3 dir in dirs)
+                    {
+                        if (isVectorVertical(dirs[i], dir))
+                        {
+                            if (isVectorGoClockwise(dirs[i], dir))
+                            {
+                                isLeft = true;
+                            }
+                            else
+                            {
+                                isRight = true;
+                            }
+                        }
+                    }
+
+                    double per = roads[i].Project(cros.getPosition() + dirs[i] / divider).percent;
+
+                    roads[i].GetComponent<SplineMesh>().GetChannel(1).clipTo = per;
+
+                    if (isLeft && !isRight)
+                    {
+                        roads[i].GetComponent<SplineMesh>().GetChannel(3).clipTo = per;
+                        roads[i].GetComponent<SplineMesh>().GetChannel(5).clipTo = per;
+                    }
+                    else if (isRight && !isLeft)
+                    {
+                        roads[i].GetComponent<SplineMesh>().GetChannel(2).clipTo = per;
+                        roads[i].GetComponent<SplineMesh>().GetChannel(4).clipTo = per;
+                    }
+                    else if (isLeft && isRight)
+                    {
+                        roads[i].GetComponent<SplineMesh>().GetChannel(3).clipTo = per;
+                        roads[i].GetComponent<SplineMesh>().GetChannel(5).clipTo = per;
+                        roads[i].GetComponent<SplineMesh>().GetChannel(2).clipTo = per;
+                        roads[i].GetComponent<SplineMesh>().GetChannel(4).clipTo = per;
+                    }
+                }
+                else if (roads[i].GetPoints().First().position == cros.getPosition())
+                {
+                    foreach (Vector3 dir in dirs)
+                    {
+                        if (isVectorVertical(dirs[i], dir))
+                        {
+                            if (isVectorGoClockwise(dirs[i], dir))
+                            {
+                                isRight = true;
+                            }
+                            else
+                            {
+                                isLeft = true;
+                            }
+                        }
+                    }
+
+                    double per = roads[i].Project(cros.getPosition() + dirs[i] / divider).percent;
+
+                    roads[i].GetComponent<SplineMesh>().GetChannel(1).clipFrom = per;
+
+                    if (isLeft && !isRight)
+                    {
+                        roads[i].GetComponent<SplineMesh>().GetChannel(3).clipFrom = per;
+                        roads[i].GetComponent<SplineMesh>().GetChannel(5).clipFrom = per;
+                    }
+                    else if (isRight && !isLeft)
+                    {
+                        roads[i].GetComponent<SplineMesh>().GetChannel(2).clipFrom = per;
+                        roads[i].GetComponent<SplineMesh>().GetChannel(4).clipFrom = per;
+                    }
+                    else if (isLeft && isRight)
+                    {
+                        roads[i].GetComponent<SplineMesh>().GetChannel(3).clipFrom = per;
+                        roads[i].GetComponent<SplineMesh>().GetChannel(5).clipFrom = per;
+                        roads[i].GetComponent<SplineMesh>().GetChannel(2).clipFrom = per;
+                        roads[i].GetComponent<SplineMesh>().GetChannel(4).clipFrom = per;
+                    }
+                }
+            }
+        }
+
         // Change MODE
         if (Input.GetKeyDown(KeyCode.B))
         {
@@ -963,7 +1085,7 @@ public class CreatePathManager : MonoBehaviour
 
                     foreach (SplineComputer spline in spline_list)
                     {           
-                        if (!spline.Fixed)
+                        if (/*!spline.Fixed*/ true)
                         {
                             SplinePoint[] points = spline.GetPoints();
 

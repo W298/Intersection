@@ -803,11 +803,17 @@ MonoBehaviour:
   debugobj2: {fileID: 1910153631}
   snapsize: 10
   current_mode: 0
+  last_x: 0
+  last_z: 0
+  last_pos: {x: 0, y: 0, z: 0}
   new_index: 0
+  snap_pos: {x: 0, y: 0, z: 0}
+  selected_spline: {fileID: 0}
+  selected_index: 0
   clean_value: 0.139
   cross_old_spline: {fileID: 0}
   cross_new_spline: {fileID: 0}
-  debugSpline: {fileID: 0}
+  divider: 6
 --- !u!114 &2135375424
 MonoBehaviour:
   m_ObjectHideFlags: 0
