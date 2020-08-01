@@ -148,24 +148,32 @@ public class CreatePathManager : MonoBehaviour
         return last_pos;
     }
 
-
-    // Check Append Point is at Valid Position.
-    bool CheckAppendValid(Vector3 addPoint)
+    bool CheckAppendVaild(Vector3 lastPoint, Vector3 currentPoint, Vector3 addPoint, bool onlyStraight = false)
     {
-        int last_id = spline_computer.GetPoints().Length - 1;
+        Vector3 dir = currentPoint - lastPoint;
+        Vector3 dirAppend = addPoint - currentPoint;
 
-        Vector3 dir = spline_computer.GetPoint(last_id).position - 
-            spline_computer.GetPoint(last_id - 1).position;
-
-        Vector3 dirAppend = addPoint - spline_computer.GetPoint(last_id).position;
-
-        if (Vector3.Angle(dir, dirAppend) <= 90)
+        if (onlyStraight)
         {
-            return true;
+            if (isVectorParallel(dir, dirAppend))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
         else
         {
-            return false;
+            if (Vector3.Angle(dir, dirAppend) <= 90)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 
@@ -204,7 +212,14 @@ public class CreatePathManager : MonoBehaviour
             float x = SnapToGridPoint(pos, snapsize).x;
             float z = SnapToGridPoint(pos, snapsize).z;
 
-            if (CheckAppendValid(new Vector3(x, 0, z)) || spline_computer.GetPoints().Length == 1)
+            int last_index = spline_computer.GetPoints().Length - 1;
+
+            bool cond = CheckAppendVaild(
+                       spline_computer.GetPoint(last_index - 1).position,
+                       spline_computer.GetPoint(last_index).position,
+                       new Vector3(x, 0, z));
+
+            if (cond || spline_computer.GetPoints().Length == 1)
             {
                 spline_computer.SetPointNormal(new_index, def_normal);
                 spline_computer.SetPointSize(new_index, 1);
@@ -224,7 +239,7 @@ public class CreatePathManager : MonoBehaviour
         return false;
     }
 
-    // Return true when snapping event on. Also return Direction.
+    // Return true when snapping event on.
     // Same feature with AppendPath()
     bool CheckSnap()
     {
@@ -328,6 +343,45 @@ public class CreatePathManager : MonoBehaviour
                     selected_spline.SetPointNormal(0, def_normal);
                     selected_spline.SetPointSize(new_index, 1);
                     selected_spline.SetPointPosition(0, snap_pos);
+
+                    // Check Joining is needed during APPEND.
+                    SplineComputer check_spline = null;
+                    foreach (SplineComputer spline in getSplineComputers(snap_pos))
+                    {
+                        if (spline != selected_spline)
+                        {
+                            check_spline = spline;
+                        }
+                    }
+
+                    if (check_spline != null && check_spline != selected_spline)
+                    {
+                        if ((check_spline.GetPoints().First().position == snap_pos ||
+                            check_spline.GetPoints().Last().position == snap_pos) &&
+                            !check_spline.Fixed)
+                        {
+                            UnityEngine.Debug.LogWarning("Join 2-crossroad!");
+
+                            MergeSplines(check_spline, selected_spline);
+                        }
+                        else
+                        {
+                            UnityEngine.Debug.LogWarning("Join 3-crossroad!");
+
+                            SplinePoint[] po = check_spline.GetPoints();
+                            int index = 0;
+
+                            for (int i = 0; i < po.Length; i++)
+                            {
+                                if (po[i].position == snap_pos)
+                                {
+                                    index = i;
+                                }
+                            }
+
+                            SplineComputer new_spline = SplitSpline(index, check_spline);
+                        }
+                    }
                 }
             }
             else
@@ -530,48 +584,6 @@ public class CreatePathManager : MonoBehaviour
         return -1;
     }
 
-    // Get Point Ref with position.
-    SplinePoint getSplinePoint(Vector3 pos)
-    {
-        SplineComputer[] spline_list = GameObject.FindObjectsOfType<SplineComputer>();
-
-        foreach (SplineComputer spline in spline_list)
-        {
-            SplinePoint[] points = spline.GetPoints();
-
-            for (int i = 0; i < points.Length; i++)
-            {
-                if (pos == points[i].position)
-                {
-                    return points[i];
-                }
-            }
-        }
-
-        return new SplinePoint();
-    }
-
-    // Get SplineComputer with position.
-    SplineComputer getSplineComputer(Vector3 pos)
-    {
-        SplineComputer[] spline_list = GameObject.FindObjectsOfType<SplineComputer>();
-
-        foreach (SplineComputer spline in spline_list)
-        {
-            SplinePoint[] points = spline.GetPoints();
-
-            for (int i = 0; i < points.Length; i++)
-            {
-                if (pos == points[i].position)
-                {
-                    return spline;
-                }
-            }
-        }
-
-        return new SplineComputer();
-    }
-
     List<SplineComputer> getSplineComputers(Vector3 pos)
     {
         SplineComputer[] spline_list = GameObject.FindObjectsOfType<SplineComputer>();
@@ -696,6 +708,28 @@ public class CreatePathManager : MonoBehaviour
 
             return s1;
         }
+        else if (s1.GetPoints().First().position == s2.GetPoints().First().position)
+        {
+            UnityEngine.Debug.LogWarning("Reverse Merge 2");
+            SplinePoint[] points = s1.GetPoints();
+            SplinePoint[] points2 = s2.GetPoints();
+
+            int index = 0;
+
+            for (int i = 0; i < points.Length; i++)
+            {
+                s1.SetPoint(i + points2.Length - 1, points[i]);
+            }
+            for (int i = points2.Length - 1; i >= 1; i--)
+            {
+                s1.SetPoint(index, points2[i]);
+                index++;
+            }
+
+            Destroy(s2.gameObject);
+
+            return s1;
+        }
         else if (s1.GetPoints().Last().position == s2.GetPoints().First().position)
         {
             // Straight Merge
@@ -709,7 +743,26 @@ public class CreatePathManager : MonoBehaviour
                 index++;
             }
 
+            Destroy(s2.gameObject);
+           
             return s1;
+        }
+        else if (s1.GetPoints().First().position == s2.GetPoints().Last().position)
+        {
+            UnityEngine.Debug.LogWarning("Straight Merge 2");
+            int index = s2.GetPoints().Length;
+
+            SplinePoint[] points = s1.GetPoints();
+
+            for (int i = 1; i <= points.Length - 1; i++)
+            {
+                s2.SetPoint(index, points[i]);
+                index++;
+            }
+
+            Destroy(s1.gameObject);
+
+            return s2;
         }
         else
         {
@@ -974,6 +1027,9 @@ public class CreatePathManager : MonoBehaviour
                         }
                         else
                         {
+                            UnityEngine.Debug.LogWarning("FIX");
+                            selected_spline = spline;
+
                             foreach (Crossroad crossroad in crossroads)
                             {
                                 if (snap_pos == crossroad.getPosition())
