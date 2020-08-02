@@ -52,7 +52,7 @@ MonoBehaviour:
   billboardThickness: 0
   isNewlyCreated: 0
   Fixed: 0
-  multithreaded: 0
+  multithreaded: 1
   rebuildOnAwake: 0
   updateMode: 0
   triggerGroups: []
@@ -73,13 +73,13 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    sampleRate: 500
+    sampleRate: 10
   _rawSamples: []
   _transformedSamples: []
   sampleCollection:
     samples: []
     optimizedIndices: 
-    sampleMode: 1
+    sampleMode: 0
     clipFrom: 0
     clipTo: 1
     loopSamples: 0
@@ -110,7 +110,7 @@ MonoBehaviour:
   pointsDirty: 
   _optimizeAngleThreshold: 0.5
   _space: 0
-  _sampleMode: 1
+  _sampleMode: 0
   subscribers:
   - {fileID: 8353213387941314489}
   nodes: []

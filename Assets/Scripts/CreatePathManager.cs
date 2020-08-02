@@ -498,13 +498,6 @@ public class CreatePathManager : MonoBehaviour
                     {
                         new_index++;
                     }
-
-                    // TODO - Change rebuild update time interval.
-                    // Rebuild All Splines at appending update.
-                    foreach (SplineComputer com in GameObject.FindObjectsOfType<SplineComputer>())
-                    {
-                        com.Rebuild(true);
-                    }
                 }
             }
 
@@ -512,10 +505,27 @@ public class CreatePathManager : MonoBehaviour
             {
                 spline_computer.Rebuild(true);
             }
+
+            if (cross_new_spline)
+            {
+                cross_new_spline.Rebuild(true);
+            }
+
+            if (cross_old_spline)
+            {
+                cross_old_spline.Rebuild(true);
+            }
+
+            if (selected_spline)
+            {
+                selected_spline.Rebuild(true);
+            }
         }
         else if (Input.GetMouseButtonUp(0))
         {
             spline_computer = null;
+            cross_old_spline = null;
+            cross_new_spline = null;
 
             selected_spline = null;
             selected_index = 0;
@@ -537,11 +547,6 @@ public class CreatePathManager : MonoBehaviour
 
                 RemovePoint(new_index - 1);
                 new_index--;
-            }
-
-            if (spline_computer)
-            {
-                spline_computer.Rebuild(true);
             }
         }
     }
@@ -921,19 +926,19 @@ public class CreatePathManager : MonoBehaviour
             {
                 if (spl.GetPoints().Last().position == cros.getPosition())
                 {
-                    UnityEngine.Debug.LogWarning("1");
+                    // UnityEngine.Debug.LogWarning("1");
                     int last_index = spl.GetPoints().Length - 1;
 
-                    Instantiate(debugobj2, spl.GetPoint(last_index - 1).position, Quaternion.identity);
+                    // Instantiate(debugobj2, spl.GetPoint(last_index - 1).position, Quaternion.identity);
 
                     Vector3 dir = spl.GetPoint(last_index - 1).position - cros.getPosition();
                     dirs.Add(dir);
                 }
                 else if (spl.GetPoints().First().position == cros.getPosition())
                 {
-                    UnityEngine.Debug.LogWarning("2");
+                    // UnityEngine.Debug.LogWarning("2");
 
-                    Instantiate(debugobj2, spl.GetPoint(1).position, Quaternion.identity);
+                    // Instantiate(debugobj2, spl.GetPoint(1).position, Quaternion.identity);
 
                     Vector3 dir = spl.GetPoint(1).position - cros.getPosition();
                     dirs.Add(dir);
@@ -942,7 +947,7 @@ public class CreatePathManager : MonoBehaviour
                 {
                     UnityEngine.Debug.LogWarning("ERROR");
 
-                    Instantiate(debugobj, spl.GetPoints().Last().position, Quaternion.identity);
+                    // Instantiate(debugobj, spl.GetPoints().Last().position, Quaternion.identity);
                 }
             }
 
