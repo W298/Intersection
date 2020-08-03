@@ -46,36 +46,33 @@ public class CreatePathManager : MonoBehaviour
     public enum JOINMODE { TO3, TO4, HEAD, NONE };
 
     private Camera cm;
-    public SplineComputer spline_computer;
-
     public SplineComputer SplinePrefab;
     public GameObject debugobj;
     public GameObject debugobj2;
-    public int snapsize = 10;
-    public MODE current_mode = MODE.NONE;
 
+    public int snapsize = 10;
     private Vector3 def_normal = new Vector3(0, 1, 0);
     private float def_y = 0.0f;
+    public float divider = 7.2f;
+
+    public SplineComputer current_spline;
+    public MODE current_mode = MODE.NONE;
+    private JOINMODE joinmode = JOINMODE.NONE;
+    public int new_index = 0;
+
     public float last_x;
     public float last_z;
     public Vector3 last_pos;
-    public int new_index = 0;
     private Vector3 pos;
     public Vector3 snap_pos;
-    private bool isJoin = false;
-    private JOINMODE joinmode = JOINMODE.NONE;
+
     public SplineComputer selected_spline;
     public int selected_index = 0;
     public Crossroad selected_crossroad;
-
-    public float clean_value = 0.139f;
-
-    public List<Crossroad> crossroads = new List<Crossroad>();
-
     public SplineComputer cross_old_spline;
     public SplineComputer cross_new_spline;
 
-    public float divider = 7.2f;
+    public List<Crossroad> crossroads = new List<Crossroad>();
 
     float SnapGrid(float value, int snapsize)
     {
@@ -194,13 +191,13 @@ public class CreatePathManager : MonoBehaviour
     void SpawnPath()
     {
         UnityEngine.Debug.LogWarning("Spawn Path!");
-        if (spline_computer)
+        if (current_spline)
         {
-            spline_computer = null;
+            current_spline = null;
             new_index = 0;
         }
 
-        spline_computer = Instantiate(SplinePrefab, pos, Quaternion.identity);
+        current_spline = Instantiate(SplinePrefab, pos, Quaternion.identity);
     }
 
     // Spawn SplineComputer independently.
@@ -217,18 +214,18 @@ public class CreatePathManager : MonoBehaviour
             float x = SnapToGridPoint(pos, snapsize).x;
             float z = SnapToGridPoint(pos, snapsize).z;
 
-            int last_index = spline_computer.GetPoints().Length - 1;
+            int last_index = current_spline.GetPoints().Length - 1;
 
             bool cond = CheckAppendVaild(
-                       spline_computer.GetPoint(last_index - 1).position,
-                       spline_computer.GetPoint(last_index).position,
+                       current_spline.GetPoint(last_index - 1).position,
+                       current_spline.GetPoint(last_index).position,
                        new Vector3(x, 0, z));
 
-            if (cond || spline_computer.GetPoints().Length == 1)
+            if (cond || current_spline.GetPoints().Length == 1)
             {
-                spline_computer.SetPointNormal(new_index, def_normal);
-                spline_computer.SetPointSize(new_index, 1);
-                spline_computer.SetPointPosition(new_index, new Vector3(x, def_y, z));
+                current_spline.SetPointNormal(new_index, def_normal);
+                current_spline.SetPointSize(new_index, 1);
+                current_spline.SetPointPosition(new_index, new Vector3(x, def_y, z));
 
                 last_x = x;
                 last_z = z;
@@ -264,35 +261,35 @@ public class CreatePathManager : MonoBehaviour
     // Body of this function refered DeletePointModule.cs
     void RemovePoint(int index)
     {
-        SplinePoint[] p = spline_computer.spline.points;
+        SplinePoint[] p = current_spline.spline.points;
 
         if (index < p.Length && index >= 0)
         {
             ArrayUtility.RemoveAt(ref p, index);
-            spline_computer.spline.points = p;
+            current_spline.spline.points = p;
         }
         else
         {
             UnityEngine.Debug.LogError("Out of Index! (RemovePoint)");
         }
 
-        if (spline_computer)
+        if (current_spline)
         {
-            spline_computer.Rebuild(true);
+            current_spline.Rebuild(true);
         }
     }
 
     // Remove point with point ref.
     void RemovePoint(SplinePoint point)
     {
-        SplinePoint[] p = spline_computer.spline.points;
+        SplinePoint[] p = current_spline.spline.points;
         
         ArrayUtility.RemoveAt(ref p, ArrayUtility.IndexOf(p, point));
-        spline_computer.spline.points = p;
+        current_spline.spline.points = p;
 
-        if (spline_computer)
+        if (current_spline)
         {
-            spline_computer.Rebuild(true);
+            current_spline.Rebuild(true);
         }
     }
 
@@ -317,9 +314,9 @@ public class CreatePathManager : MonoBehaviour
 
         SpawnPath();
 
-        if (spline_computer)
+        if (current_spline)
         {
-            spline_computer.Rebuild(true);
+            current_spline.Rebuild(true);
         }
         
         AppendPath();
@@ -397,25 +394,25 @@ public class CreatePathManager : MonoBehaviour
                     SplineComputer check_spline = null;
                     foreach (SplineComputer spline in getSplineComputers(snap_pos))
                     {
-                        if (spline != spline_computer)
+                        if (spline != current_spline)
                         {
                             check_spline = spline;
                         }
                     }
 
-                    if (check_spline != null && check_spline != spline_computer)
+                    if (check_spline != null && check_spline != current_spline)
                     {
                         if ((check_spline.GetPoints().First().position == snap_pos ||
                             check_spline.GetPoints().Last().position == snap_pos) &&
                             !check_spline.Fixed)
                         {
-                            UnityEngine.Debug.LogWarning("Join 2-crossroad!");
+                            UnityEngine.Debug.LogWarning("Join 2-roads (APPEND)");
 
-                            MergeSplines(check_spline, spline_computer);
+                            MergeSplines(check_spline, current_spline);
                         }
                         else
                         {
-                            UnityEngine.Debug.LogWarning("Join 3-crossroad!");
+                            UnityEngine.Debug.LogWarning("Join 3-crossroad (APPEND)");
 
                             SplinePoint[] points = check_spline.GetPoints();
                             int index = 0;
@@ -429,68 +426,49 @@ public class CreatePathManager : MonoBehaviour
                             }
 
                             SplineComputer new_spline = SplitSpline(index, check_spline);
+
+                            Crossroad crossroad = new Crossroad();
+                            crossroad.addRoad(new_spline);
+                            crossroad.addRoad(check_spline);
+                            crossroad.addRoad(current_spline);
+                            crossroad.setPosition(new_spline.GetPoint(0).position);
+
+                            crossroads.Add(crossroad);
                         }
                     }
 
-                    if (isJoin)
+                    if (joinmode != JOINMODE.NONE)
                     {
                         if (joinmode == JOINMODE.TO3)
                         {
-                            UnityEngine.Debug.LogWarning("JOIN 3");
+                            UnityEngine.Debug.LogWarning("Join 3-crossroad (BUILD)");
+
                             // Split
                             SplineComputer temp_spline = SplitSpline(selected_index, selected_spline);
                             cross_new_spline = temp_spline;
                             cross_old_spline = selected_spline;
 
-                            new_index++;
-
                             Crossroad crossroad = new Crossroad();
                             crossroad.addRoad(cross_new_spline);
                             crossroad.addRoad(cross_old_spline);
-                            crossroad.addRoad(spline_computer);
+                            crossroad.addRoad(current_spline);
                             crossroad.setPosition(cross_new_spline.GetPoint(0).position);
 
                             crossroads.Add(crossroad);
 
                             Instantiate(debugobj2, crossroad.getPosition(), Quaternion.identity);
 
-                            isJoin = false;
                             joinmode = JOINMODE.NONE;
                             selected_spline = null;
+                            new_index++;
                         }
                         else if (joinmode == JOINMODE.TO4)
                         {
-                            spline_computer.GetComponent<SplineMesh>().GetChannel(2).clipFrom = clean_value;
-                            spline_computer.GetComponent<SplineMesh>().GetChannel(4).clipFrom = clean_value;
+                            UnityEngine.Debug.LogWarning("Join 4-crossroad (BUILD)");
 
-                            spline_computer.GetComponent<SplineMesh>().GetChannel(3).clipFrom = clean_value;
-                            spline_computer.GetComponent<SplineMesh>().GetChannel(5).clipFrom = clean_value;
-
-                            spline_computer.GetComponent<SplineMesh>().GetChannel(1).clipFrom = clean_value;
-
-                            List<SplineComputer> splines = selected_crossroad.getRoads();
-
-                            foreach (SplineComputer spline in splines)
-                            {
-                                Vector3 dir = spline_computer.GetPoint(1).position - spline_computer.GetPoint(0).position;
-                                Vector3 dir2 = spline.GetPoint(1).position - spline.GetPoint(0).position;
-
-                                if (isVectorVertical(dir, dir2))
-                                {
-                                    if (isVectorGoClockwise(dir, dir2))
-                                    {
-                                        // 시작부븐 왼쪽
-                                    }
-                                    else
-                                    {
-                                        // 끝부분 오른쪽
-                                    }
-                                }
-                            }
+                            selected_crossroad.addRoad(current_spline);
 
                             new_index++;
-
-                            isJoin = false;
                             joinmode = JOINMODE.NONE;
                         }
                     }
@@ -501,9 +479,9 @@ public class CreatePathManager : MonoBehaviour
                 }
             }
 
-            if (spline_computer)
+            if (current_spline)
             {
-                spline_computer.Rebuild(true);
+                current_spline.Rebuild(true);
             }
 
             if (cross_new_spline)
@@ -523,7 +501,7 @@ public class CreatePathManager : MonoBehaviour
         }
         else if (Input.GetMouseButtonUp(0))
         {
-            spline_computer = null;
+            current_spline = null;
             cross_old_spline = null;
             cross_new_spline = null;
 
@@ -537,7 +515,6 @@ public class CreatePathManager : MonoBehaviour
 
             joinmode = JOINMODE.NONE;
             current_mode = MODE.BUILD;
-            isJoin = false;
         }
         else if (Input.GetMouseButton(1))
         {
@@ -554,7 +531,7 @@ public class CreatePathManager : MonoBehaviour
     // Get Point index with position.
     int GetPointIndex(Vector3 pos)
     {
-        SplinePoint[] points = spline_computer.GetPoints();
+        SplinePoint[] points = current_spline.GetPoints();
 
         for (int i = 0; i < points.Length; i++)
         {
@@ -587,6 +564,19 @@ public class CreatePathManager : MonoBehaviour
         }
 
         return return_list;
+    }
+
+    SplinePoint getSplinePoint(Vector3 pos, SplineComputer spline)
+    {
+        foreach (SplinePoint point in spline.GetPoints())
+        {
+            if (point.position == pos)
+            {
+                return point;
+            }
+        }
+
+        return new SplinePoint();
     }
 
     int getSplinePointIndex(SplineComputer spline, SplinePoint point)
@@ -754,157 +744,6 @@ public class CreatePathManager : MonoBehaviour
         }
     }
 
-    // Clean Joined Path Line.
-    void CleanLines()
-    {
-        Vector3 dir = spline_computer.GetPoint(1).position - spline_computer.GetPoint(0).position;
-        Vector3 cross_old_spline_dir = cross_old_spline.GetPoint(1).position - cross_old_spline.GetPoint(0).position;
-        Vector3 cross_new_spline_dir = cross_new_spline.GetPoint(1).position - cross_new_spline.GetPoint(0).position;
-
-        if (isVectorParallel(cross_old_spline_dir, cross_new_spline_dir))
-        {
-            if (isVectorVertical(cross_old_spline_dir, dir))
-            {
-                if (isVectorGoClockwise(cross_old_spline_dir, dir))
-                {
-                    UnityEngine.Debug.LogWarning("90 DEG C");
-                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 1 - clean_value;
-                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(4).clipTo = 1 - clean_value;
-
-                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = clean_value;
-                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(4).clipFrom = clean_value;
-
-                    spline_computer.GetComponent<SplineMesh>().GetChannel(2).clipFrom = clean_value;
-                    spline_computer.GetComponent<SplineMesh>().GetChannel(4).clipFrom = clean_value;
-
-                    spline_computer.GetComponent<SplineMesh>().GetChannel(3).clipFrom = clean_value;
-                    spline_computer.GetComponent<SplineMesh>().GetChannel(5).clipFrom = clean_value;
-
-                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(1).clipTo = 1 - clean_value;
-                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(1).clipFrom = clean_value;
-                    spline_computer.GetComponent<SplineMesh>().GetChannel(1).clipFrom = clean_value;
-                }
-                else
-                {
-                    UnityEngine.Debug.LogWarning("90 DEG CC");
-                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(3).clipTo = 1 - clean_value;
-                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(5).clipTo = 1 - clean_value;
-
-                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(3).clipFrom = clean_value;
-                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(5).clipFrom = clean_value;
-
-                    spline_computer.GetComponent<SplineMesh>().GetChannel(2).clipFrom = clean_value;
-                    spline_computer.GetComponent<SplineMesh>().GetChannel(4).clipFrom = clean_value;
-
-                    spline_computer.GetComponent<SplineMesh>().GetChannel(3).clipFrom = clean_value;
-                    spline_computer.GetComponent<SplineMesh>().GetChannel(5).clipFrom = clean_value;
-
-                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(1).clipTo = 1 - clean_value;
-                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(1).clipFrom = clean_value;
-                    spline_computer.GetComponent<SplineMesh>().GetChannel(1).clipFrom = clean_value;
-                }
-            }
-            else
-            {
-                // TODO - Clean Crossed Join Line
-                UnityEngine.Debug.LogWarning("DIR CROSS JOIN");
-            }
-        }
-        else
-        {
-            if (isVectorParallel(cross_old_spline_dir, dir))
-            {
-                if (isVectorGoClockwise(cross_old_spline_dir, cross_new_spline_dir))
-                {
-                    UnityEngine.Debug.LogWarning("CASE 1");
-                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 1 - clean_value;
-                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(4).clipTo = 1 - clean_value;
-
-                    spline_computer.GetComponent<SplineMesh>().GetChannel(2).clipFrom = clean_value;
-                    spline_computer.GetComponent<SplineMesh>().GetChannel(4).clipFrom = clean_value;
-
-                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = clean_value;
-                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(4).clipFrom = clean_value;
-
-                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(3).clipFrom = clean_value;
-                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(5).clipFrom = clean_value;
-
-                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(1).clipTo = 1 - clean_value;
-                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(1).clipFrom = clean_value;
-                    spline_computer.GetComponent<SplineMesh>().GetChannel(1).clipFrom = clean_value;
-                }
-                else
-                {
-                    UnityEngine.Debug.LogWarning("CASE 2");
-                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(3).clipTo = 1 - clean_value;
-                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(5).clipTo = 1 - clean_value;
-
-                    spline_computer.GetComponent<SplineMesh>().GetChannel(3).clipFrom = clean_value;
-                    spline_computer.GetComponent<SplineMesh>().GetChannel(5).clipFrom = clean_value;
-
-                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = clean_value;
-                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(4).clipFrom = clean_value;
-
-                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(3).clipFrom = clean_value;
-                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(5).clipFrom = clean_value;
-
-                    cross_old_spline.GetComponent<SplineMesh>().GetChannel(1).clipTo = 1 - clean_value;
-                    cross_new_spline.GetComponent<SplineMesh>().GetChannel(1).clipFrom = clean_value;
-                    spline_computer.GetComponent<SplineMesh>().GetChannel(1).clipFrom = clean_value;
-                }
-            }
-            else
-            {
-                if (isVectorParallel(cross_new_spline_dir, dir))
-                {
-                    if (isVectorGoClockwise(cross_old_spline_dir, dir))
-                    {
-                        UnityEngine.Debug.LogWarning("CASE 3");
-                        cross_new_spline.GetComponent<SplineMesh>().GetChannel(3).clipFrom = clean_value;
-                        cross_new_spline.GetComponent<SplineMesh>().GetChannel(5).clipFrom = clean_value;
-
-                        spline_computer.GetComponent<SplineMesh>().GetChannel(2).clipFrom = clean_value;
-                        spline_computer.GetComponent<SplineMesh>().GetChannel(4).clipFrom = clean_value;
-
-                        cross_old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 1 - clean_value;
-                        cross_old_spline.GetComponent<SplineMesh>().GetChannel(4).clipTo = 1 - clean_value;
-
-                        cross_old_spline.GetComponent<SplineMesh>().GetChannel(3).clipTo = 1 - clean_value;
-                        cross_old_spline.GetComponent<SplineMesh>().GetChannel(5).clipTo = 1 - clean_value;
-
-                        cross_old_spline.GetComponent<SplineMesh>().GetChannel(1).clipTo = 1 - clean_value;
-                        cross_new_spline.GetComponent<SplineMesh>().GetChannel(1).clipFrom = clean_value;
-                        spline_computer.GetComponent<SplineMesh>().GetChannel(1).clipFrom = clean_value;
-                    }
-                    else
-                    {
-                        UnityEngine.Debug.LogWarning("CASE 4");
-                        cross_new_spline.GetComponent<SplineMesh>().GetChannel(2).clipFrom = clean_value;
-                        cross_new_spline.GetComponent<SplineMesh>().GetChannel(4).clipFrom = clean_value;
-
-                        spline_computer.GetComponent<SplineMesh>().GetChannel(3).clipFrom = clean_value;
-                        spline_computer.GetComponent<SplineMesh>().GetChannel(5).clipFrom = clean_value;
-
-                        cross_old_spline.GetComponent<SplineMesh>().GetChannel(2).clipTo = 1 - clean_value;
-                        cross_old_spline.GetComponent<SplineMesh>().GetChannel(4).clipTo = 1 - clean_value;
-
-                        cross_old_spline.GetComponent<SplineMesh>().GetChannel(3).clipTo = 1 - clean_value;
-                        cross_old_spline.GetComponent<SplineMesh>().GetChannel(5).clipTo = 1 - clean_value;
-
-                        cross_old_spline.GetComponent<SplineMesh>().GetChannel(1).clipTo = 1 - clean_value;
-                        cross_new_spline.GetComponent<SplineMesh>().GetChannel(1).clipFrom = clean_value;
-                        spline_computer.GetComponent<SplineMesh>().GetChannel(1).clipFrom = clean_value;
-                    }
-                }
-                else
-                {
-                    // TODO - Clean Crossed Join Line 2
-                    UnityEngine.Debug.LogWarning("3 CROSS JOIN");
-                }
-            }
-        }
-    }
-
     void Start()
     {
         cm = GetComponentInChildren<Camera>();
@@ -1058,108 +897,84 @@ public class CreatePathManager : MonoBehaviour
             {
                 SplineComputer[] spline_list = GameObject.FindObjectsOfType<SplineComputer>();
 
-                // Check Mouse Position Value
-                bool _isJoin = false;
+                Crossroad crossroad = null;
 
-                if (spline_list.Length != 0)
+                foreach (Crossroad cros in crossroads)
                 {
-                    bool isFound = false;
+                    if (snap_pos == cros.getPosition())
+                    {
+                        crossroad = cros;
+                        break;
+                    }
+                }
 
-                    foreach (SplineComputer spline in spline_list)
-                    {           
-                        if (/*!spline.Fixed*/ true)
+                if (crossroad != null)
+                {
+                    if (crossroad.getRoads().Count == 3)
+                    {
+                        joinmode = JOINMODE.TO4;
+
+                        selected_crossroad = crossroad;
+
+                        runBuildMode();
+                    }
+                }
+                else
+                {
+                    List<SplineComputer> splines = getSplineComputers(snap_pos);
+                    SplineComputer spline = null;
+
+                    if (splines.Count == 1)
+                    {
+                        spline = splines[0];
+
+                        SplinePoint point = getSplinePoint(snap_pos, spline);
+                        int point_index = getSplinePointIndex(spline, point);
+
+                        if (point_index != -1)
                         {
-                            SplinePoint[] points = spline.GetPoints();
-
-                            for (int i = 0; i < points.Length; i++)
+                            if (point_index == spline.GetPoints().Count() - 1)
                             {
-                                if (snap_pos == points[i].position)
-                                {
-                                    // Append To Tail.
-                                    if (snap_pos == points.Last().position)
-                                    {
-                                        UnityEngine.Debug.LogWarning("Tail Append");
-                                        _isJoin = true;
-                                        isFound = true;
+                                UnityEngine.Debug.LogWarning("Tail Append");
 
-                                        new_index = spline.GetPoints().Length - 1;
-                                        spline_computer = spline;
+                                new_index = point_index;
+                                current_spline = spline;
 
-                                        current_mode = MODE.APPEND;
+                                current_mode = MODE.APPEND;
+                            }
+                            else if (point_index == 0)
+                            {
+                                UnityEngine.Debug.LogWarning("Head Append");
 
-                                        break;
-                                    }
-                                    // Append To Head.
-                                    else if (snap_pos == points.First().position)
-                                    {
-                                        UnityEngine.Debug.LogWarning("Head Append");
+                                selected_spline = spline;
 
-                                        _isJoin = true;
-                                        isFound = true;
+                                current_mode = MODE.APPEND;
+                                joinmode = JOINMODE.HEAD;
 
-                                        selected_spline = spline;
-                                        current_mode = MODE.APPEND;
+                                last_x = snap_pos.x;
+                                last_z = snap_pos.z;
+                            }
+                            else
+                            {
+                                UnityEngine.Debug.LogWarning("Split for Join");
 
-                                        isJoin = true;
-                                        joinmode = JOINMODE.HEAD;
+                                selected_spline = spline;
+                                selected_index = point_index;
 
-                                        last_x = snap_pos.x;
-                                        last_z = snap_pos.z;
+                                joinmode = JOINMODE.TO3;
 
-                                        break;
-                                    }
-
-                                    // Split and Join.
-                                    else
-                                    {
-                                        UnityEngine.Debug.LogWarning("Split");
-
-                                        _isJoin = true;
-                                        isJoin = true;
-                                        joinmode = JOINMODE.TO3;
-
-                                        selected_spline = spline;
-                                        selected_index = i;
-
-                                        runBuildMode();
-                                        isFound = true;
-
-                                        break;
-                                    }
-                                }
+                                runBuildMode();
                             }
                         }
                         else
                         {
-                            UnityEngine.Debug.LogWarning("FIX");
-                            selected_spline = spline;
-
-                            foreach (Crossroad crossroad in crossroads)
-                            {
-                                if (snap_pos == crossroad.getPosition())
-                                {
-                                    UnityEngine.Debug.LogWarning("Find");
-                                    _isJoin = true;
-                                    isJoin = true;
-                                    joinmode = JOINMODE.TO4;
-
-                                    selected_crossroad = crossroad;
-
-                                    runBuildMode();
-                                    isFound = true;
-
-                                    break;
-                                }
-                            }
+                            UnityEngine.Debug.LogWarning("ERROR - Can't find Point in Spline");
                         }
-
-                        if (isFound) { break; }
                     }
-                }
-
-                if (!_isJoin)
-                {
-                    runBuildMode();
+                    else if (splines.Count == 0)
+                    {
+                        runBuildMode();
+                    }
                 }
             }
         }
