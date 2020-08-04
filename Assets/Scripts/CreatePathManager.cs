@@ -34,6 +34,17 @@ public class Crossroad
         position = pos;
     }
 
+    public void logInfo()
+    {
+        string values = "";
+
+        foreach (var road in roads)
+        {
+            values += road.position + " ";
+        }
+        UnityEngine.Debug.LogWarning("Crossroad Info : " + values);
+    }
+
     public void Update()
     {
 
@@ -258,7 +269,7 @@ public class CreatePathManager : MonoBehaviour
 
     // WARNING - To make this function work, I changed below thing.
     // CHANGED - Changed `spline` variable in SplineComputer to public (from private)
-    // Body of this function refered DeletePointModule.cs
+    // Body of this function referred DeletePointModule.cs
     void RemovePoint(int index)
     {
         SplinePoint[] p = current_spline.spline.points;
@@ -293,7 +304,7 @@ public class CreatePathManager : MonoBehaviour
         }
     }
 
-    // Simply Raytrace and Set mouse position.
+    // Simply Ray-trace and Set mouse position.
     void RayTrace()
     {
         Ray ray = cm.ScreenPointToRay(Input.mousePosition);
@@ -362,26 +373,25 @@ public class CreatePathManager : MonoBehaviour
                             check_spline.GetPoints().Last().position == snap_pos) &&
                             !check_spline.Fixed)
                         {
-                            UnityEngine.Debug.LogWarning("Join 2-crossroad!");
+                            UnityEngine.Debug.LogWarning("Join 2-crossroad (HEAD)");
 
                             MergeSplines(check_spline, selected_spline);
                         }
                         else
                         {
-                            UnityEngine.Debug.LogWarning("Join 3-crossroad!");
+                            UnityEngine.Debug.LogWarning("Join 3-crossroad (HEAD)");
 
-                            SplinePoint[] po = check_spline.GetPoints();
-                            int index = 0;
-
-                            for (int i = 0; i < po.Length; i++)
-                            {
-                                if (po[i].position == snap_pos)
-                                {
-                                    index = i;
-                                }
-                            }
+                            int index = getSplinePointIndex(check_spline, getSplinePoint(snap_pos, check_spline));
 
                             SplineComputer new_spline = SplitSpline(index, check_spline);
+
+                            Crossroad crossroad = new Crossroad();
+                            crossroad.addRoad(check_spline);
+                            crossroad.addRoad(new_spline);
+                            crossroad.addRoad(selected_spline);
+                            crossroad.setPosition(new_spline.GetPoint(0).position);
+
+                            crossroads.Add(crossroad);
                         }
                     }
                 }
@@ -443,10 +453,40 @@ public class CreatePathManager : MonoBehaviour
                         {
                             UnityEngine.Debug.LogWarning("Join 3-crossroad (BUILD)");
 
-                            // Split
-                            SplineComputer temp_spline = SplitSpline(selected_index, selected_spline);
-                            cross_new_spline = temp_spline;
-                            cross_old_spline = selected_spline;
+                            // Check If selected spline referenced by another crossroad
+                            Crossroad refCrossroad = null;
+
+                            foreach (var cros in crossroads)
+                            {
+                                if (cros.getRoads().Contains(selected_spline))
+                                {
+                                    refCrossroad = cros;
+                                    break;
+                                }
+                            }
+
+                            if (refCrossroad != null)
+                            {
+                                if (refCrossroad.getPosition() == selected_spline.GetPoints().Last().position)
+                                {
+                                    UnityEngine.Debug.LogWarning("Last");
+
+                                    cross_new_spline = SplitSpline(selected_index, selected_spline, true);
+                                    cross_old_spline = selected_spline;
+                                }
+                                else if (refCrossroad.getPosition() == selected_spline.GetPoints().First().position)
+                                {
+                                    UnityEngine.Debug.LogWarning("First");
+
+                                    cross_new_spline = SplitSpline(selected_index, selected_spline);
+                                    cross_old_spline = selected_spline;
+                                }
+                            }
+                            else
+                            {
+                                cross_new_spline = SplitSpline(selected_index, selected_spline);
+                                cross_old_spline = selected_spline;
+                            }
 
                             Crossroad crossroad = new Crossroad();
                             crossroad.addRoad(cross_new_spline);
@@ -455,8 +495,6 @@ public class CreatePathManager : MonoBehaviour
                             crossroad.setPosition(cross_new_spline.GetPoint(0).position);
 
                             crossroads.Add(crossroad);
-
-                            Instantiate(debugobj2, crossroad.getPosition(), Quaternion.identity);
 
                             joinmode = JOINMODE.NONE;
                             selected_spline = null;
@@ -528,7 +566,7 @@ public class CreatePathManager : MonoBehaviour
         }
     }
     
-    // Get Point index with position.
+    // Get Point count with position.
     int GetPointIndex(Vector3 pos)
     {
         SplinePoint[] points = current_spline.GetPoints();
@@ -595,27 +633,42 @@ public class CreatePathManager : MonoBehaviour
     }
 
     // Split Spline and return newly spawned SplineComputer.
-    SplineComputer SplitSpline(int index, SplineComputer spline)
+    SplineComputer SplitSpline(int index, SplineComputer spline, bool reverse = false)
     {
-        SplinePoint[] originPoints = spline.GetPoints();
+        var oldPoints = new List<SplinePoint>();
+        var newPoints = new List<SplinePoint>();
 
-        List<SplinePoint> old_points = new List<SplinePoint>();
-        List<SplinePoint> new_points = new List<SplinePoint>();
+        var originPoints = spline.GetPoints();
 
-        for (int j = 0; j <= index; j++)
+        if (!reverse)
         {
-            old_points.Add(originPoints[j]);
+            for (int j = 0; j <= index; j++)
+            {
+                oldPoints.Add(originPoints[j]);
+            }
+
+            for (int j = index; j < originPoints.Length; j++)
+            {
+                newPoints.Add(originPoints[j]);
+            }
+        }
+        else
+        {
+            for (int i = 0; i <= index; i++)
+            {
+                newPoints.Add(originPoints[i]);
+            }
+
+            for (int i = index; i < originPoints.Length; i++)
+            {
+                oldPoints.Add(originPoints[i]);
+            }
         }
 
-        for (int j = index; j < originPoints.Length; j++)
-        {
-            new_points.Add(originPoints[j]);
-        }
+        spline.SetPoints(oldPoints.ToArray());
 
-        spline.SetPoints(old_points.ToArray());
-
-        SplineComputer newSpline = InsPath(new_points[0].position);
-        newSpline.SetPoints(new_points.ToArray());
+        var newSpline = InsPath(newPoints[0].position);
+        newSpline.SetPoints(newPoints.ToArray());
 
         spline.Rebuild(true);
         newSpline.Rebuild(true);
@@ -624,7 +677,7 @@ public class CreatePathManager : MonoBehaviour
     }
 
     // Check two vector create Clockwise or Counterclockwise.
-    bool isVectorGoClockwise(Vector3 from, Vector3 to)
+        bool isVectorGoClockwise(Vector3 from, Vector3 to)
     {
         if (Vector3.SignedAngle(from, to, new Vector3(0, 1, 0)) <= 0)
         {
@@ -749,6 +802,8 @@ public class CreatePathManager : MonoBehaviour
         cm = GetComponentInChildren<Camera>();
     }
 
+    public bool enable = false;
+
     void Update()
     {  
         RayTrace();
@@ -757,40 +812,57 @@ public class CreatePathManager : MonoBehaviour
         last_pos = snap_pos;
         debugobj.GetComponent<Transform>().position = snap_pos;
 
+        foreach (var cros in crossroads)
+        {
+            cros.logInfo();
+
+            List<SplineComputer> roads = cros.getRoads();
+
+            foreach (var road in roads)
+            {
+                if (road.GetPoints().Last().position == cros.getPosition())
+                {
+                    if (enable) 
+                        UnityEngine.Debug.LogWarning("1- " + road.position);
+                }
+                    
+                else if (road.GetPoints().First().position == cros.getPosition())
+                {
+                    if (enable)
+                        UnityEngine.Debug.LogWarning("2- " + road.position);
+                }
+                else
+                {
+                    if (enable)
+                        UnityEngine.Debug.LogWarning("E- " + road.position);
+                }
+            }
+        }
+
         foreach (Crossroad cros in crossroads)
         {
             List<Vector3> dirs = new List<Vector3>();
+            List<SplineComputer> roads = cros.getRoads();
 
-            foreach (SplineComputer spl in cros.getRoads())
+            for (int i = 0; i < roads.Count; i++)
             {
-                if (spl.GetPoints().Last().position == cros.getPosition())
+                if (roads[i].GetPoints().Last().position == cros.getPosition())
                 {
-                    // UnityEngine.Debug.LogWarning("1");
-                    int last_index = spl.GetPoints().Length - 1;
+                    int last_index = roads[i].GetPoints().Length - 1;
 
-                    // Instantiate(debugobj2, spl.GetPoint(last_index - 1).position, Quaternion.identity);
-
-                    Vector3 dir = spl.GetPoint(last_index - 1).position - cros.getPosition();
+                    Vector3 dir = roads[i].GetPoint(last_index - 1).position - cros.getPosition();
                     dirs.Add(dir);
                 }
-                else if (spl.GetPoints().First().position == cros.getPosition())
+                else if (roads[i].GetPoints().First().position == cros.getPosition())
                 {
-                    // UnityEngine.Debug.LogWarning("2");
-
-                    // Instantiate(debugobj2, spl.GetPoint(1).position, Quaternion.identity);
-
-                    Vector3 dir = spl.GetPoint(1).position - cros.getPosition();
+                    Vector3 dir = roads[i].GetPoint(1).position - cros.getPosition();
                     dirs.Add(dir);
                 }
                 else
                 {
-                    UnityEngine.Debug.LogWarning("ERROR");
 
-                    // Instantiate(debugobj, spl.GetPoints().Last().position, Quaternion.identity);
                 }
             }
-
-            List<SplineComputer> roads = cros.getRoads();
 
             for (int i = 0; i < roads.Count; i++)
             {

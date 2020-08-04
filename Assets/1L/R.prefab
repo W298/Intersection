@@ -46,9 +46,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 598e68924c9f6324bbfd049d3bae754c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  editorPathColor: {r: 0, g: 0, b: 0, a: 1}
-  alwaysDraw: 0
-  drawThinckness: 0
+  editorPathColor: {r: 1, g: 1, b: 1, a: 1}
+  alwaysDraw: 1
+  drawThinckness: 1
   billboardThickness: 0
   isNewlyCreated: 0
   Fixed: 0
