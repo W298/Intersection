@@ -64,6 +64,9 @@ public class CreatePathManager : MonoBehaviour
 {
     public enum MODE { BUILD, APPEND, REMOVE, NONE };
     public enum JOINMODE { TO3, TO4, HEAD, NONE };
+    public enum ROADLANE { RL1, RL2, RL3, RL4 };
+
+    public SplineComputer[] roadPrefabs;
 
     private Camera cm;
     public SplineComputer SplinePrefab;
@@ -82,6 +85,7 @@ public class CreatePathManager : MonoBehaviour
     public MODE current_mode = MODE.NONE;
     private JOINMODE joinmode = JOINMODE.NONE;
     public int new_index = 0;
+    public ROADLANE currentRoadLane = ROADLANE.RL1;
 
     public float last_x;
     public float last_z;
@@ -231,12 +235,44 @@ public class CreatePathManager : MonoBehaviour
             new_index = 0;
         }
 
+        switch (currentRoadLane)
+        {
+            case ROADLANE.RL1:
+                SplinePrefab = roadPrefabs[0];
+                break;
+            case ROADLANE.RL2:
+                SplinePrefab = roadPrefabs[1];
+                break;
+            case ROADLANE.RL3:
+                SplinePrefab = roadPrefabs[2];
+                break;
+            case ROADLANE.RL4:
+                SplinePrefab = roadPrefabs[3];
+                break;
+        }
+
         current_spline = Instantiate(SplinePrefab, pos, Quaternion.identity);
     }
 
     // Spawn SplineComputer independently.
     SplineComputer InsPath(Vector3 pos)
     {
+        switch (currentRoadLane)
+        {
+            case ROADLANE.RL1:
+                SplinePrefab = roadPrefabs[0];
+                break;
+            case ROADLANE.RL2:
+                SplinePrefab = roadPrefabs[1];
+                break;
+            case ROADLANE.RL3:
+                SplinePrefab = roadPrefabs[2];
+                break;
+            case ROADLANE.RL4:
+                SplinePrefab = roadPrefabs[3];
+                break;
+        }
+
         return Instantiate(SplinePrefab, pos, Quaternion.identity);
     }
 
@@ -988,6 +1024,15 @@ public class CreatePathManager : MonoBehaviour
         {
             UnityEngine.Debug.LogWarning("Remove Mode Enabled!");
             current_mode = MODE.REMOVE;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            currentRoadLane = ROADLANE.RL1;
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            currentRoadLane = ROADLANE.RL2;
         }
 
         if (current_mode == MODE.BUILD)

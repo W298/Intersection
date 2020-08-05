@@ -690,7 +690,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2869961281386906930, guid: c16f885deda4c1d4c9ead4c180d315b7, type: 3}
+  - {fileID: 2100000, guid: b9d34e58fe2f5da4b9bfe63dbeada3ad, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -982,7 +982,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 372d12fac049242489cd0f0ec536657f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SplinePrefab: {fileID: 8353213387941314471, guid: 0f0f7e1b6ce97cb489d678f20f53f3b7,
+  roadPrefabs:
+  - {fileID: 8353213387941314471, guid: 0f0f7e1b6ce97cb489d678f20f53f3b7, type: 3}
+  - {fileID: 7700269737332976399, guid: 96614301abe54d942b07fc21a0fae7ca, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  SplinePrefab: {fileID: 7700269737332976399, guid: 96614301abe54d942b07fc21a0fae7ca,
     type: 3}
   debugobj: {fileID: 1518576004}
   debugObj_2: {fileID: 1910153631}
@@ -993,6 +998,7 @@ MonoBehaviour:
   current_spline: {fileID: 0}
   current_mode: 0
   new_index: 0
+  currentRoadLane: 0
   last_x: 0
   last_z: 0
   last_pos: {x: 0, y: 0, z: 0}
@@ -1001,7 +1007,6 @@ MonoBehaviour:
   selected_index: 0
   cross_old_spline: {fileID: 0}
   cross_new_spline: {fileID: 0}
-  enable: 0
 --- !u!114 &2135375424
 MonoBehaviour:
   m_ObjectHideFlags: 0
