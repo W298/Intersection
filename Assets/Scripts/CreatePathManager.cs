@@ -24,6 +24,11 @@ public class Crossroad
         roads.Add(road);
     }
 
+    public void RemoveRoad(SplineComputer road)
+    {
+        roads.Remove(road);
+    }
+
     public void SetRoads(SplineComputer[] list)
     {
         if (list != null)
@@ -364,6 +369,7 @@ public class CreatePathManager : MonoBehaviour
             {
                 if (CheckSnap())
                 {
+                    // -------------------------------------------------------------------- HEAD APPEND CODE 
                     SplinePoint[] points = selected_spline.GetPoints();
 
                     for (int i = 0; i < points.Length; i++)
@@ -375,7 +381,7 @@ public class CreatePathManager : MonoBehaviour
                     selected_spline.SetPointSize(new_index, 1);
                     selected_spline.SetPointPosition(0, snap_pos);
 
-                    // Check Joining is needed during APPEND.
+                    // ----------------------------------------------------- CHECK JOIN DURING APPEND (HEAD)
                     SplineComputer check_spline = null;
                     foreach (SplineComputer spline in getSplineComputers(snap_pos))
                     {
@@ -418,7 +424,7 @@ public class CreatePathManager : MonoBehaviour
             {
                 if (AppendPath())
                 {
-                    // Check Joining is needed during APPEND.
+                    // ----------------------------------------------------- CHECK JOIN DURING APPEND (TAIL)
                     SplineComputer check_spline = null;
                     foreach (SplineComputer spline in getSplineComputers(snap_pos))
                     {
@@ -465,6 +471,7 @@ public class CreatePathManager : MonoBehaviour
                         }
                     }
 
+                    // ------------------------------------------------------------- CHECK JOIN DURING BUILD
                     if (joinmode != JOINMODE.NONE)
                     {
                         if (joinmode == JOINMODE.TO3)
@@ -478,8 +485,6 @@ public class CreatePathManager : MonoBehaviour
                             {
                                 if (refCrossroad.getPosition() == selected_spline.GetPoints().Last().position)
                                 {
-                                    UnityEngine.Debug.LogWarning("Last");
-
                                     cross_new_spline = SplitSpline(selected_index, selected_spline, true);
                                     cross_old_spline = selected_spline;
 
@@ -493,8 +498,6 @@ public class CreatePathManager : MonoBehaviour
                                 }
                                 else if (refCrossroad.getPosition() == selected_spline.GetPoints().First().position)
                                 {
-                                    UnityEngine.Debug.LogWarning("First");
-
                                     cross_new_spline = SplitSpline(selected_index, selected_spline);
                                     cross_old_spline = selected_spline;
 
@@ -756,6 +759,13 @@ public class CreatePathManager : MonoBehaviour
                 index++;
             }
 
+            var refCrossroad = crossroads.FirstOrDefault(cros => cros.getRoads().Contains(s2));
+            if (refCrossroad != null)
+            {
+                refCrossroad.RemoveRoad(s2);
+                refCrossroad.AddRoad(s1);
+            }
+
             Destroy(s2.gameObject);
 
             return s1;
@@ -778,6 +788,13 @@ public class CreatePathManager : MonoBehaviour
                 index++;
             }
 
+            var refCrossroad = crossroads.FirstOrDefault(cros => cros.getRoads().Contains(s2));
+            if (refCrossroad != null)
+            {
+                refCrossroad.RemoveRoad(s2);
+                refCrossroad.AddRoad(s1);
+            }
+
             Destroy(s2.gameObject);
 
             return s1;
@@ -793,6 +810,13 @@ public class CreatePathManager : MonoBehaviour
             {
                 s1.SetPoint(index, points[i]);
                 index++;
+            }
+
+            var refCrossroad = crossroads.FirstOrDefault(cros => cros.getRoads().Contains(s2));
+            if (refCrossroad != null)
+            {
+                refCrossroad.RemoveRoad(s2);
+                refCrossroad.AddRoad(s1);
             }
 
             Destroy(s2.gameObject);
@@ -812,6 +836,13 @@ public class CreatePathManager : MonoBehaviour
                 index++;
             }
 
+            var refCrossroad = crossroads.FirstOrDefault(cros => cros.getRoads().Contains(s1));
+            if (refCrossroad != null)
+            {
+                refCrossroad.RemoveRoad(s1);
+                refCrossroad.AddRoad(s2);
+            }
+
             Destroy(s1.gameObject);
 
             return s2;
@@ -828,8 +859,6 @@ public class CreatePathManager : MonoBehaviour
         cm = GetComponentInChildren<Camera>();
     }
 
-    public bool enable = false;
-
     void Update()
     {  
         RayTrace();
@@ -837,33 +866,6 @@ public class CreatePathManager : MonoBehaviour
         snap_pos = new Vector3(SnapGrid(pos.x, snapsize), 0, SnapGrid(pos.z, snapsize));
         last_pos = snap_pos;
         debugobj.GetComponent<Transform>().position = snap_pos;
-
-        foreach (var cros in crossroads)
-        {
-            cros.logInfo();
-
-            List<SplineComputer> roads = cros.getRoads();
-
-            foreach (var road in roads)
-            {
-                if (road.GetPoints().Last().position == cros.getPosition())
-                {
-                    if (enable) 
-                        UnityEngine.Debug.LogWarning("1- " + road.position);
-                }
-                    
-                else if (road.GetPoints().First().position == cros.getPosition())
-                {
-                    if (enable)
-                        UnityEngine.Debug.LogWarning("2- " + road.position);
-                }
-                else
-                {
-                    if (enable)
-                        UnityEngine.Debug.LogWarning("E- " + road.position);
-                }
-            }
-        }
 
         foreach (Crossroad cros in crossroads)
         {
@@ -886,7 +888,7 @@ public class CreatePathManager : MonoBehaviour
                 }
                 else
                 {
-                    debugPoint(cros.getPosition());
+                    UnityEngine.Debug.LogWarning("ERROR!");
                 }
             }
 
