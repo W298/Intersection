@@ -430,8 +430,7 @@ public class CreatePathManager : MonoBehaviour
                     if (check_spline != null && check_spline != selected_spline)
                     {
                         if ((check_spline.GetPoints().First().position == snap_pos ||
-                            check_spline.GetPoints().Last().position == snap_pos) &&
-                            !check_spline.Fixed)
+                            check_spline.GetPoints().Last().position == snap_pos))
                         {
                             UnityEngine.Debug.LogWarning("Join 2-crossroad (HEAD)");
 
@@ -473,8 +472,7 @@ public class CreatePathManager : MonoBehaviour
                     if (check_spline != null && check_spline != current_spline)
                     {
                         if ((check_spline.GetPoints().First().position == snap_pos ||
-                            check_spline.GetPoints().Last().position == snap_pos) &&
-                            !check_spline.Fixed)
+                            check_spline.GetPoints().Last().position == snap_pos))
                         {
                             UnityEngine.Debug.LogWarning("Join 2-roads (APPEND)");
 
@@ -893,6 +891,8 @@ public class CreatePathManager : MonoBehaviour
     void Start()
     {
         cm = GetComponentInChildren<Camera>();
+
+        roadPrefabs[1].GetComponent<SplineMesh>().meshReduce(6, 7);
     }
 
     void Update()
