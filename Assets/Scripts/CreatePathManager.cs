@@ -1,4 +1,5 @@
-﻿using Dreamteck;
+﻿using System.Collections;
+using Dreamteck;
 using Dreamteck.Splines;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,17 +44,6 @@ public class Crossroad
         position = pos;
     }
 
-    public void logInfo()
-    {
-        string values = "";
-
-        foreach (var road in roads)
-        {
-            values += road.position + " ";
-        }
-        UnityEngine.Debug.LogWarning("Crossroad Info : " + values);
-    }
-
     public void Update()
     {
 
@@ -75,6 +65,7 @@ public class CreatePathManager : MonoBehaviour
 
     public GameObject debugObj_3;
     public GameObject debugObj_4;
+    public GameObject textObj;
 
     public int snapsize = 10;
     private Vector3 def_normal = new Vector3(0, 1, 0);
@@ -110,6 +101,21 @@ public class CreatePathManager : MonoBehaviour
     {
         Instantiate(debugObj_3, start, Quaternion.identity);
         Instantiate(debugObj_4, end, Quaternion.identity);
+    }
+
+    public void LogTextOnPos(string text, Vector3 pos)
+    {
+        var obj = Instantiate(textObj, pos, Quaternion.Euler(90, 0, 0));
+        obj.GetComponent<TextMesh>().text = text;
+        obj.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f);
+
+        StartCoroutine(Stop());
+
+        IEnumerator Stop()
+        {
+            yield return new WaitForSeconds(0.016f);
+            Destroy(obj);
+        }
     }
 
     float SnapGrid(float value, int snapsize)
@@ -531,37 +537,32 @@ public class CreatePathManager : MonoBehaviour
                             UnityEngine.Debug.LogWarning("Join 3-crossroad (BUILD)");
 
                             // Check If selected spline referenced by another crossroad
-                            var refCrossroad = crossroads.FirstOrDefault(cros => cros.getRoads().Contains(selected_spline));
+                            var refCrossroads = crossroads.Where(cros => cros.getRoads().Contains(selected_spline)).ToList();
 
-                            if (refCrossroad != null)
+                            if (refCrossroads.Count != 0)
                             {
-                                if (refCrossroad.getPosition() == selected_spline.GetPoints().Last().position)
+                                Vector3 checkLastPos = selected_spline.GetPoints().Last().position;
+
+                                cross_new_spline = SplitSpline(selected_index, selected_spline);
+                                cross_old_spline = selected_spline;
+
+                                foreach (var refCros in refCrossroads)
                                 {
-                                    cross_new_spline = SplitSpline(selected_index, selected_spline, true);
-                                    cross_old_spline = selected_spline;
-
-                                    Crossroad crossroad = new Crossroad();
-                                    crossroad.AddRoad(cross_new_spline);
-                                    crossroad.AddRoad(cross_old_spline);
-                                    crossroad.AddRoad(current_spline);
-                                    crossroad.setPosition(cross_new_spline.GetPoints().Last().position);
-
-                                    crossroads.Add(crossroad);
+                                    if (refCros.getPosition() == checkLastPos)
+                                    {
+                                        refCros.RemoveRoad(selected_spline);
+                                        refCros.AddRoad(cross_new_spline);
+                                    }
                                 }
-                                else if (refCrossroad.getPosition() == selected_spline.GetPoints().First().position)
-                                {
-                                    cross_new_spline = SplitSpline(selected_index, selected_spline);
-                                    cross_old_spline = selected_spline;
 
-                                    Crossroad crossroad = new Crossroad();
-                                    crossroad.AddRoad(cross_new_spline);
-                                    crossroad.AddRoad(cross_old_spline);
-                                    crossroad.AddRoad(current_spline);
+                                Crossroad crossroad = new Crossroad();
+                                crossroad.AddRoad(cross_new_spline);
+                                crossroad.AddRoad(cross_old_spline);
+                                crossroad.AddRoad(current_spline);
 
-                                    crossroad.setPosition(cross_new_spline.GetPoint(0).position);
+                                crossroad.setPosition(cross_new_spline.GetPoint(0).position);
 
-                                    crossroads.Add(crossroad);
-                                }
+                                crossroads.Add(crossroad);
                             }
                             else
                             {
@@ -906,6 +907,16 @@ public class CreatePathManager : MonoBehaviour
         }
     }
 
+    void LogSpline(SplineComputer spline)
+    {
+
+    }
+
+    Vector3 GetSplinePosition(SplineComputer spline)
+    {
+        return spline.GetPoint(spline.GetPoints().Length / 2).position;
+    }
+
     void Start()
     {
         cm = GetComponentInChildren<Camera>();
@@ -919,13 +930,19 @@ public class CreatePathManager : MonoBehaviour
         last_pos = snap_pos;
         debugobj.GetComponent<Transform>().position = snap_pos;
 
-        foreach (Crossroad cros in crossroads)
+        for (var index = 0; index < crossroads.Count; index++)
         {
+            Crossroad cros = crossroads[index];
+
+            LogTextOnPos(index + "C ", cros.getPosition()); // DEBUG
+
             List<Vector3> dirs = new List<Vector3>();
             List<SplineComputer> roads = cros.getRoads();
 
             for (int i = 0; i < roads.Count; i++)
             {
+                LogTextOnPos(index + "C - " + i, GetSplinePosition(roads[i]));
+
                 if (roads[i].GetPoints().Last().position == cros.getPosition())
                 {
                     int last_index = roads[i].GetPoints().Length - 1;

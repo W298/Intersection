@@ -1005,6 +1005,7 @@ MonoBehaviour:
   debugObj_2: {fileID: 1910153631}
   debugObj_3: {fileID: 1988226548}
   debugObj_4: {fileID: 1787325906}
+  textObj: {fileID: 1030422081987952459, guid: c39138b03836bea4d9391938251f469a, type: 3}
   snapsize: 10
   divider: 7.2
   current_spline: {fileID: 0}
