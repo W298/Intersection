@@ -188,32 +188,19 @@ public class CreatePathManager : MonoBehaviour
         return last_pos;
     }
 
-    bool CheckAppendVaild(Vector3 lastPoint, Vector3 currentPoint, Vector3 addPoint, bool onlyStraight = false)
+    bool CheckAppendVaild(Vector3 lastPoint, Vector3 currentPoint, Vector3 addPoint)
     {
         Vector3 dir = currentPoint - lastPoint;
         Vector3 dirAppend = addPoint - currentPoint;
 
-        if (onlyStraight)
+        switch (currentRoadLane)
         {
-            if (isVectorParallel(dir, dirAppend))
-            {
+            case ROADLANE.RL1:
+                return (Vector3.Angle(dir, dirAppend) <= 90);
+            case ROADLANE.RL2:
+                return (Vector3.Angle(dir, dirAppend) <= 45);
+            default:
                 return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        else
-        {
-            if (Vector3.Angle(dir, dirAppend) <= 90)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
         }
     }
 
@@ -252,6 +239,8 @@ public class CreatePathManager : MonoBehaviour
         }
 
         current_spline = Instantiate(SplinePrefab, pos, Quaternion.identity);
+
+        meshReform(current_spline);
     }
 
     // Spawn SplineComputer independently.
@@ -273,7 +262,28 @@ public class CreatePathManager : MonoBehaviour
                 break;
         }
 
-        return Instantiate(SplinePrefab, pos, Quaternion.identity);
+        var spline = Instantiate(SplinePrefab, pos, Quaternion.identity);
+        
+        meshReform(spline);
+
+        return spline;
+    }
+
+    void meshReform(SplineComputer spline)
+    {
+        switch (currentRoadLane)
+        {
+            case ROADLANE.RL1:
+                for (int i = 0; i < 6; i++)
+                {
+                    spline.GetComponent<SplineMesh>().meshReduce(i, 1);
+                }
+                break;
+            case ROADLANE.RL2:
+                spline.GetComponent<SplineMesh>().meshReduce(6, 4);
+                spline.GetComponent<SplineMesh>().meshReduce(7, 4);
+                break;
+        }
     }
 
     // Append path when snapping event on. Return true when snapping event on.
@@ -406,51 +416,59 @@ public class CreatePathManager : MonoBehaviour
                 if (CheckSnap())
                 {
                     // -------------------------------------------------------------------- HEAD APPEND CODE 
-                    SplinePoint[] points = selected_spline.GetPoints();
+                    bool cond = CheckAppendVaild(
+                        selected_spline.GetPoint(1).position,
+                        selected_spline.GetPoint(0).position,
+                        snap_pos);
 
-                    for (int i = 0; i < points.Length; i++)
+                    if (cond || current_spline.GetPoints().Length == 1)
                     {
-                        selected_spline.SetPoint(i + 1, points[i]);
-                    }
+                        SplinePoint[] points = selected_spline.GetPoints();
 
-                    selected_spline.SetPointNormal(0, def_normal);
-                    selected_spline.SetPointSize(new_index, 1);
-                    selected_spline.SetPointPosition(0, snap_pos);
-
-                    // ----------------------------------------------------- CHECK JOIN DURING APPEND (HEAD)
-                    SplineComputer check_spline = null;
-                    foreach (SplineComputer spline in getSplineComputers(snap_pos))
-                    {
-                        if (spline != selected_spline)
+                        for (int i = 0; i < points.Length; i++)
                         {
-                            check_spline = spline;
+                            selected_spline.SetPoint(i + 1, points[i]);
                         }
-                    }
 
-                    if (check_spline != null && check_spline != selected_spline)
-                    {
-                        if ((check_spline.GetPoints().First().position == snap_pos ||
-                            check_spline.GetPoints().Last().position == snap_pos))
+                        selected_spline.SetPointNormal(0, def_normal);
+                        selected_spline.SetPointSize(new_index, 1);
+                        selected_spline.SetPointPosition(0, snap_pos);
+
+                        // ----------------------------------------------------- CHECK JOIN DURING APPEND (HEAD)
+                        SplineComputer check_spline = null;
+                        foreach (SplineComputer spline in getSplineComputers(snap_pos))
                         {
-                            UnityEngine.Debug.LogWarning("Join 2-crossroad (HEAD)");
-
-                            MergeSplines(check_spline, selected_spline);
+                            if (spline != selected_spline)
+                            {
+                                check_spline = spline;
+                            }
                         }
-                        else
+
+                        if (check_spline != null && check_spline != selected_spline)
                         {
-                            UnityEngine.Debug.LogWarning("Join 3-crossroad (HEAD)");
+                            if ((check_spline.GetPoints().First().position == snap_pos ||
+                                check_spline.GetPoints().Last().position == snap_pos))
+                            {
+                                UnityEngine.Debug.LogWarning("Join 2-crossroad (HEAD)");
 
-                            int index = getSplinePointIndex(check_spline, getSplinePoint(snap_pos, check_spline));
+                                MergeSplines(check_spline, selected_spline);
+                            }
+                            else
+                            {
+                                UnityEngine.Debug.LogWarning("Join 3-crossroad (HEAD)");
 
-                            SplineComputer new_spline = SplitSpline(index, check_spline);
+                                int index = getSplinePointIndex(check_spline, getSplinePoint(snap_pos, check_spline));
 
-                            Crossroad crossroad = new Crossroad();
-                            crossroad.AddRoad(check_spline);
-                            crossroad.AddRoad(new_spline);
-                            crossroad.AddRoad(selected_spline);
-                            crossroad.setPosition(new_spline.GetPoint(0).position);
+                                SplineComputer new_spline = SplitSpline(index, check_spline);
 
-                            crossroads.Add(crossroad);
+                                Crossroad crossroad = new Crossroad();
+                                crossroad.AddRoad(check_spline);
+                                crossroad.AddRoad(new_spline);
+                                crossroad.AddRoad(selected_spline);
+                                crossroad.setPosition(new_spline.GetPoint(0).position);
+
+                                crossroads.Add(crossroad);
+                            }
                         }
                     }
                 }
@@ -891,8 +909,6 @@ public class CreatePathManager : MonoBehaviour
     void Start()
     {
         cm = GetComponentInChildren<Camera>();
-
-        roadPrefabs[1].GetComponent<SplineMesh>().meshReduce(6, 7);
     }
 
     void Update()

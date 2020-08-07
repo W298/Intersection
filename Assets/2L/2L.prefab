@@ -51,7 +51,6 @@ MonoBehaviour:
   drawThinckness: 1
   billboardThickness: 0
   isNewlyCreated: 0
-  Fixed: 0
   multithreaded: 1
   rebuildOnAwake: 0
   updateMode: 0
@@ -79,7 +78,7 @@ MonoBehaviour:
   sampleCollection:
     samples: []
     optimizedIndices: 
-    sampleMode: 0
+    sampleMode: 1
     clipFrom: 0
     clipTo: 1
     loopSamples: 0
@@ -110,7 +109,7 @@ MonoBehaviour:
   pointsDirty: 
   _optimizeAngleThreshold: 0.5
   _space: 0
-  _sampleMode: 0
+  _sampleMode: 1
   subscribers:
   - {fileID: 7700269737332976401}
   nodes: []
@@ -137,6 +136,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -165,6 +165,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!114 &7700269737332976401
 MonoBehaviour:
   m_ObjectHideFlags: 0
