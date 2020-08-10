@@ -39,7 +39,7 @@ public class Crossroad
         }
     }
 
-    public void setPosition(Vector3 pos)
+    public void SetPosition(Vector3 pos)
     {
         position = pos;
     }
@@ -113,7 +113,7 @@ public class CreatePathManager : MonoBehaviour
 
         IEnumerator Stop()
         {
-            yield return new WaitForSeconds(0.016f);
+            yield return 0;
             Destroy(obj);
         }
     }
@@ -471,7 +471,7 @@ public class CreatePathManager : MonoBehaviour
                                 crossroad.AddRoad(check_spline);
                                 crossroad.AddRoad(new_spline);
                                 crossroad.AddRoad(selected_spline);
-                                crossroad.setPosition(new_spline.GetPoint(0).position);
+                                crossroad.SetPosition(new_spline.GetPoint(0).position);
 
                                 crossroads.Add(crossroad);
                             }
@@ -523,7 +523,7 @@ public class CreatePathManager : MonoBehaviour
                             crossroad.AddRoad(new_spline);
                             crossroad.AddRoad(check_spline);
                             crossroad.AddRoad(current_spline);
-                            crossroad.setPosition(new_spline.GetPoint(0).position);
+                            crossroad.SetPosition(new_spline.GetPoint(0).position);
 
                             crossroads.Add(crossroad);
                         }
@@ -537,7 +537,7 @@ public class CreatePathManager : MonoBehaviour
                             UnityEngine.Debug.LogWarning("Join 3-crossroad (BUILD)");
 
                             // Check If selected spline referenced by another crossroad
-                            var refCrossroads = crossroads.Where(cros => cros.getRoads().Contains(selected_spline)).ToList();
+                            var refCrossroads = GetRefCrossroads(selected_spline);
 
                             if (refCrossroads.Count != 0)
                             {
@@ -560,7 +560,7 @@ public class CreatePathManager : MonoBehaviour
                                 crossroad.AddRoad(cross_old_spline);
                                 crossroad.AddRoad(current_spline);
 
-                                crossroad.setPosition(cross_new_spline.GetPoint(0).position);
+                                crossroad.SetPosition(cross_new_spline.GetPoint(0).position);
 
                                 crossroads.Add(crossroad);
                             }
@@ -573,7 +573,7 @@ public class CreatePathManager : MonoBehaviour
                                 crossroad.AddRoad(cross_new_spline);
                                 crossroad.AddRoad(cross_old_spline);
                                 crossroad.AddRoad(current_spline);
-                                crossroad.setPosition(cross_new_spline.GetPoint(0).position);
+                                crossroad.SetPosition(cross_new_spline.GetPoint(0).position);
 
                                 crossroads.Add(crossroad);
                             }
@@ -907,14 +907,15 @@ public class CreatePathManager : MonoBehaviour
         }
     }
 
-    void LogSpline(SplineComputer spline)
-    {
-
-    }
-
     Vector3 GetSplinePosition(SplineComputer spline)
     {
-        return spline.GetPoint(spline.GetPoints().Length / 2).position;
+        // return spline.GetPoint(spline.GetPoints().Length / 2).position;
+        return (spline.GetPoints().First().position + spline.GetPoints().Last().position) / 2;
+    }
+
+    List<Crossroad> GetRefCrossroads(SplineComputer spline)
+    {
+        return crossroads.Where(cros => cros.getRoads().Contains(spline)).ToList();
     }
 
     void Start()
