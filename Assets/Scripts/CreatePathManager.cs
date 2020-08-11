@@ -434,7 +434,6 @@ public class CreatePathManager : MonoBehaviour
                 if (CheckSnap())
                 {
                     // -------------------------------------------------------------------- HEAD APPEND CODE
-                    // TODO - HEAD APPEND LOOP CODE
                     bool cond = CheckAppendVaild(
                         selected_spline.GetPoint(1).position,
                         selected_spline.GetPoint(0).position,
@@ -488,6 +487,13 @@ public class CreatePathManager : MonoBehaviour
 
                                 crossroads.Add(crossroad);
                             }
+                        }
+                        
+                        // Check Appending Spline is Closed.
+                        if (selected_spline.GetPoints().First().position == selected_spline.GetPoints().Last().position)
+                        {
+                            UnityEngine.Debug.LogWarning("LOOP");
+                            selected_spline.Close();
                         }
                     }
                 }
@@ -986,7 +992,7 @@ public class CreatePathManager : MonoBehaviour
         cm = GetComponentInChildren<Camera>();
     }
 
-    // TODO - LOOP Spline Append Spliting Code
+    // TODO - LOOP Spline Append Spliting Code (BUILD, TAIL APPEND, HEAD APPEND / contain CROSSROAD or not contain)
 
     void Update()
     {  
