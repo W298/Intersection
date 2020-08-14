@@ -165,7 +165,7 @@ public class CreatePathManager : MonoBehaviour
 
     Vector3 SnapToGridPoint(Vector3 pos, int _snapsize)
     {
-        float snapsize = (float) _snapsize;
+        var snapsize = (float) _snapsize;
 
         if (!isVectorInXZArea(pos, -snapsize + last_pos.x, snapsize + last_pos.x,
             -snapsize + last_pos.z, snapsize + +last_pos.z))
@@ -229,8 +229,8 @@ public class CreatePathManager : MonoBehaviour
 
     bool CheckAppendVaild(Vector3 lastPoint, Vector3 currentPoint, Vector3 addPoint)
     {
-        Vector3 dir = currentPoint - lastPoint;
-        Vector3 dirAppend = addPoint - currentPoint;
+        var dir = currentPoint - lastPoint;
+        var dirAppend = addPoint - currentPoint;
 
         switch (currentRoadLane)
         {
@@ -245,8 +245,8 @@ public class CreatePathManager : MonoBehaviour
 
     bool isVectorInXZArea(Vector3 pos, float x_from, float x_to, float z_from, float z_to)
     {
-        bool cond_1 = x_from <= pos.x && pos.x <= x_to;
-        bool cond_2 = z_from <= pos.z && pos.z <= z_to;
+        var cond_1 = x_from <= pos.x && pos.x <= x_to;
+        var cond_2 = z_from <= pos.z && pos.z <= z_to;
 
         return cond_1 && cond_2;
     }
@@ -313,7 +313,7 @@ public class CreatePathManager : MonoBehaviour
         switch (currentRoadLane)
         {
             case ROADLANE.RL1:
-                for (int i = 0; i < 6; i++)
+                for (var i = 0; i < 6; i++)
                 {
                     spline.GetComponent<SplineMesh>().meshReduce(i, 1);
                 }
@@ -331,12 +331,12 @@ public class CreatePathManager : MonoBehaviour
     {
         if (last_x != SnapToGridPoint(pos, snapsize).x || last_z != SnapToGridPoint(pos, snapsize).z)
         {
-            float x = SnapToGridPoint(pos, snapsize).x;
-            float z = SnapToGridPoint(pos, snapsize).z;
+            var x = SnapToGridPoint(pos, snapsize).x;
+            var z = SnapToGridPoint(pos, snapsize).z;
 
-            int last_index = current_spline.GetPoints().Length - 1;
+            var last_index = current_spline.GetPoints().Length - 1;
 
-            bool cond = CheckAppendVaild(
+            var cond = CheckAppendVaild(
                 current_spline.GetPoint(last_index - 1).position,
                 current_spline.GetPoint(last_index).position,
                 new Vector3(x, 0, z));
@@ -381,7 +381,7 @@ public class CreatePathManager : MonoBehaviour
     // Body of this function referred DeletePointModule.cs
     void RemovePoint(int index)
     {
-        SplinePoint[] p = current_spline.spline.points;
+        var p = current_spline.spline.points;
 
         if (index < p.Length && index >= 0)
         {
@@ -402,7 +402,7 @@ public class CreatePathManager : MonoBehaviour
     // Remove point with point ref.
     void RemovePoint(SplinePoint point)
     {
-        SplinePoint[] p = current_spline.spline.points;
+        var p = current_spline.spline.points;
 
         ArrayUtility.RemoveAt(ref p, ArrayUtility.IndexOf(p, point));
         current_spline.spline.points = p;
@@ -416,7 +416,7 @@ public class CreatePathManager : MonoBehaviour
     // Simply Ray-trace and Set mouse position.
     void RayTrace()
     {
-        Ray ray = cm.ScreenPointToRay(Input.mousePosition);
+        var ray = cm.ScreenPointToRay(Input.mousePosition);
         RaycastHit hitData;
 
         if (Physics.Raycast(ray, out hitData, 10000))
@@ -455,17 +455,17 @@ public class CreatePathManager : MonoBehaviour
             {
                 if (CheckSnap())
                 {
-                    // -------------------------------------------------------------------- HEAD APPEND CODE
-                    bool cond = CheckAppendVaild(
+                    // HEAD APPEND CODE
+                    var cond = CheckAppendVaild(
                         selected_spline.GetPoint(1).position,
                         selected_spline.GetPoint(0).position,
                         snap_pos);
 
                     if (cond || current_spline.GetPoints().Length == 1)
                     {
-                        SplinePoint[] points = selected_spline.GetPoints();
+                        var points = selected_spline.GetPoints();
 
-                        for (int i = 0; i < points.Length; i++)
+                        for (var i = 0; i < points.Length; i++)
                         {
                             selected_spline.SetPoint(i + 1, points[i]);
                         }
@@ -474,9 +474,9 @@ public class CreatePathManager : MonoBehaviour
                         selected_spline.SetPointSize(new_index, 1);
                         selected_spline.SetPointPosition(0, snap_pos);
 
-                        // ----------------------------------------------------- CHECK JOIN DURING APPEND (HEAD)
+                        // CHECK JOIN DURING APPEND (HEAD)
                         SplineComputer check_spline = null;
-                        foreach (SplineComputer spline in GetSplineComputers(snap_pos))
+                        foreach (var spline in GetSplineComputers(snap_pos))
                         {
                             if (spline != selected_spline)
                             {
@@ -490,18 +490,31 @@ public class CreatePathManager : MonoBehaviour
                                  check_spline.GetPoints().Last().position == snap_pos))
                             {
                                 UnityEngine.Debug.LogWarning("Join 2-crossroad (HEAD)");
+                                
+                                var haveSameCrossroad = GetRefCrossroads(selected_spline)
+                                    .Any(cros => GetRefCrossroads(check_spline).Contains(cros));
 
-                                MergeSplines(check_spline, selected_spline);
+                                if (haveSameCrossroad)
+                                {
+                                    // CROSSROAD LOOP (HEAD APPEND)
+                                    UnityEngine.Debug.LogWarning("LOOP");
+                                    var spline = MergeSplines(check_spline, selected_spline);
+                                    spline.isLoop = true;
+                                }
+                                else
+                                {
+                                    MergeSplines(check_spline, selected_spline);
+                                }
                             }
                             else
                             {
                                 UnityEngine.Debug.LogWarning("Join 3-crossroad (HEAD)");
 
-                                int index = getSplinePointIndex(check_spline, getSplinePoint(snap_pos, check_spline));
+                                var index = getSplinePointIndex(check_spline, getSplinePoint(snap_pos, check_spline));
 
-                                SplineComputer new_spline = SplitSpline(index, check_spline);
+                                var new_spline = SplitSpline(index, check_spline);
 
-                                Crossroad crossroad = new Crossroad();
+                                var crossroad = new Crossroad();
                                 crossroad.AddRoad(check_spline);
                                 crossroad.AddRoad(new_spline);
                                 crossroad.AddRoad(selected_spline);
@@ -525,10 +538,10 @@ public class CreatePathManager : MonoBehaviour
             {
                 if (AppendPath())
                 {
-                    // ----------------------------------------------------- CHECK JOIN DURING APPEND (TAIL)
+                    // CHECK JOIN DURING APPEND (TAIL)
                     SplineComputer check_spline = null;
 
-                    foreach (SplineComputer spline in GetSplineComputers(snap_pos))
+                    foreach (var spline in GetSplineComputers(snap_pos))
                     {
                         if (spline != current_spline)
                         {
@@ -548,7 +561,7 @@ public class CreatePathManager : MonoBehaviour
 
                             if (haveSameCrossroad)
                             {
-                                // CROSSROAD LOOP
+                                // CROSSROAD LOOP (TAIL APPEND)
                                 var spline = MergeSplines(check_spline, current_spline);
                                 spline.isLoop = true;
                             }
@@ -561,10 +574,10 @@ public class CreatePathManager : MonoBehaviour
                         {
                             UnityEngine.Debug.LogWarning("Join 3-crossroad (APPEND)");
 
-                            SplinePoint[] points = check_spline.GetPoints();
-                            int index = 0;
+                            var points = check_spline.GetPoints();
+                            var index = 0;
 
-                            for (int i = 0; i < points.Length; i++)
+                            for (var i = 0; i < points.Length; i++)
                             {
                                 if (points[i].position == snap_pos)
                                 {
@@ -572,9 +585,9 @@ public class CreatePathManager : MonoBehaviour
                                 }
                             }
 
-                            SplineComputer new_spline = SplitSpline(index, check_spline);
+                            var new_spline = SplitSpline(index, check_spline);
 
-                            Crossroad crossroad = new Crossroad();
+                            var crossroad = new Crossroad();
                             crossroad.AddRoad(new_spline);
                             crossroad.AddRoad(check_spline);
                             crossroad.AddRoad(current_spline);
@@ -592,7 +605,7 @@ public class CreatePathManager : MonoBehaviour
                         current_spline.Close();
                     }
 
-                    // ------------------------------------------------------------- CHECK JOIN DURING BUILD
+                    // CHECK JOIN DURING BUILD
                     if (joinmode != JOINMODE.NONE)
                     {
                         if (joinmode == JOINMODE.TO3)
@@ -604,7 +617,7 @@ public class CreatePathManager : MonoBehaviour
 
                             if (refCrossroads.Count != 0)
                             {
-                                Vector3 checkLastPos = selected_spline.GetPoints().Last().position;
+                                var checkLastPos = selected_spline.GetPoints().Last().position;
 
                                 cross_new_spline = SplitSpline(selected_index, selected_spline);
                                 cross_old_spline = selected_spline;
@@ -618,7 +631,7 @@ public class CreatePathManager : MonoBehaviour
                                     }
                                 }
 
-                                Crossroad crossroad = new Crossroad();
+                                var crossroad = new Crossroad();
                                 crossroad.AddRoad(cross_new_spline);
                                 crossroad.AddRoad(cross_old_spline);
                                 crossroad.AddRoad(current_spline);
@@ -632,7 +645,7 @@ public class CreatePathManager : MonoBehaviour
                                 cross_new_spline = SplitSpline(selected_index, selected_spline);
                                 cross_old_spline = selected_spline;
 
-                                Crossroad crossroad = new Crossroad();
+                                var crossroad = new Crossroad();
                                 crossroad.AddRoad(cross_new_spline);
                                 crossroad.AddRoad(cross_old_spline);
                                 crossroad.AddRoad(current_spline);
@@ -727,9 +740,9 @@ public class CreatePathManager : MonoBehaviour
     // Get Point count with position.
     int GetPointIndex(Vector3 pos)
     {
-        SplinePoint[] points = current_spline.GetPoints();
+        var points = current_spline.GetPoints();
 
-        for (int i = 0; i < points.Length; i++)
+        for (var i = 0; i < points.Length; i++)
         {
             if (points[i].position == snap_pos)
             {
@@ -742,14 +755,14 @@ public class CreatePathManager : MonoBehaviour
 
     List<SplineComputer> GetSplineComputers(Vector3 pos)
     {
-        SplineComputer[] spline_list = GameObject.FindObjectsOfType<SplineComputer>();
-        List<SplineComputer> return_list = new List<SplineComputer>();
+        var spline_list = GameObject.FindObjectsOfType<SplineComputer>();
+        var return_list = new List<SplineComputer>();
 
-        foreach (SplineComputer spline in spline_list)
+        foreach (var spline in spline_list)
         {
-            SplinePoint[] points = spline.GetPoints();
+            var points = spline.GetPoints();
 
-            for (int i = 0; i < points.Length; i++)
+            for (var i = 0; i < points.Length; i++)
             {
                 if (pos == points[i].position)
                 {
@@ -764,7 +777,7 @@ public class CreatePathManager : MonoBehaviour
 
     SplinePoint getSplinePoint(Vector3 pos, SplineComputer spline)
     {
-        foreach (SplinePoint point in spline.GetPoints())
+        foreach (var point in spline.GetPoints())
         {
             if (point.position == pos)
             {
@@ -777,9 +790,9 @@ public class CreatePathManager : MonoBehaviour
 
     int getSplinePointIndex(SplineComputer spline, SplinePoint point)
     {
-        SplinePoint[] points = spline.GetPoints();
+        var points = spline.GetPoints();
 
-        for (int i = 0; i < points.Length; i++)
+        for (var i = 0; i < points.Length; i++)
         {
             if (points[i].position == point.position)
             {
@@ -800,24 +813,24 @@ public class CreatePathManager : MonoBehaviour
 
         if (!reverse)
         {
-            for (int j = 0; j <= index; j++)
+            for (var j = 0; j <= index; j++)
             {
                 oldPoints.Add(originPoints[j]);
             }
 
-            for (int j = index; j < originPoints.Length; j++)
+            for (var j = index; j < originPoints.Length; j++)
             {
                 newPoints.Add(originPoints[j]);
             }
         }
         else
         {
-            for (int i = 0; i <= index; i++)
+            for (var i = 0; i <= index; i++)
             {
                 newPoints.Add(originPoints[i]);
             }
 
-            for (int i = index; i < originPoints.Length; i++)
+            for (var i = index; i < originPoints.Length; i++)
             {
                 oldPoints.Add(originPoints[i]);
             }
@@ -878,12 +891,11 @@ public class CreatePathManager : MonoBehaviour
         {
             // Reverse Merge
             UnityEngine.Debug.LogWarning("Reverse Merge");
-            int index = s1.GetPoints().Length;
+            var index = s1.GetPoints().Length;
 
-            SplinePoint[] points = s2.GetPoints();
-            for (int i = points.Length - 2; i >= 0; i--)
+            var points = s2.GetPoints();
+            for (var i = points.Length - 2; i >= 0; i--)
             {
-                UnityEngine.Debug.LogWarning(i);
                 s1.SetPoint(index, points[i]);
                 index++;
             }
@@ -902,17 +914,17 @@ public class CreatePathManager : MonoBehaviour
         else if (s1.GetPoints().First().position == s2.GetPoints().First().position)
         {
             UnityEngine.Debug.LogWarning("Reverse Merge 2");
-            SplinePoint[] points = s1.GetPoints();
-            SplinePoint[] points2 = s2.GetPoints();
+            var points = s1.GetPoints();
+            var points2 = s2.GetPoints();
 
-            int index = 0;
+            var index = 0;
 
-            for (int i = 0; i < points.Length; i++)
+            for (var i = 0; i < points.Length; i++)
             {
                 s1.SetPoint(i + points2.Length - 1, points[i]);
             }
 
-            for (int i = points2.Length - 1; i >= 1; i--)
+            for (var i = points2.Length - 1; i >= 1; i--)
             {
                 s1.SetPoint(index, points2[i]);
                 index++;
@@ -933,10 +945,10 @@ public class CreatePathManager : MonoBehaviour
         {
             // Straight Merge
             UnityEngine.Debug.LogWarning("Straight Merge");
-            int index = s1.GetPoints().Length;
+            var index = s1.GetPoints().Length;
 
-            SplinePoint[] points = s2.GetPoints();
-            for (int i = 1; i < points.Length; i++)
+            var points = s2.GetPoints();
+            for (var i = 1; i < points.Length; i++)
             {
                 s1.SetPoint(index, points[i]);
                 index++;
@@ -956,11 +968,11 @@ public class CreatePathManager : MonoBehaviour
         else if (s1.GetPoints().First().position == s2.GetPoints().Last().position)
         {
             UnityEngine.Debug.LogWarning("Straight Merge 2");
-            int index = s2.GetPoints().Length;
+            var index = s2.GetPoints().Length;
 
-            SplinePoint[] points = s1.GetPoints();
+            var points = s1.GetPoints();
 
-            for (int i = 1; i <= points.Length - 1; i++)
+            for (var i = 1; i <= points.Length - 1; i++)
             {
                 s2.SetPoint(index, points[i]);
                 index++;
@@ -1010,75 +1022,71 @@ public class CreatePathManager : MonoBehaviour
         last_pos = snap_pos;
         debugobj.GetComponent<Transform>().position = snap_pos;
 
+        // Crossroad Clean Line Code
         for (var index = 0; index < crossroads.Count; index++)
         {
-            Crossroad cros = crossroads[index];
+            var cros = crossroads[index];
 
             LogTextOnPos(index + "C ", cros.getPosition()); // DEBUG
-            List<SplineComputer> roads = cros.getRoads();
+            var roads = cros.getRoads();
 
             var dirList = new List<Vector3>();
             var roadList = new List<SplineComputer>();
 
             var loopedRoad = roads.FirstOrDefault(road => road.isLoop);
-            
-            UnityEngine.Debug.LogWarning("Roads : " + cros.getRoads().Count);
-            
+
             if (loopedRoad != null)
             {
-                roads.Add(loopedRoad);
-                roads = (from road in roads orderby road.isLoop ascending select road).ToList();
-
-                int loopRoadStartIndex = 0;
-                for (int i = 0; i < roads.Count; i++)
+                if (roads.Count(road => road.isLoop) == 1)
                 {
-                    if (roads[i].isLoop)
-                    {
-                        loopRoadStartIndex = i;
-                        break;
-                    }
+                    roads.Add(loopedRoad);
+                    roads = (from road in roads orderby road.isLoop ascending select road).ToList();
+                }
+
+                var loopRoadStartIndex = 0;
+                for (var i = 0; i < roads.Count; i++)
+                {
+                    if (!roads[i].isLoop) continue;
+                    loopRoadStartIndex = i;
+                    break;
                 }
 
                 // Make dirList
-                for (int i = 0; i < roads.Count; i++)
+                for (var i = 0; i < roads.Count; i++)
                 {
-                    if (!roads[i].isLoop)
+                    if (roads[i].isLoop) continue;
+                    LogTextOnPos(index + "C - " + i, GetSplinePosition(roads[i]));
+
+                    if (roads[i].GetPoints().Last().position == cros.getPosition())
                     {
-                        LogTextOnPos(index + "C - " + i, GetSplinePosition(roads[i]));
+                        var last_index = roads[i].GetPoints().Length - 1;
 
-                        if (roads[i].GetPoints().Last().position == cros.getPosition())
-                        {
-                            int last_index = roads[i].GetPoints().Length - 1;
-
-                            Vector3 dir = roads[i].GetPoint(last_index - 1).position - cros.getPosition();
-                            dirList.Add(dir);
-                        }
-                        else if (roads[i].GetPoints().First().position == cros.getPosition())
-                        {
-                            Vector3 dir = roads[i].GetPoint(1).position - cros.getPosition();
-                            dirList.Add(dir);
-                        }
-                        else
-                        {
-                            UnityEngine.Debug.LogWarning("ERROR!");
-                        }
+                        var dir = roads[i].GetPoint(last_index - 1).position - cros.getPosition();
+                        dirList.Add(dir);
+                    }
+                    else if (roads[i].GetPoints().First().position == cros.getPosition())
+                    {
+                        var dir = roads[i].GetPoint(1).position - cros.getPosition();
+                        dirList.Add(dir);
+                    }
+                    else
+                    {
+                        UnityEngine.Debug.LogWarning("ERROR!");
                     }
                 }
 
-                int joinIndex = 0;
-                for (int i = 0; i < loopedRoad.GetPoints().Length; i++)
+                var joinIndex = 0;
+                for (var i = 0; i < loopedRoad.GetPoints().Length; i++)
                 {
-                    if (loopedRoad.GetPoint(i).position == cros.getPosition())
-                    {
-                        joinIndex = i;
-                        break;
-                    }
+                    if (loopedRoad.GetPoint(i).position != cros.getPosition()) continue;
+                    joinIndex = i;
+                    break;
                 }
 
                 var loopForwardDir = loopedRoad.GetPoint(joinIndex + 1).position -
                                      loopedRoad.GetPoint(joinIndex).position;
 
-                int backIndex = joinIndex - 1;
+                var backIndex = joinIndex - 1;
                 if (backIndex < 0)
                     backIndex = loopedRoad.GetPoints().Length - 1 + backIndex;
 
@@ -1089,10 +1097,10 @@ public class CreatePathManager : MonoBehaviour
                 dirList.Add(loopBackwardDir);
 
                 // Apply To SplineMesh
-                for (int i = 0; i < roads.Count; i++)
+                for (var i = 0; i < roads.Count; i++)
                 {
-                    bool isRight = false;
-                    bool isLeft = false;
+                    var isRight = false;
+                    var isLeft = false;
 
                     // Straigt Road
                     if (!roads[i].isLoop)
@@ -1112,7 +1120,7 @@ public class CreatePathManager : MonoBehaviour
                                 }
                             }
 
-                            double per = roads[i].Project(cros.getPosition() + dirList[i] / divider).percent;
+                            var per = roads[i].Project(cros.getPosition() + dirList[i] / divider).percent;
 
                             roads[i].GetComponent<SplineMesh>().GetChannel(1).clipTo = per;
 
@@ -1137,7 +1145,7 @@ public class CreatePathManager : MonoBehaviour
                         // First Point
                         else if (roads[i].GetPoint(0).position == cros.getPosition())
                         {
-                            foreach (Vector3 dir in dirList)
+                            foreach (var dir in dirList)
                             {
                                 if (isVectorVertical(dirList[i], dir))
                                 {
@@ -1152,7 +1160,7 @@ public class CreatePathManager : MonoBehaviour
                                 }
                             }
 
-                            double per = roads[i].Project(cros.getPosition() + dirList[i] / divider).percent;
+                            var per = roads[i].Project(cros.getPosition() + dirList[i] / divider).percent;
 
                             roads[i].GetComponent<SplineMesh>().GetChannel(1).clipFrom = per;
 
@@ -1199,7 +1207,7 @@ public class CreatePathManager : MonoBehaviour
                             }
                         }
 
-                        double per = roads[i].Project(cros.getPosition() + dirList[i] / divider).percent;
+                        var per = roads[i].Project(cros.getPosition() + dirList[i] / divider).percent;
 
                         if (i == loopRoadStartIndex)
                         {
@@ -1250,20 +1258,20 @@ public class CreatePathManager : MonoBehaviour
             }
             else
             {
-                for (int i = 0; i < roads.Count; i++)
+                for (var i = 0; i < roads.Count; i++)
                 {
                     LogTextOnPos(index + "C - " + i, GetSplinePosition(roads[i]));
 
                     if (roads[i].GetPoints().Last().position == cros.getPosition())
                     {
-                        int last_index = roads[i].GetPoints().Length - 1;
+                        var last_index = roads[i].GetPoints().Length - 1;
 
-                        Vector3 dir = roads[i].GetPoint(last_index - 1).position - cros.getPosition();
+                        var dir = roads[i].GetPoint(last_index - 1).position - cros.getPosition();
                         dirList.Add(dir);
                     }
                     else if (roads[i].GetPoints().First().position == cros.getPosition())
                     {
-                        Vector3 dir = roads[i].GetPoint(1).position - cros.getPosition();
+                        var dir = roads[i].GetPoint(1).position - cros.getPosition();
                         dirList.Add(dir);
                     }
                     else
@@ -1272,14 +1280,14 @@ public class CreatePathManager : MonoBehaviour
                     }
                 }
 
-                for (int i = 0; i < roads.Count; i++)
+                for (var i = 0; i < roads.Count; i++)
                 {
-                    bool isRight = false;
-                    bool isLeft = false;
+                    var isRight = false;
+                    var isLeft = false;
 
                     if (roads[i].GetPoints().Last().position == cros.getPosition())
                     {
-                        foreach (Vector3 dir in dirList)
+                        foreach (var dir in dirList)
                         {
                             if (isVectorVertical(dirList[i], dir))
                             {
@@ -1294,7 +1302,7 @@ public class CreatePathManager : MonoBehaviour
                             }
                         }
 
-                        double per = roads[i].Project(cros.getPosition() + dirList[i] / divider).percent;
+                        var per = roads[i].Project(cros.getPosition() + dirList[i] / divider).percent;
 
                         roads[i].GetComponent<SplineMesh>().GetChannel(1).clipTo = per;
 
@@ -1318,7 +1326,7 @@ public class CreatePathManager : MonoBehaviour
                     }
                     else if (roads[i].GetPoints().First().position == cros.getPosition())
                     {
-                        foreach (Vector3 dir in dirList)
+                        foreach (var dir in dirList)
                         {
                             if (isVectorVertical(dirList[i], dir))
                             {
@@ -1333,7 +1341,7 @@ public class CreatePathManager : MonoBehaviour
                             }
                         }
 
-                        double per = roads[i].Project(cros.getPosition() + dirList[i] / divider).percent;
+                        var per = roads[i].Project(cros.getPosition() + dirList[i] / divider).percent;
 
                         roads[i].GetComponent<SplineMesh>().GetChannel(1).clipFrom = per;
 
@@ -1385,11 +1393,11 @@ public class CreatePathManager : MonoBehaviour
             // BUILD MODE
             if (Input.GetMouseButtonDown(0))
             {
-                SplineComputer[] spline_list = GameObject.FindObjectsOfType<SplineComputer>();
+                var spline_list = GameObject.FindObjectsOfType<SplineComputer>();
 
                 Crossroad crossroad = null;
 
-                foreach (Crossroad cros in crossroads)
+                foreach (var cros in crossroads)
                 {
                     if (snap_pos == cros.getPosition())
                     {
@@ -1405,21 +1413,21 @@ public class CreatePathManager : MonoBehaviour
                         joinmode = JOINMODE.TO4;
 
                         selected_crossroad = crossroad;
-
+                        
                         runBuildMode();
                     }
                 }
                 else
                 {
-                    List<SplineComputer> splines = GetSplineComputers(snap_pos);
+                    var splines = GetSplineComputers(snap_pos);
                     SplineComputer spline = null;
 
                     if (splines.Count == 1)
                     {
                         spline = splines[0];
 
-                        SplinePoint point = getSplinePoint(snap_pos, spline);
-                        int point_index = getSplinePointIndex(spline, point);
+                        var point = getSplinePoint(snap_pos, spline);
+                        var point_index = getSplinePointIndex(spline, point);
 
                         if (point_index != -1)
                         {
@@ -1490,7 +1498,7 @@ public class CreatePathManager : MonoBehaviour
             // REMOVE MODE
             if (Input.GetMouseButton(0))
             {
-                int index = GetPointIndex(snap_pos);
+                var index = GetPointIndex(snap_pos);
                 RemovePoint(index - 1);
             }
 
