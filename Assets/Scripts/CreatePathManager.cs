@@ -88,6 +88,16 @@ public class CreatePathManager : MonoBehaviour
         RL4
     };
 
+    private enum MERGEMODE
+    {
+        LL,
+        FF,
+        LF,
+        FL,
+        LOOP,
+        NONE
+    };
+
     public SplineComputer[] roadPrefabs;
 
     private Camera cm;
@@ -887,10 +897,18 @@ public class CreatePathManager : MonoBehaviour
 
     SplineComputer MergeSplines(SplineComputer s1, SplineComputer s2)
     {
-        if (s1.GetPoints().Last().position == s2.GetPoints().Last().position)
+        var mergemode = MERGEMODE.NONE;
+
+        if (s1.GetPoints().Last().position == s2.GetPoints().First().position &&
+            s1.GetPoints().First().position == s2.GetPoints().Last().position) mergemode = MERGEMODE.LOOP;
+        else if (s1.GetPoints().Last().position == s2.GetPoints().Last().position) mergemode = MERGEMODE.LL;
+        else if (s1.GetPoints().First().position == s2.GetPoints().First().position) mergemode = MERGEMODE.FF;
+        else if (s1.GetPoints().Last().position == s2.GetPoints().First().position) mergemode = MERGEMODE.LF;
+        else if (s1.GetPoints().First().position == s2.GetPoints().Last().position) mergemode = MERGEMODE.FL;
+
+        if (mergemode == MERGEMODE.LL)
         {
-            // Reverse Merge
-            UnityEngine.Debug.LogWarning("Reverse Merge");
+            UnityEngine.Debug.LogWarning("LL");
             var index = s1.GetPoints().Length;
 
             var points = s2.GetPoints();
@@ -908,12 +926,11 @@ public class CreatePathManager : MonoBehaviour
             }
 
             Destroy(s2.gameObject);
-
             return s1;
         }
-        else if (s1.GetPoints().First().position == s2.GetPoints().First().position)
+        else if (mergemode == MERGEMODE.FF)
         {
-            UnityEngine.Debug.LogWarning("Reverse Merge 2");
+            UnityEngine.Debug.LogWarning("FF");
             var points = s1.GetPoints();
             var points2 = s2.GetPoints();
 
@@ -938,13 +955,11 @@ public class CreatePathManager : MonoBehaviour
             }
 
             Destroy(s2.gameObject);
-
             return s1;
         }
-        else if (s1.GetPoints().Last().position == s2.GetPoints().First().position)
+        else if (mergemode == MERGEMODE.LF)
         {
-            // Straight Merge
-            UnityEngine.Debug.LogWarning("Straight Merge");
+            UnityEngine.Debug.LogWarning("LF");
             var index = s1.GetPoints().Length;
 
             var points = s2.GetPoints();
@@ -962,12 +977,11 @@ public class CreatePathManager : MonoBehaviour
             }
 
             Destroy(s2.gameObject);
-
             return s1;
         }
-        else if (s1.GetPoints().First().position == s2.GetPoints().Last().position)
+        else if (mergemode == MERGEMODE.FL)
         {
-            UnityEngine.Debug.LogWarning("Straight Merge 2");
+            UnityEngine.Debug.LogWarning("FL");
             var index = s2.GetPoints().Length;
 
             var points = s1.GetPoints();
@@ -986,14 +1000,65 @@ public class CreatePathManager : MonoBehaviour
             }
 
             Destroy(s1.gameObject);
-
             return s2;
         }
-        else
+        else if (mergemode == MERGEMODE.LOOP)
+        {
+            var refCrossroad = crossroads.FirstOrDefault(cros => cros.getRoads().Contains(s1));
+
+            if (s1.GetPoints().Last().position == refCrossroad.getPosition())
+            {
+                // FL
+                UnityEngine.Debug.LogWarning("LOOP - FL");
+                var index = s2.GetPoints().Length;
+
+                var points = s1.GetPoints();
+
+                for (var i = 1; i <= points.Length - 1; i++)
+                {
+                    s2.SetPoint(index, points[i]);
+                    index++;
+                }
+                
+                if (refCrossroad != null)
+                {
+                    refCrossroad.RemoveRoad(s1);
+                    refCrossroad.AddRoad(s2);
+                }
+
+                Destroy(s1.gameObject);
+                return s2;
+            }
+            else if (s1.GetPoint(0).position == refCrossroad.getPosition())
+            {
+                // LF
+                UnityEngine.Debug.LogWarning("LOOP - LF");
+                var index = s1.GetPoints().Length;
+
+                var points = s2.GetPoints();
+                for (var i = 1; i < points.Length; i++)
+                {
+                    s1.SetPoint(index, points[i]);
+                    index++;
+                }
+                
+                if (refCrossroad != null)
+                {
+                    refCrossroad.RemoveRoad(s2);
+                    refCrossroad.AddRoad(s1);
+                }
+
+                Destroy(s2.gameObject);
+                return s1;
+            }
+        }
+        else if (mergemode == MERGEMODE.NONE)
         {
             UnityEngine.Debug.LogWarning("NONE");
             return null;
         }
+
+        return null;
     }
 
     Vector3 GetSplinePosition(SplineComputer spline)
@@ -1028,20 +1093,17 @@ public class CreatePathManager : MonoBehaviour
             var cros = crossroads[index];
 
             LogTextOnPos(index + "C ", cros.getPosition()); // DEBUG
-            var roads = cros.getRoads();
-
+            
+            var roads = new List<SplineComputer>(cros.getRoads()); // COPY LIST
             var dirList = new List<Vector3>();
-            var roadList = new List<SplineComputer>();
-
             var loopedRoad = roads.FirstOrDefault(road => road.isLoop);
 
             if (loopedRoad != null)
             {
-                if (roads.Count(road => road.isLoop) == 1)
-                {
-                    roads.Add(loopedRoad);
-                    roads = (from road in roads orderby road.isLoop ascending select road).ToList();
-                }
+                UnityEngine.Debug.LogWarning("Count : " + roads.Count(road => road.isLoop));
+                
+                roads.Add(loopedRoad);
+                roads = (from road in roads orderby road.isLoop ascending select road).ToList();
 
                 var loopRoadStartIndex = 0;
                 for (var i = 0; i < roads.Count; i++)
@@ -1112,11 +1174,14 @@ public class CreatePathManager : MonoBehaviour
                             {
                                 if (isVectorVertical(dirList[i], dir))
                                 {
-                                    isLeft = true;
-                                }
-                                else
-                                {
-                                    isRight = true;
+                                    if (isVectorGoClockwise(dirList[i], dir))
+                                    {
+                                        isLeft = true;
+                                    }
+                                    else
+                                    {
+                                        isRight = true;
+                                    }
                                 }
                             }
 
