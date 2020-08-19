@@ -760,7 +760,7 @@ public class CreatePathManager : MonoBehaviour
                             if (selected_spline.isClosed)
                             {
                                 selected_spline.Break();
-                                debugPoint(selected_spline.GetPoint(selected_index).position);
+                                // debugPoint(selected_spline.GetPoint(selected_index).position);
                                 
                                 var pointList = new List<SplinePoint>();
                                 var points = new List<SplinePoint>(selected_spline.GetPoints());
@@ -976,7 +976,7 @@ public class CreatePathManager : MonoBehaviour
         }
         else
         {
-            debugPoint(spline.GetPoint(index).position);
+            // debugPoint(spline.GetPoint(index).position);
         }
 
         spline.SetPoints(oldPoints.ToArray());
@@ -1244,7 +1244,7 @@ public class CreatePathManager : MonoBehaviour
         {
             var cros = crossroads[index];
 
-            debugPoint(cros.getPosition());
+            // debugPoint(cros.getPosition());
 
             LogTextOnPos(index + "C ", cros.getPosition()); // DEBUG
             

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Sockets;
@@ -12,9 +13,9 @@ public class Isometric_Movement : MonoBehaviour
     private Vector3 movedir;
     private float zoom;
 
-    public float camera_move_speed = 15.0f;
-    public float camera_zoom_speed = 2.0f;
-    public float camera_zoom_breaker = 10.0f;
+    public float camera_move_speed = 20.0f;
+    public float camera_zoom_speed = 5.0f;
+    public float camera_zoom_breaker = 8.0f;
 
     public float minZoom = 2.0f;
     public float maxZoom = 20.0f;
@@ -28,7 +29,7 @@ public class Isometric_Movement : MonoBehaviour
         tr = GetComponent<Transform>();
         cm = GetComponentInChildren<Camera>();
 
-        cm.transform.rotation = Quaternion.Euler(55, 45, 0);
+        cm.transform.rotation = Quaternion.Euler(45, 45, 0);
         cm.orthographic = true;
     }
 
@@ -42,7 +43,7 @@ public class Isometric_Movement : MonoBehaviour
             right_vector * Input.GetAxis("Horizontal");
 
         tr.Translate(movedir * camera_move_speed * Time.deltaTime, Space.Self);
-
+        
         cm.orthographicSize += zoom * camera_zoom_speed;
         if (cm.orthographicSize < minZoom)
         {
