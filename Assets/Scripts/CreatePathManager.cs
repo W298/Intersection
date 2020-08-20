@@ -6,6 +6,8 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Rendering;
 using UnityEngine;
+using UnityEngine.Analytics;
+using UnityEngine.Serialization;
 using ArrayUtility = Dreamteck.ArrayUtility;
 
 public class Crossroad
@@ -413,38 +415,32 @@ public class CreatePathManager : MonoBehaviour
     // WARNING - To make this function work, I changed below thing.
     // CHANGED - Changed `spline` variable in SplineComputer to public (from private)
     // Body of this function referred DeletePointModule.cs
-    void RemovePoint(int index)
+    private void RemovePoint(SplineComputer spline, int index)
     {
-        var p = current_spline.spline.points;
-
-        if (index < p.Length && index >= 0)
+        var points = spline.spline.points;
+        
+        if (index < points.Length && index >= 0)
         {
-            ArrayUtility.RemoveAt(ref p, index);
-            current_spline.spline.points = p;
+            ArrayUtility.RemoveAt(ref points, index);
+            spline.spline.points = points;
         }
         else
         {
             UnityEngine.Debug.LogError("Out of Index! (RemovePoint)");
         }
-
-        if (current_spline)
-        {
-            current_spline.Rebuild(true);
-        }
+        
+        if (spline) { spline.Rebuild(); }
     }
 
     // Remove point with point ref.
-    void RemovePoint(SplinePoint point)
+    private void RemovePoint(SplineComputer spline, SplinePoint point)
     {
-        var p = current_spline.spline.points;
+        var points = spline.spline.points;
+        
+        ArrayUtility.RemoveAt(ref points, ArrayUtility.IndexOf(points, point));
+        spline.spline.points = points;
 
-        ArrayUtility.RemoveAt(ref p, ArrayUtility.IndexOf(p, point));
-        current_spline.spline.points = p;
-
-        if (current_spline)
-        {
-            current_spline.Rebuild(true);
-        }
+        if (spline) { spline.Rebuild(true); }
     }
 
     // Simply Ray-trace and Set mouse position.
@@ -876,16 +872,6 @@ public class CreatePathManager : MonoBehaviour
 
             joinmode = JOINMODE.NONE;
             current_mode = MODE.BUILD;
-        }
-        else if (Input.GetMouseButton(1))
-        {
-            if (Input.GetMouseButtonDown(1))
-            {
-                UnityEngine.Debug.LogWarning("Undo Last Point Creation");
-
-                RemovePoint(new_index - 1);
-                new_index--;
-            }
         }
     }
 
@@ -1717,12 +1703,74 @@ public class CreatePathManager : MonoBehaviour
             // REMOVE MODE
             if (Input.GetMouseButton(0))
             {
-                var index = GetPointIndex(snap_pos);
-                RemovePoint(index - 1);
+                if (CheckSnap())
+                {
+                    var spline = GetSplineComputers(snap_pos).First();
+                    var point = getSplinePoint(snap_pos, spline);
+                    var pointIndex = getSplinePointIndex(spline, point);
+                    
+                    if (removeMode == REMOVEMODE.STANDBY)
+                    {
+                        removePointIndex = pointIndex;
+                        removePoint = point;
+                        removeMode = REMOVEMODE.EXECUTE;
+                        UnityEngine.Debug.LogWarning("SET!!" + removePointIndex);
+                    }
+                    else if (removeMode == REMOVEMODE.EXECUTE)
+                    {
+                        if (spline)
+                        {
+                            UnityEngine.Debug.LogWarning("REMOVE!!" + removePointIndex);
+                            RemovePoint(spline, removePoint);
+                        }
+                        
+                        RebuildLate(spline);
+                        
+                        removePointIndex = pointIndex;
+                        removePoint = point;
+                    }
+                }
             }
+            else if (Input.GetMouseButtonUp(0))
+            {
+                removeMode = REMOVEMODE.STANDBY;
+            }
+        }
+    }
 
-            // TODO - Remove points in the middle of spline
-            // Now We can use checking mouse position value function.
+    public enum REMOVEMODE
+    {
+        STANDBY,
+        EXECUTE
+    }
+
+    public REMOVEMODE removeMode = REMOVEMODE.STANDBY;
+    public int removePointIndex;
+    public SplinePoint removePoint;
+
+    private bool _rebuildLateBool = false;
+    private SplineComputer _rebuildLateSpline = null;
+    
+    private void RebuildLate(SplineComputer spline)
+    {
+        _rebuildLateBool = true;
+        _rebuildLateSpline = spline;
+
+        StartCoroutine(Stop());
+
+        IEnumerator Stop()
+        {
+            yield return new WaitForSeconds(0.01f);
+            _rebuildLateBool = false;
+            _rebuildLateSpline = null;
+        }
+    }
+    
+    private void LateUpdate()
+    {
+        if (_rebuildLateBool)
+        {
+            _rebuildLateSpline.Rebuild(true);
         }
     }
 }
