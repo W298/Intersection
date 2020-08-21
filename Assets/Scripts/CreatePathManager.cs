@@ -875,22 +875,6 @@ public class CreatePathManager : MonoBehaviour
         }
     }
 
-    // Get Point count with position.
-    int GetPointIndex(Vector3 pos)
-    {
-        var points = current_spline.GetPoints();
-
-        for (var i = 0; i < points.Length; i++)
-        {
-            if (points[i].position == snap_pos)
-            {
-                return i;
-            }
-        }
-
-        return -1;
-    }
-
     List<SplineComputer> GetSplineComputers(Vector3 pos)
     {
         var spline_list = GameObject.FindObjectsOfType<SplineComputer>();
@@ -952,12 +936,12 @@ public class CreatePathManager : MonoBehaviour
         {
             for (var i = 0; i <= index; i++)
             {
-                newPoints.Add(originPoints[i]);
+                oldPoints.Add(originPoints[i]);
             }
 
             for (var i = index; i < originPoints.Length; i++)
             {
-                oldPoints.Add(originPoints[i]);
+                newPoints.Add(originPoints[i]);
             }
         }
         else
@@ -1708,22 +1692,51 @@ public class CreatePathManager : MonoBehaviour
                     var spline = GetSplineComputers(snap_pos).First();
                     var point = getSplinePoint(snap_pos, spline);
                     var pointIndex = getSplinePointIndex(spline, point);
+                    var lastIndex = spline.GetPoints().Length - 1;
                     
                     if (removeMode == REMOVEMODE.STANDBY)
                     {
                         removePointIndex = pointIndex;
                         removePoint = point;
                         removeMode = REMOVEMODE.EXECUTE;
-                        UnityEngine.Debug.LogWarning("SET!!" + removePointIndex);
                     }
                     else if (removeMode == REMOVEMODE.EXECUTE)
                     {
                         if (spline)
                         {
-                            UnityEngine.Debug.LogWarning("REMOVE!!" + removePointIndex);
-                            RemovePoint(spline, removePoint);
+                            if (removePointIndex == lastIndex || removePointIndex == 0)
+                            {
+                                RemovePoint(spline, removePoint);
+
+                                if (spline.GetPoints().Length <= 1)
+                                {
+                                    foreach (var cros in GetRefCrossroads(spline))
+                                    {
+                                        cros.RemoveRoad(spline);
+                                    }
+                                    
+                                    Destroy(spline.gameObject);
+                                }
+                            }
+                            else
+                            {
+                                var newSpline = SplitSpline(removePointIndex, spline);
+
+                                if (removePointIndex < pointIndex)
+                                {
+                                    RemovePoint(newSpline, removePoint);
+                                    RebuildLate(spline);
+                                    RebuildLate(newSpline);
+                                }
+                                else
+                                {
+                                    RemovePoint(spline, removePoint);
+                                    RebuildLate(spline);
+                                    RebuildLate(newSpline);
+                                }
+                            }
                         }
-                        
+
                         RebuildLate(spline);
                         
                         removePointIndex = pointIndex;
