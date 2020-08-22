@@ -104,25 +104,23 @@ public class CreatePathManager : MonoBehaviour
         NONE
     };
 
-    public SplineComputer[] roadPrefabs;
-
-    private Camera cm;
-    public SplineComputer SplinePrefab;
+    public SplineComputer[] roadPrefabs; 
     public GameObject debugobj;
-    public GameObject debugObj_2;
-
-    public GameObject debugObj_3;
-    public GameObject debugObj_4;
     public GameObject textObj;
-
+    
+    private Camera cm;
+    private SplineComputer SplinePrefab;
+    private ItemManager itemManager;
+    
     public int snapsize = 10;
+    public float divider = 7.4f;
+    
     private Vector3 def_normal = new Vector3(0, 1, 0);
     private float def_y = 0.0f;
-    public float divider = 7.2f;
 
     public SplineComputer current_spline;
     public MODE current_mode = MODE.NONE;
-    private JOINMODE joinmode = JOINMODE.NONE;
+    public JOINMODE joinmode = JOINMODE.NONE;
     public int new_index = 0;
     public ROADLANE currentRoadLane = ROADLANE.RL1;
 
@@ -139,30 +137,8 @@ public class CreatePathManager : MonoBehaviour
     public SplineComputer cross_old_spline;
     public SplineComputer cross_new_spline;
 
-    public bool stop = false;
-
     public List<GameObject> texts = new List<GameObject>();
-
     public List<Crossroad> crossroads = new List<Crossroad>();
-
-    void debugPoint(Vector3 pos)
-    {
-        var obj = Instantiate(debugObj_2, pos, Quaternion.identity);
-
-        StartCoroutine(Stop());
-
-        IEnumerator Stop()
-        {
-            yield return 0;
-            Destroy(obj.gameObject);
-        }
-    }
-
-    void debugVector(Vector3 start, Vector3 end)
-    {
-        Instantiate(debugObj_3, start, Quaternion.identity);
-        Instantiate(debugObj_4, end, Quaternion.identity);
-    }
 
     public void LogTextOnPos(string text, Vector3 pos)
     {
@@ -368,7 +344,7 @@ public class CreatePathManager : MonoBehaviour
     }
 
     // Append path when snapping event on. Return true when snapping event on.
-    bool AppendPath()
+    bool AppendPath(bool countRoad = true)
     {
         if (last_x != SnapToGridPoint(pos, snapsize).x || last_z != SnapToGridPoint(pos, snapsize).z)
         {
@@ -384,14 +360,26 @@ public class CreatePathManager : MonoBehaviour
 
             if (cond || current_spline.GetPoints().Length == 1)
             {
-                current_spline.SetPointNormal(new_index, def_normal);
-                current_spline.SetPointSize(new_index, 1);
-                current_spline.SetPointPosition(new_index, new Vector3(x, def_y, z));
+                if (itemManager.remainRoad > 0)
+                {
+                    current_spline.SetPointNormal(new_index, def_normal);
+                    current_spline.SetPointSize(new_index, 1);
+                    current_spline.SetPointPosition(new_index, new Vector3(x, def_y, z));
 
-                last_x = x;
-                last_z = z;
+                    last_x = x;
+                    last_z = z;
 
-                return true;
+                    if (countRoad)
+                    {
+                        itemManager.remainRoad--;
+                    }
+                    
+                    return true;
+                }
+                else
+                {
+                    UnityEngine.Debug.LogWarning("No Remaining Roads!");
+                }
             }
             else
             {
@@ -473,17 +461,20 @@ public class CreatePathManager : MonoBehaviour
 
         new_index = 0;
 
-        SpawnPath();
-
-        if (current_spline)
+        if (itemManager.remainRoad > 0)
         {
-            current_spline.Rebuild(true);
+            SpawnPath();
+            
+            if (current_spline)
+            {
+                current_spline.Rebuild(true);
+            }
+            
+            AppendPath(false);
+            new_index++;
+
+            current_mode = MODE.APPEND;
         }
-
-        AppendPath();
-        new_index++;
-
-        current_mode = MODE.APPEND;
     }
 
     // Append Point when snapping event on. Also Handle Cleaning Joined Path.
@@ -1255,6 +1246,7 @@ public class CreatePathManager : MonoBehaviour
     void Start()
     {
         cm = GetComponentInChildren<Camera>();
+        itemManager = GetComponent<ItemManager>();
     }
 
     void Update()
@@ -1647,18 +1639,7 @@ public class CreatePathManager : MonoBehaviour
             // BUILD MODE
             if (Input.GetMouseButtonDown(0))
             {
-                var spline_list = GameObject.FindObjectsOfType<SplineComputer>();
-
-                Crossroad crossroad = null;
-
-                foreach (var cros in crossroads)
-                {
-                    if (snap_pos == cros.getPosition())
-                    {
-                        crossroad = cros;
-                        break;
-                    }
-                }
+                var crossroad = crossroads.FirstOrDefault(cros => snap_pos == cros.getPosition());
 
                 if (crossroad != null)
                 {
@@ -1822,6 +1803,9 @@ public class CreatePathManager : MonoBehaviour
                             {
                                 UnityEngine.Debug.LogWarning("SPLIT");
                                 var newSpline = SplitSpline(removePointIndex, spline);
+                                
+                                ResetMeshClip(spline);
+                                ResetMeshClip(newSpline);
 
                                 if (removePointIndex < pointIndex)
                                 {
