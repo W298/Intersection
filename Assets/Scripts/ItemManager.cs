@@ -6,7 +6,15 @@ public class ItemManager : MonoBehaviour
 {
     private CreatePathManager pathManager;
 
-    public int remainRoad = 10;
+    public Dictionary<CreatePathManager.ROADLANE, int> 
+        remainRoadList = new Dictionary<CreatePathManager.ROADLANE, int>()
+    {
+        {CreatePathManager.ROADLANE.RL1, 20},
+        {CreatePathManager.ROADLANE.RL2, 5}
+    };
+
+    public int remainRL1 = 0;
+    public int remainRL2 = 0;
 
     void Start()
     {
@@ -15,6 +23,7 @@ public class ItemManager : MonoBehaviour
     
     void Update()
     {
-        
+        remainRL1 = remainRoadList[CreatePathManager.ROADLANE.RL1];
+        remainRL2 = remainRoadList[CreatePathManager.ROADLANE.RL2];
     }
 }
