@@ -9,6 +9,7 @@ using UnityEngine;
 using UnityEngine.Analytics;
 using UnityEngine.Serialization;
 using ArrayUtility = Dreamteck.ArrayUtility;
+using Object = System.Object;
 
 public class Crossroad
 {
@@ -869,6 +870,14 @@ public class CreatePathManager : MonoBehaviour
         }
         else if (Input.GetMouseButtonUp(0))
         {
+            if (current_spline)
+            {
+                if (current_spline.GetPoints().Length <= 1)
+                {
+                    Destroy(current_spline.gameObject);
+                }
+            }
+
             current_spline = null;
             cross_old_spline = null;
             cross_new_spline = null;
@@ -1204,6 +1213,17 @@ public class CreatePathManager : MonoBehaviour
     List<Crossroad> GetRefCrossroads(SplineComputer spline)
     {
         return crossroads.Where(cros => cros.getRoads().Contains(spline)).ToList();
+    }
+
+    Crossroad GetCrossroad(Vector3 pos)
+    {
+        return crossroads.Find(cros => cros.getPosition() == pos);
+    }
+
+    SplineComputer GetOwnSpline(SplinePoint point)
+    {
+        var splineList = GameObject.FindObjectsOfType<SplineComputer>();
+        return splineList.FirstOrDefault(spline => spline.GetPoints().Contains(point));
     }
 
     void ResetMeshClip(SplineComputer spline)
@@ -1737,10 +1757,17 @@ public class CreatePathManager : MonoBehaviour
                     var spline = new SplineComputer();
                     if (GetSplineComputers(snap_pos).Count != 1)
                     {
-                        foreach (var splineComputer in GetSplineComputers(snap_pos)
-                            .Where(splineComputer => splineComputer.GetPoints().Contains(removePoint)))
+                        if (removePointIndex == -1)
                         {
-                            spline = splineComputer;
+                            crossroadRef = GetCrossroad(snap_pos);
+                        }
+                        else
+                        {
+                            foreach (var splineComputer in GetSplineComputers(snap_pos)
+                                .Where(splineComputer => splineComputer.GetPoints().Contains(removePoint)))
+                            {
+                                spline = splineComputer;
+                            }
                         }
                     }
                     else
@@ -1754,18 +1781,32 @@ public class CreatePathManager : MonoBehaviour
 
                     if (removeMode == REMOVEMODE.STANDBY)
                     {
-                        removePointIndex = pointIndex;
-                        removePoint = point;
+                        if (crossroadRef == null)
+                        {
+                            removePointIndex = pointIndex;
+                            removePoint = point;
+                        }
                         removeMode = REMOVEMODE.EXECUTE;
                     }
                     else if (removeMode == REMOVEMODE.EXECUTE)
                     {
                         if (spline)
                         {
-                            if (removePointIndex == lastIndex || removePointIndex == 0)
+                            if (removePointIndex == lastIndex || removePointIndex == 0 || removePointIndex == -1)
                             {
                                 UnityEngine.Debug.LogWarning("REMOVE");
-                                RemovePoint(spline, removePoint);
+                                if (crossroadRef == null)
+                                {
+                                    RemovePoint(spline, removePoint);
+                                }
+                                else
+                                {
+                                    removePoint = spline.GetPoints().FirstOrDefault(po => po.position == crossroadRef.getPosition());
+                                    removePointIndex = getSplinePointIndex(spline, removePoint);
+                                    RemovePoint(spline, removePoint);
+
+                                    CheckRoadConnectedValid(crossroadRef, spline, true);
+                                }
 
                                 if (spline.GetPoints().Length <= 1)
                                 {
@@ -1810,6 +1851,12 @@ public class CreatePathManager : MonoBehaviour
             else if (Input.GetMouseButtonUp(0))
             {
                 removeMode = REMOVEMODE.STANDBY;
+                removePoint = new SplinePoint();
+                removePointIndex = -1;
+                crossroadRef = null;
+
+                last_x = 0;
+                last_z = 0;
             }
         }
     }
@@ -1820,8 +1867,9 @@ public class CreatePathManager : MonoBehaviour
         EXECUTE
     }
 
+    public Crossroad crossroadRef;
     public REMOVEMODE removeMode = REMOVEMODE.STANDBY;
-    public int removePointIndex;
+    public int removePointIndex = -1;
     public SplinePoint removePoint;
 
     private bool _rebuildLateBool = false;
