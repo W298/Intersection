@@ -2687,6 +2687,7 @@ GameObject:
   - component: {fileID: 2135375423}
   - component: {fileID: 2135375425}
   - component: {fileID: 2135375424}
+  - component: {fileID: 2135375426}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -2747,31 +2748,17 @@ MonoBehaviour:
   textObj: {fileID: 1030422081987952459, guid: c39138b03836bea4d9391938251f469a, type: 3}
   snapsize: 10
   divider: 7.4
-  current_spline: {fileID: 0}
-  current_mode: 0
-  joinmode: 4
-  new_index: 0
+  currentSpline: {fileID: 0}
+  currentMode: 3
+  joinMode: 4
+  newIndex: 0
   currentRoadLane: 0
-  last_x: 0
-  last_z: 0
-  last_pos: {x: 0, y: 0, z: 0}
-  snap_pos: {x: 0, y: 0, z: 0}
-  selected_spline: {fileID: 0}
-  selectedSplines: []
-  selected_index: 0
-  cross_old_spline: {fileID: 0}
-  cross_new_spline: {fileID: 0}
-  texts: []
+  lastX: 0
+  lastZ: 0
+  lastPos: {x: 0, y: 0, z: 0}
+  pos: {x: 0, y: 0, z: 0}
+  snapPos: {x: 0, y: 0, z: 0}
   removeMode: 0
-  removePointIndex: -1
-  removePoint:
-    _type: 0
-    position: {x: 0, y: 0, z: 0}
-    color: {r: 0, g: 0, b: 0, a: 0}
-    normal: {x: 0, y: 0, z: 0}
-    size: 0
-    tangent: {x: 0, y: 0, z: 0}
-    tangent2: {x: 0, y: 0, z: 0}
 --- !u!114 &2135375424
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2798,4 +2785,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9bcd7ebe2c6b31468728513aefa9216, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  remainRoad: 10
+--- !u!114 &2135375426
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2135375420}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57028a5060646fa49901bbeddde40ca5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

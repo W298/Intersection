@@ -62,6 +62,7 @@ public class Crossroad
 
     public void Update()
     {
+        
     }
 }
 
@@ -1227,7 +1228,7 @@ public class CreatePathManager : MonoBehaviour
         return splineList.FirstOrDefault(spline => spline.GetPoints().Contains(point));
     }
 
-    void ResetMeshClip(SplineComputer spline)
+    public void ResetMeshClip(SplineComputer spline)
     {
         for (int i = 0; i < 5; i++)
         {
@@ -1506,10 +1507,16 @@ public class CreatePathManager : MonoBehaviour
                 if (cros.getRoads().Count == 2)
                 {
                     var spline = MergeSplines(cros.getRoads()[0], cros.getRoads()[1]);
-                    ResetMeshClip(spline);
-                    
+
                     crossroads.Remove(cros);
-                    cros = null;
+                    
+                    StartCoroutine(ResetMeshClipLate());
+
+                    IEnumerator ResetMeshClipLate()
+                    {
+                        yield return new WaitForSeconds(0.01f);
+                        ResetMeshClip(spline);
+                    }
                 }
                 else
                 {
@@ -1804,6 +1811,17 @@ public class CreatePathManager : MonoBehaviour
                                     foreach (var cros in GetRefCrossroads(spline))
                                     {
                                         cros.RemoveRoad(spline);
+
+                                        StartCoroutine(ResetMeshClipLate());
+
+                                        IEnumerator ResetMeshClipLate()
+                                        {
+                                            yield return new WaitForSeconds(0.01f);
+                                            foreach (var road in cros.getRoads())
+                                            {
+                                                ResetMeshClip(road);
+                                            }
+                                        }
                                     }
                                     
                                     Destroy(spline.gameObject);

@@ -1,29 +1,26 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
 
 public class ItemManager : MonoBehaviour
 {
     private CreatePathManager pathManager;
 
-    public Dictionary<CreatePathManager.ROADLANE, int> 
+    public Dictionary<CreatePathManager.ROADLANE, int>
         remainRoadList = new Dictionary<CreatePathManager.ROADLANE, int>()
-    {
-        {CreatePathManager.ROADLANE.RL1, 20},
-        {CreatePathManager.ROADLANE.RL2, 5}
-    };
-
-    public int remainRL1 = 0;
-    public int remainRL2 = 0;
+        {
+            {CreatePathManager.ROADLANE.RL1, 20},
+            {CreatePathManager.ROADLANE.RL2, 5}
+        };
 
     void Start()
     {
         pathManager = GetComponent<CreatePathManager>();
     }
-    
+
     void Update()
     {
-        remainRL1 = remainRoadList[CreatePathManager.ROADLANE.RL1];
-        remainRL2 = remainRoadList[CreatePathManager.ROADLANE.RL2];
+        UnityEngine.Debug.LogWarning(remainRoadList[CreatePathManager.ROADLANE.RL2]);
     }
 }
