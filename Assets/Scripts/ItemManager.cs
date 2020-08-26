@@ -14,6 +14,9 @@ public class ItemManager : MonoBehaviour
             {CreatePathManager.ROADLANE.RL2, 5}
         };
 
+    public int RL1;
+    public int RL2;
+
     void Start()
     {
         pathManager = GetComponent<CreatePathManager>();
@@ -21,6 +24,7 @@ public class ItemManager : MonoBehaviour
 
     void Update()
     {
-        UnityEngine.Debug.LogWarning(remainRoadList[CreatePathManager.ROADLANE.RL2]);
+        RL1 = remainRoadList[CreatePathManager.ROADLANE.RL1];
+        RL2 = remainRoadList[CreatePathManager.ROADLANE.RL2];
     }
 }
