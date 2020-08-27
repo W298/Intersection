@@ -10,7 +10,7 @@ public class ItemManager : MonoBehaviour
     public Dictionary<CreatePathManager.ROADLANE, int>
         remainRoadList = new Dictionary<CreatePathManager.ROADLANE, int>()
         {
-            {CreatePathManager.ROADLANE.RL1, 20},
+            {CreatePathManager.ROADLANE.RL1, 100},
             {CreatePathManager.ROADLANE.RL2, 5}
         };
 

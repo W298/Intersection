@@ -16,6 +16,19 @@ public class Crossroad
     private Vector3 position;
     private List<SplineComputer> roads = new List<SplineComputer>();
 
+    public Crossroad() {}
+
+    public Crossroad(List<SplineComputer> _roads)
+    {
+        SetRoads(_roads);
+    }
+
+    public Crossroad(List<SplineComputer> _roads, Vector3 _position)
+    {
+        SetRoads(_roads);
+        position = _position;
+    }
+
     public List<SplineComputer> getRoads()
     {
         return roads;
@@ -82,7 +95,8 @@ public class CreatePathManager : MonoBehaviour
         TO4,
         HEAD,
         TO3_SPLIT,
-        NONE
+        NONE,
+        TO3_NOSPLIT
     };
 
     public enum ROADLANE
@@ -629,11 +643,41 @@ public class CreatePathManager : MonoBehaviour
                         }
 
                         // Check Appending Spline is Closed.
-                        if (check_spline == null && selectedSpline.GetPoints().First().position ==
-                            selectedSpline.GetPoints().Last().position)
+                        if (check_spline == null)
                         {
-                            UnityEngine.Debug.LogWarning("LOOP");
-                            selectedSpline.Close();
+                            if (selectedSpline.GetPoints().First().position ==
+                                selectedSpline.GetPoints().Last().position)
+                            {
+                                UnityEngine.Debug.LogWarning("LOOP");
+                                selectedSpline.Close();
+                            }
+                            else
+                            {
+                                var splinePoints = selectedSpline.GetPoints();
+
+                                var overlappingPoint = new SplinePoint();
+                                var overlappingPointIndex = -1;
+
+                                for (var i = 0; i < splinePoints.Length; i++)
+                                {
+                                    if (splinePoints[i].position == splinePoints[0].position && i != 0)
+                                    {
+                                        overlappingPoint = splinePoints[i];
+                                        overlappingPointIndex = i;
+                                        break;
+                                    }
+                                }
+
+                                if (overlappingPointIndex != -1)
+                                {
+                                    var restSpline = SplitSpline(overlappingPointIndex, selectedSpline);
+                                    selectedSpline.isLoop = true;
+                                    
+                                    crossroads.Add(new Crossroad(
+                                        new List<SplineComputer>() { selectedSpline, restSpline },
+                                        overlappingPoint.position));
+                                }
+                            }
                         }
                     }
                 }
@@ -649,8 +693,6 @@ public class CreatePathManager : MonoBehaviour
                 {
                     // CHECK JOIN DURING APPEND (TAIL)
                     SplineComputer check_spline = null;
-                    
-                    UnityEngine.Debug.LogWarning(GetSplineComputers(snapPos).Count);
 
                     foreach (var spline in GetSplineComputers(snapPos))
                     {
@@ -763,11 +805,42 @@ public class CreatePathManager : MonoBehaviour
                     }
 
                     // Check Appending Spline is Closed.
-                    if (check_spline == null && currentSpline.GetPoints().First().position ==
-                        currentSpline.GetPoints().Last().position)
+                    if (check_spline == null)
                     {
-                        UnityEngine.Debug.LogWarning("LOOP");
-                        currentSpline.Close();
+                        if (currentSpline.GetPoints().First().position ==
+                            currentSpline.GetPoints().Last().position)
+                        {
+                            UnityEngine.Debug.LogWarning("LOOP");
+                            currentSpline.Close();
+                        }
+                        else
+                        {
+                            var points = currentSpline.GetPoints();
+                            var lastIndex = points.Length - 1;
+                            
+                            var overlappingPoint = new SplinePoint();
+                            var overlappingPointIndex = -1;
+
+                            for (var i = 0; i < points.Length; i++)
+                            {
+                                if (points[i].position == points[lastIndex].position && i != lastIndex)
+                                {
+                                    overlappingPoint = points[i];
+                                    overlappingPointIndex = i;
+                                    break;
+                                }
+                            }
+
+                            if (overlappingPointIndex != -1)
+                            {
+                                var loopSpline = SplitSpline(overlappingPointIndex, currentSpline);
+                                loopSpline.isLoop = true;
+                                
+                                crossroads.Add(new Crossroad(
+                                    new List<SplineComputer>() { loopSpline, currentSpline }, 
+                                    overlappingPoint.position));
+                            }
+                        }
                     }
 
                     // CHECK JOIN DURING BUILD
@@ -848,6 +921,13 @@ public class CreatePathManager : MonoBehaviour
                             selectedSplines = null;
                             newIndex++;
                         }
+                        else if (joinMode == JOINMODE.TO3_NOSPLIT)
+                        {
+                            selectedCrossroad.AddRoad(currentSpline);
+
+                            newIndex++;
+                            joinMode = JOINMODE.NONE;
+                        }
                     }
                     else
                     {
@@ -903,8 +983,8 @@ public class CreatePathManager : MonoBehaviour
             currentMode = MODE.BUILD;
         }
     }
-
-    List<SplineComputer> GetSplineComputers(Vector3 pos)
+    
+    List<SplineComputer> GetSplineComputers(Vector3 pos, bool heightFunc = true)
     {
         var spline_list = GameObject.FindObjectsOfType<SplineComputer>();
         var return_list = new List<SplineComputer>();
@@ -915,17 +995,28 @@ public class CreatePathManager : MonoBehaviour
 
             for (var i = 0; i < points.Length; i++)
             {
-                if (pos == points[i].position)
+                if (heightFunc)
                 {
-                    return_list.Add(spline);
-                    break;
+                    if (pos == points[i].position)
+                    {
+                        return_list.Add(spline);
+                        break;
+                    }
+                }
+                else
+                {
+                    if (pos.x == points[i].position.x && pos.z == points[i].position.z)
+                    {
+                        return_list.Add(spline);
+                        break;
+                    }
                 }
             }
         }
 
         return return_list;
     }
-    
+
     SplinePoint getSplinePoint(Vector3 pos, SplineComputer spline)
     {
         foreach (var point in spline.GetPoints())
@@ -1271,12 +1362,11 @@ public class CreatePathManager : MonoBehaviour
     {
         RayTrace();
 
-        snapPos = new Vector3(SnapGrid(pos.x, snapsize), 0, SnapGrid(pos.z, snapsize));
+        snapPos = new Vector3(SnapGrid(pos.x, snapsize), height * 2, SnapGrid(pos.z, snapsize));
         lastPos = snapPos;
         debugobj.transform.position = snapPos;
         
-        snapPosWithY = snapPos + new Vector3(0, height * 2, 0);
-        debugobj2.transform.position = snapPosWithY;
+        debugobj2.transform.position = new Vector3(snapPos.x, 0, snapPos.z);
 
         // Crossroad Clean Line Code
         for (var index = 0; index < crossroads.Count; index++)
@@ -1701,6 +1791,14 @@ public class CreatePathManager : MonoBehaviour
 
                         selectedCrossroad = crossroad;
 
+                        runBuildMode();
+                    }
+                    else if (crossroad.getRoads().Count == 2 && crossroad.getRoads().Any(road => road.isLoop))
+                    {
+                        joinMode = JOINMODE.TO3_NOSPLIT;
+                        
+                        selectedCrossroad = crossroad;
+                        
                         runBuildMode();
                     }
                 }
