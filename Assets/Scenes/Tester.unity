@@ -2935,6 +2935,7 @@ MonoBehaviour:
   - {fileID: 3104578535762560046, guid: dfdee4049a74b6846baef4bb5f153ed5, type: 3}
   - {fileID: 0}
   - {fileID: 0}
+  - {fileID: 6134424620591549924, guid: 943a0ae8ec8b1104da6ba080c01014fb, type: 3}
   debugobj: {fileID: 1518576004}
   debugobj2: {fileID: 1807007270}
   textObj: {fileID: 1030422081987952459, guid: c39138b03836bea4d9391938251f469a, type: 3}
@@ -2943,6 +2944,9 @@ MonoBehaviour:
   dividerList:
   - 7.4
   - 3.6
+  - 0
+  - 0
+  - 12
   currentSpline: {fileID: 0}
   currentMode: 3
   joinMode: 4

@@ -104,7 +104,8 @@ public class CreatePathManager : MonoBehaviour
         RL1,
         RL2,
         RL3,
-        RL4
+        RL4,
+        RL05
     };
 
     private enum MERGEMODE
@@ -119,7 +120,7 @@ public class CreatePathManager : MonoBehaviour
 
     public int height = 0;
 
-    public SplineComputer[] roadPrefabs; 
+    public SplineComputer[] roadPrefabs;
     public GameObject debugobj;
     public GameObject debugobj2;
     public GameObject textObj;
@@ -131,10 +132,13 @@ public class CreatePathManager : MonoBehaviour
     
     public int snapsize = 10;
     
-    public float[] dividerList = new float[2]
+    public float[] dividerList = new float[5]
     {
         7.22f,
-        3.6f
+        3.6f,
+        0.0f,
+        0.0f,
+        12.0f
     };
 
     private Vector3 def_normal = new Vector3(0, 1, 0);
@@ -393,28 +397,14 @@ public class CreatePathManager : MonoBehaviour
     // Spawn SplineComputer and Apply to spline_computer variable.
     void SpawnPath()
     {
-        UnityEngine.Debug.LogWarning("Spawn Path!");
         if (currentSpline)
         {
             currentSpline = null;
             newIndex = 0;
         }
-
-        switch (currentRoadLane)
-        {
-            case ROADLANE.RL1:
-                SplinePrefab = roadPrefabs[0];
-                break;
-            case ROADLANE.RL2:
-                SplinePrefab = roadPrefabs[1];
-                break;
-            case ROADLANE.RL3:
-                SplinePrefab = roadPrefabs[2];
-                break;
-            case ROADLANE.RL4:
-                SplinePrefab = roadPrefabs[3];
-                break;
-        }
+        
+        UnityEngine.Debug.LogWarning((int) currentRoadLane);
+        SplinePrefab = roadPrefabs[(int) currentRoadLane];
 
         currentSpline = Instantiate(SplinePrefab, pos, Quaternion.identity);
         currentSpline.roadLane = currentRoadLane;
@@ -425,21 +415,7 @@ public class CreatePathManager : MonoBehaviour
     // Spawn SplineComputer independently.
     SplineComputer InsPath(Vector3 pos)
     {
-        switch (currentRoadLane)
-        {
-            case ROADLANE.RL1:
-                SplinePrefab = roadPrefabs[0];
-                break;
-            case ROADLANE.RL2:
-                SplinePrefab = roadPrefabs[1];
-                break;
-            case ROADLANE.RL3:
-                SplinePrefab = roadPrefabs[2];
-                break;
-            case ROADLANE.RL4:
-                SplinePrefab = roadPrefabs[3];
-                break;
-        }
+        SplinePrefab = roadPrefabs[(int) currentRoadLane];
 
         var spline = Instantiate(SplinePrefab, pos, Quaternion.identity);
         spline.roadLane = currentRoadLane;
@@ -453,25 +429,7 @@ public class CreatePathManager : MonoBehaviour
 
     SplineComputer InsPath(Vector3 pos, ROADLANE roadlane)
     {
-        SplineComputer prefab;
-        switch (roadlane)
-        {
-            case ROADLANE.RL1:
-                prefab = roadPrefabs[0];
-                break;
-            case ROADLANE.RL2:
-                prefab = roadPrefabs[1];
-                break;
-            case ROADLANE.RL3:
-                prefab = roadPrefabs[2];
-                break;
-            case ROADLANE.RL4:
-                prefab = roadPrefabs[3];
-                break;
-            default:
-                prefab = roadPrefabs[0];
-                break;
-        }
+        var prefab = roadPrefabs[(int) currentRoadLane];
         
         var spline = Instantiate(prefab, pos, Quaternion.identity);
         spline.roadLane = roadlane;
@@ -1886,6 +1844,10 @@ public class CreatePathManager : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.Alpha2))
         {
             currentRoadLane = ROADLANE.RL2;
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha5))
+        {
+            currentRoadLane = ROADLANE.RL05;
         }
         else if (Input.GetKeyDown(KeyCode.RightBracket))
         {

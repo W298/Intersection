@@ -11,7 +11,8 @@ public class ItemManager : MonoBehaviour
         remainRoadList = new Dictionary<CreatePathManager.ROADLANE, int>()
         {
             {CreatePathManager.ROADLANE.RL1, 100},
-            {CreatePathManager.ROADLANE.RL2, 50}
+            {CreatePathManager.ROADLANE.RL2, 50},
+            {CreatePathManager.ROADLANE.RL05, 50}
         };
 
     public int RL1;
