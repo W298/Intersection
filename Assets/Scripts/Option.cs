@@ -33,4 +33,16 @@ public partial class SROptions
             pathManager.ResetMeshClip(spline);
         }
     }
+
+    public float divider_RL1
+    {
+        get { return pathManager.dividerList[0]; }
+        set { pathManager.dividerList[0] = value; }
+    }
+
+    public float divider_RL2
+    {
+        get { return pathManager.dividerList[1]; }
+        set { pathManager.dividerList[1] = value; }
+    }
 }

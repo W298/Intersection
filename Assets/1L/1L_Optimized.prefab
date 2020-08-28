@@ -72,10 +72,15 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8353213387941314488, guid: 0f0f7e1b6ce97cb489d678f20f53f3b7,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8353213387941314489, guid: 0f0f7e1b6ce97cb489d678f20f53f3b7,
         type: 3}
       propertyPath: channels.Array.size
-      value: 7
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 8353213387941314489, guid: 0f0f7e1b6ce97cb489d678f20f53f3b7,
         type: 3}
