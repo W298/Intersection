@@ -26,7 +26,7 @@ public partial class SROptions
     public CreatePathManager pathManager;
 
     [Category("PathManager")]
-    public void ResetMeshClip()
+    public void ResetAllMeshClip()
     {
         foreach (var spline in GameObject.FindObjectsOfType<SplineComputer>())
         {

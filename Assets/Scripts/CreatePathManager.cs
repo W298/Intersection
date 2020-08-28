@@ -123,6 +123,7 @@ public class CreatePathManager : MonoBehaviour
     public GameObject debugobj;
     public GameObject debugobj2;
     public GameObject textObj;
+    public GameObject Pillar;
     
     private Camera cm;
     private SplineComputer SplinePrefab;
@@ -398,7 +399,19 @@ public class CreatePathManager : MonoBehaviour
                     {
                         --itemManager.remainRoadList[currentRoadLane];
                     }
-                    
+
+                    // Spawn Pillar
+                    var points = currentSpline.GetPoints();
+                    if (newIndex != 0)
+                    {
+                        var spawnPos = (points[newIndex - 1].position + points[newIndex].position) / 2;
+
+                        var dir = points[newIndex].position - points[newIndex - 1].position;
+                        spawnPos -= new Vector3(0, 4.3f, 0);
+                        
+                        Instantiate(Pillar, spawnPos, Quaternion.LookRotation(dir));
+                    }
+
                     return true;
                 }
                 else
@@ -536,6 +549,18 @@ public class CreatePathManager : MonoBehaviour
                         selectedSpline.SetPointNormal(0, def_normal);
                         selectedSpline.SetPointSize(newIndex, 1);
                         selectedSpline.SetPointPosition(0, snapPos);
+                        
+                        // Spawn Pillar (Head)
+                        var selectedSplinePoints = selectedSpline.GetPoints();
+                        if (selectedSplinePoints.Length > 1)
+                        {
+                            var spawnPos = (selectedSplinePoints[0].position + selectedSplinePoints[1].position) / 2;
+
+                            var dir = selectedSplinePoints[1].position - selectedSplinePoints[0].position;
+                            spawnPos -= new Vector3(0, 4.3f, 0);
+                            
+                            Instantiate(Pillar, spawnPos, Quaternion.LookRotation(dir));
+                        }
 
                         // CHECK JOIN DURING APPEND (HEAD)
                         SplineComputer check_spline = null;
