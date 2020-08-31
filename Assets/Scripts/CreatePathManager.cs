@@ -378,6 +378,10 @@ public class CreatePathManager : MonoBehaviour
     {
         var dir = currentPoint - lastPoint;
         var dirAppend = addPoint - currentPoint;
+
+        var dirProj = new Vector3(dir.x, 0, dir.z);
+        var dirAppendProj = new Vector3(dirAppend.x, 0, dirAppend.z);
+        
         var overlapped = false;
 
         var refSplineList = GetSplineComputers(addPoint, false);
@@ -397,7 +401,7 @@ public class CreatePathManager : MonoBehaviour
             switch (currentRoadLane)
             {
                 case ROADLANE.RL1:
-                    return (Vector3.Angle(dir, dirAppend) <= 90);
+                    return (Vector3.Angle(dir, dirAppend) <= 90 || isVectorParallel(dirProj, dirAppendProj));
                 case ROADLANE.RL2:
                     return (Vector3.Angle(dir, dirAppend) <= 45);
                 default:
@@ -535,6 +539,8 @@ public class CreatePathManager : MonoBehaviour
             else
             {
                 UnityEngine.Debug.LogWarning("Point is out of range!");
+
+                return false;
             }
         }
 
