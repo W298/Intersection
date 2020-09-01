@@ -173,6 +173,7 @@ public class CreatePathManager : MonoBehaviour
     private SplineComputer _rebuildLateSpline = null;
 
     public bool needDebug = false;
+    private bool useSnapToGridPoint = false;
 
     private List<GameObject> texts = new List<GameObject>();
     public List<Crossroad> crossroads = new List<Crossroad>();
@@ -314,9 +315,9 @@ public class CreatePathManager : MonoBehaviour
     Vector3 SnapToGridPoint(Vector3 pos, int _snapsize)
     {
         var snapsize = (float) _snapsize;
-
+        
         if (!isVectorInXZArea(pos, -snapsize + lastPos.x, snapsize + lastPos.x,
-            -snapsize + lastPos.z, snapsize + +lastPos.z))
+            -snapsize + lastPos.z, snapsize + lastPos.z))
         {
             UnityEngine.Debug.LogWarning("Out of range!");
         }
@@ -369,6 +370,10 @@ public class CreatePathManager : MonoBehaviour
             {
                 lastPos = lastPos - new Vector3(snapsize, 0, snapsize);
                 return lastPos;
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning("NONE");
             }
         }
 
@@ -680,6 +685,7 @@ public class CreatePathManager : MonoBehaviour
     {
         if (Input.GetMouseButton(0))
         {
+            useSnapToGridPoint = true;
             // -------------------------------------------------------------------
             // HEAD
             if (joinMode == JOINMODE.HEAD)
@@ -1174,6 +1180,8 @@ public class CreatePathManager : MonoBehaviour
         }
         else if (Input.GetMouseButtonUp(0))
         {
+            useSnapToGridPoint = false;
+            
             if (currentSpline)
             {
                 if (currentSpline.GetPoints().Length <= 1)
@@ -1210,6 +1218,14 @@ public class CreatePathManager : MonoBehaviour
             yield return 0;
             Destroy(obj.gameObject);
         }
+    }
+
+    void debugArea(float x1, float x2, float z1, float z2)
+    {
+        debugPoint(new Vector3(x1, 0, z1));
+        debugPoint(new Vector3(x2, 0, z2));
+        debugPoint(new Vector3(x1, 0, z2));
+        debugPoint(new Vector3(x2, 0, z1));
     }
 
     bool CheckCrossroadCreationValid(SplineComputer originSpline, SplineComputer newSpline, int joinIndex)
@@ -1636,11 +1652,20 @@ public class CreatePathManager : MonoBehaviour
     {
         RayTrace();
 
-        snapPos = new Vector3(SnapGrid(pos.x, snapsize), height * 2, SnapGrid(pos.z, snapsize));
-        lastPos = snapPos;
-        debugobj.transform.position = snapPos;
-
-        debugobj2.transform.position = new Vector3(snapPos.x, 0, snapPos.z);
+        if (!useSnapToGridPoint)
+        {
+            snapPos = new Vector3(SnapGrid(pos.x, snapsize), height * 2, SnapGrid(pos.z, snapsize));
+            lastPos = snapPos;
+            debugobj.transform.position = snapPos;
+            debugobj2.transform.position = new Vector3(snapPos.x, 0, snapPos.z);
+        }
+        else
+        {
+            snapPos = new Vector3(SnapToGridPoint(pos, snapsize).x, height * 2, SnapToGridPoint(pos, snapsize).z);
+            lastPos = snapPos;
+            debugobj.transform.position = snapPos;
+            debugobj2.transform.position = new Vector3(snapPos.x, 0, snapPos.z);
+        }
 
         // Crossroad Clean Line Code
         for (var index = 0; index < crossroads.Count; index++)

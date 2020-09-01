@@ -15,6 +15,7 @@
       <Path>Library/PackageCache/com.unity.test-framework@1.1.14</Path>
       <Path>Library/PackageCache/com.unity.textmeshpro@3.0.1</Path>
       <Path>Library/PackageCache/com.unity.timeline@1.2.14</Path>
+      <Path>Library/PackageCache/com.vladfaust.unitywakatime@4dedbeac2e</Path>
       <Path>Packages</Path>
       <Path>ProjectSettings</Path>
     </explicitIncludes>
