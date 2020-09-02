@@ -51,4 +51,10 @@ public partial class SROptions
         get { return pathManager.dividerList[4]; }
         set { pathManager.dividerList[4] = value; }
     }
+
+    public float changer
+    {
+        get { return pathManager.changer; }
+        set { pathManager.changer = value; }
+    }
 }
