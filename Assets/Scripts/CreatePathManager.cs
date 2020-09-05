@@ -120,17 +120,6 @@ public class CreatePathManager : MonoBehaviour
         NONE
     };
 
-    public enum SNAPDIR
-    {
-        RIGHT,
-        UPPERRIGHT,
-        LOWERRIGHT,
-        LEFT,
-        UPPERLEFT,
-        LOWERLEFT,
-        NONE
-    }
-
     public int height = 0;
 
     public SplineComputer[] roadPrefabs;
@@ -187,10 +176,20 @@ public class CreatePathManager : MonoBehaviour
     private bool useSnapToGridPoint = false;
 
     public float changer = 0.0f;
+    public GameObject car;
 
     private List<GameObject> texts = new List<GameObject>();
     public List<Crossroad> crossroads = new List<Crossroad>();
 
+    public void MoveCar()
+    {
+        var startSpline = GameObject.FindObjectOfType<SplineComputer>();
+
+        var pathFollower = car.GetComponent<PathFollower>();
+        pathFollower.setSpline(startSpline);
+        pathFollower.Run();
+    }
+    
     private void SetMeshClip(SplineComputer spline, int direction, bool isTo, double per)
     {
         var mesh = spline.GetComponent<SplineMesh>();
@@ -1658,6 +1657,9 @@ public class CreatePathManager : MonoBehaviour
     void Update()
     {
         RayTrace();
+        
+        if (currentSpline) 
+            UnityEngine.Debug.LogWarning(currentSpline.roadMode);
 
         if (!useSnapToGridPoint)
         {
@@ -1935,154 +1937,64 @@ public class CreatePathManager : MonoBehaviour
                     {
                         var isRight = false;
                         var isLeft = false;
-                        
 
                         if (roads[i].GetPoints().Last().position == cros.getPosition())
                         {
-                            var snapDirList = new List<SNAPDIR>();
-
                             foreach (var dir in dirList)
                             {
                                 if (isVectorVertical(dirList[i], dir))
                                 {
                                     if (isVectorGoClockwise(dirList[i], dir))
                                     {
-                                        snapDirList.Add(SNAPDIR.LEFT);
+                                        isLeft = true;
                                     }
                                     else
                                     {
-                                        snapDirList.Add(SNAPDIR.RIGHT);
-                                    }
-                                }
-                                else
-                                {
-                                    if (!isVectorParallel(dirList[i], dir))
-                                    {
-                                        if (isVectorGoClockwise(dirList[i], dir))
-                                        {
-                                            if (Vector3.Angle(dirList[i], dir) < 90)
-                                            {
-                                                snapDirList.Add(SNAPDIR.LOWERLEFT);
-                                            }
-                                            else
-                                            {
-                                                snapDirList.Add(SNAPDIR.UPPERLEFT);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            if (Vector3.Angle(dirList[i], dir) < 90)
-                                            {
-                                                snapDirList.Add(SNAPDIR.LOWERRIGHT);
-                                            }
-                                            else
-                                            {
-                                                snapDirList.Add(SNAPDIR.UPPERRIGHT);
-                                            }
-                                        }
+                                        isRight = true;
                                     }
                                 }
                             }
-
-                            string str = "";
-                            foreach (var snapdir in snapDirList)
-                            {
-                                str += snapdir.ToString() + "/";
-                            }
-
-                            UnityEngine.Debug.LogWarning("Last - " + i + " - " + str);
 
                             var per = roads[i]
-                                .Project(cros.getPosition() + dirList[i] / dividerList[(int) roads[i].roadLane])
+                                .Project(cros.getPosition() + dirList[i] / dividerList[(int)roads[i].roadLane])
                                 .percent;
 
                             var mesh = roads[i].GetComponent<SplineMesh>();
 
                             mesh.GetChannel(1).clipTo = per;
 
-                            foreach (var snapdir in snapDirList)
+                            if (isLeft && !isRight)
                             {
-                                switch (snapdir)
-                                {
-                                    case SNAPDIR.RIGHT:
-                                        SetMeshClip(roads[i], 1, true, per);
-                                        break;
-                                    case SNAPDIR.UPPERRIGHT:
-                                        SetMeshClip(roads[i], 1, true, per + 0.22f);
-                                        break;
-                                    case SNAPDIR.LOWERRIGHT:
-                                        SetMeshClip(roads[i], 1, true, per - 0.07f);
-                                        break;
-                                    case SNAPDIR.LEFT:
-                                        SetMeshClip(roads[i], 0, true, per);
-                                        break;
-                                    case SNAPDIR.UPPERLEFT:
-                                        SetMeshClip(roads[i], 0, true, per + 0.22f);
-                                        break;
-                                    case SNAPDIR.LOWERLEFT:
-                                        SetMeshClip(roads[i], 0, true, per - 0.07f);
-                                        break;
-                                }
+                                SetMeshClip(roads[i], 0, true, per);
+                            }
+                            else if (isRight && !isLeft)
+                            {
+                                SetMeshClip(roads[i], 1, true, per);
+                            }
+                            else if (isLeft && isRight)
+                            {
+                                SetMeshClip(roads[i], 2, true, per);
                             }
                         }
-                        // ---------------------------------
                         else if (roads[i].GetPoints().First().position == cros.getPosition())
                         {
-                            var snapDirList = new List<SNAPDIR>();
-
                             foreach (var dir in dirList)
                             {
                                 if (isVectorVertical(dirList[i], dir))
                                 {
                                     if (isVectorGoClockwise(dirList[i], dir))
                                     {
-                                        snapDirList.Add(SNAPDIR.RIGHT);
+                                        isRight = true;
                                     }
                                     else
                                     {
-                                        snapDirList.Add(SNAPDIR.LEFT);
-                                    }
-                                }
-                                else
-                                {
-                                    if (!isVectorParallel(dirList[i], dir))
-                                    {
-                                        if (isVectorGoClockwise(dirList[i], dir))
-                                        {
-                                            if (Vector3.Angle(dirList[i], dir) < 90)
-                                            {
-                                                snapDirList.Add(SNAPDIR.UPPERRIGHT);
-                                            }
-                                            else
-                                            {
-                                                snapDirList.Add(SNAPDIR.LOWERRIGHT);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            if (Vector3.Angle(dirList[i], dir) < 90)
-                                            {
-                                                snapDirList.Add(SNAPDIR.UPPERLEFT);
-                                            }
-                                            else
-                                            {
-                                                snapDirList.Add(SNAPDIR.LOWERLEFT);
-                                            }
-                                        }
+                                        isLeft = true;
                                     }
                                 }
                             }
-
-                            string str = "";
-                            foreach (var snapdir in snapDirList)
-                            {
-                                str += snapdir.ToString() + "/";
-                            }
-
-                            UnityEngine.Debug.LogWarning("First - " + i + " - " + str);
 
                             var per = roads[i]
-                                .Project(cros.getPosition() + dirList[i] / dividerList[(int) roads[i].roadLane])
+                                .Project(cros.getPosition() + dirList[i] / dividerList[(int)roads[i].roadLane])
                                 .percent;
 
                             var mesh = roads[i].GetComponent<SplineMesh>();
@@ -2100,31 +2012,6 @@ public class CreatePathManager : MonoBehaviour
                             else if (isLeft && isRight)
                             {
                                 SetMeshClip(roads[i], 2, false, per);
-                            }
-
-                            foreach (var snapdir in snapDirList)
-                            {
-                                switch (snapdir)
-                                {
-                                    case SNAPDIR.RIGHT:
-                                        SetMeshClip(roads[i], 1, false, per);
-                                        break;
-                                    case SNAPDIR.UPPERRIGHT:
-                                        SetMeshClip(roads[i], 1, false, per + 0.22f);
-                                        break;
-                                    case SNAPDIR.LOWERRIGHT:
-                                        SetMeshClip(roads[i], 1, false, per - 0.07f);
-                                        break;
-                                    case SNAPDIR.LEFT:
-                                        SetMeshClip(roads[i], 0, false, per);
-                                        break;
-                                    case SNAPDIR.UPPERLEFT:
-                                        SetMeshClip(roads[i], 0, false, per + 0.22f);
-                                        break;
-                                    case SNAPDIR.LOWERLEFT:
-                                        SetMeshClip(roads[i], 0, false, per - 0.07f);
-                                        break;
-                                }
                             }
                         }
                     }

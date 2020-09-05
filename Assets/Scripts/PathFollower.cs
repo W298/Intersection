@@ -8,67 +8,53 @@ using UnityEngine.EventSystems;
 
 public class PathFollower : MonoBehaviour
 {
-    private SplineFollower sf;
+    private SplineFollower splineFollower;
 
-    public SplineComputer cm2;
+    public float defY = 0.35f;
 
-    public enum ROAD { plus_road, minus_road }
-
-    public ROAD follow_road;
-    void Start()
+    public void setSpline(SplineComputer _spline)
     {
-        sf = GetComponent<SplineFollower>();
+        splineFollower.spline = _spline;
 
-        sf.motion.velocityHandleMode = TransformModule.VelocityHandleMode.Preserve;
-        applyFollowRoad();
-
-        sf.onEndReached += EndReach;
+        switch (_spline.roadLane)
+        {
+            case CreatePathManager.ROADLANE.RL1:
+                switch (_spline.roadMode)
+                {
+                    case SplineComputer.MODE.FIRST_OPEN:
+                        splineFollower.direction = Spline.Direction.Forward;
+                        splineFollower.startPosition = 0;
+                        splineFollower.motion.offset = new Vector2(0.65f, defY);
+                        break;
+                    case SplineComputer.MODE.LAST_OPEN:
+                        splineFollower.direction = Spline.Direction.Backward;
+                        splineFollower.startPosition = 1;
+                        splineFollower.motion.offset = new Vector2(-0.65f, defY);
+                        break;
+                }
+                break;
+            default:
+                break;
+        }
     }
 
-    private void EndReach(double last_percent)
+    public void Run()
     {
-        sf.spline = cm2;
-        setFollowRoad(ROAD.minus_road);
+        splineFollower.follow = true;
+    }
 
-        sf.clipTo = cm2.GetPointPercent(3);
+    public void Stop()
+    {
+        splineFollower.follow = false;
+    }
+
+    void Start()
+    {
+        splineFollower = GetComponent<SplineFollower>();
+        splineFollower.motion.velocityHandleMode = TransformModule.VelocityHandleMode.Preserve;
     }
 
     void Update()
     {
-        
-    }
-
-    public void setFollowRoad(ROAD _roadtype)
-    {
-        follow_road = _roadtype;
-        applyFollowRoad();
-    }
-
-    private void applyFollowRoadOffset()
-    {
-        if (follow_road == ROAD.plus_road)
-            sf.motion.offset = new Vector2(1, 0);
-        else if (follow_road == ROAD.minus_road)
-            sf.motion.offset = new Vector2(-1, 0);
-    }
-
-    private void applyFollowRoadDirection()
-    {
-        if (follow_road == ROAD.plus_road)
-        {
-            sf.direction = Spline.Direction.Forward;
-            sf.startPosition = 0;
-        }
-        else if (follow_road == ROAD.minus_road)
-        {
-            sf.direction = Spline.Direction.Backward;
-            sf.startPosition = 1;
-        }
-    }
-
-    public void applyFollowRoad()
-    {
-        applyFollowRoadOffset();
-        applyFollowRoadDirection();
     }
 }
