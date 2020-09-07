@@ -63,8 +63,39 @@ public partial class SROptions
     }
 
     [Category("Path Follower")]
-    public void MoveCar()
+    public void Move()
     {
-        pathManager.MoveCar();
+        pathManager.car.GetComponent<PathFollower>().Run();
+    }
+    
+    [Category("Path Follower")]
+    public void Stop()
+    {
+        pathManager.car.GetComponent<PathFollower>().Stop();
+    }
+    
+    [Category("Path Follower")]
+    public void Reset()
+    {
+        pathManager.car.GetComponent<PathFollower>().Reset();
+    }
+
+    [Category("Path Follower")]
+    public void SetMoveDirStraight()
+    {
+        pathManager.car.GetComponent<PathFollower>().setMoveDir(true);
+    }
+    
+    [Category("Path Follower")]
+    public void SetMoveDirReverse()
+    {
+        pathManager.car.GetComponent<PathFollower>().setMoveDir(false);
+    }
+    
+    [Category("Path Follower")]
+    public void SetSpline()
+    {
+        var startSpline = GameObject.FindObjectOfType<SplineComputer>();
+        pathManager.car.GetComponent<PathFollower>().setSpline(startSpline);
     }
 }

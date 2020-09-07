@@ -10,6 +10,7 @@ public class PathFollower : MonoBehaviour
 {
     private SplineFollower splineFollower;
 
+    public bool isStraight = true; // Reset on the end
     public float defY = 0.35f;
 
     public void setSpline(SplineComputer _spline)
@@ -22,19 +23,47 @@ public class PathFollower : MonoBehaviour
                 switch (_spline.roadMode)
                 {
                     case SplineComputer.MODE.FIRST_OPEN:
-                        splineFollower.direction = Spline.Direction.Forward;
-                        splineFollower.startPosition = 0;
-                        splineFollower.motion.offset = new Vector2(0.65f, defY);
+                        setMoveDir(true);
                         break;
                     case SplineComputer.MODE.LAST_OPEN:
-                        splineFollower.direction = Spline.Direction.Backward;
-                        splineFollower.startPosition = 1;
-                        splineFollower.motion.offset = new Vector2(-0.65f, defY);
+                        setMoveDir(false);
                         break;
                 }
                 break;
             default:
                 break;
+        }
+    }
+
+    public void setMoveDir(bool _isStraight)
+    {
+        if (splineFollower.spline)
+        {
+            switch (splineFollower.spline.roadLane)
+            {
+                case CreatePathManager.ROADLANE.RL1:
+                    if (_isStraight)
+                    {
+                        splineFollower.direction = Spline.Direction.Forward;
+                        splineFollower.startPosition = 0;
+                        splineFollower.motion.offset = new Vector2(0.65f, defY);
+
+                        isStraight = true;
+                    }
+                    else
+                    {
+                        splineFollower.direction = Spline.Direction.Backward;
+                        splineFollower.startPosition = 1;
+                        splineFollower.motion.offset = new Vector2(-0.65f, defY);
+                        
+                        isStraight = false;
+                    }
+                    break;
+            }
+        }
+        else
+        {
+            UnityEngine.Debug.LogWarning("Spline is not defined.");
         }
     }
 
@@ -46,6 +75,18 @@ public class PathFollower : MonoBehaviour
     public void Stop()
     {
         splineFollower.follow = false;
+    }
+
+    public void Reset()
+    {
+        if (isStraight)
+        {
+            splineFollower.SetPercent(0.0f);
+        }
+        else
+        {
+            splineFollower.SetPercent(1.0f);
+        }
     }
 
     void Start()

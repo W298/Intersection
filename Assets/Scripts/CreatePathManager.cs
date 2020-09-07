@@ -181,15 +181,6 @@ public class CreatePathManager : MonoBehaviour
     private List<GameObject> texts = new List<GameObject>();
     public List<Crossroad> crossroads = new List<Crossroad>();
 
-    public void MoveCar()
-    {
-        var startSpline = GameObject.FindObjectOfType<SplineComputer>();
-
-        var pathFollower = car.GetComponent<PathFollower>();
-        pathFollower.setSpline(startSpline);
-        pathFollower.Run();
-    }
-    
     private void SetMeshClip(SplineComputer spline, int direction, bool isTo, double per)
     {
         var mesh = spline.GetComponent<SplineMesh>();
