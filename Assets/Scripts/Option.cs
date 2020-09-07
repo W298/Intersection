@@ -95,7 +95,7 @@ public partial class SROptions
     [Category("Path Follower")]
     public void SetSpline()
     {
-        var startSpline = GameObject.FindObjectOfType<SplineComputer>();
-        pathManager.car.GetComponent<PathFollower>().setSpline(startSpline);
+        var roads = GameObject.FindObjectsOfType<SplineComputer>().ToList();
+        pathManager.car.GetComponent<PathFollower>().setPath(roads, 1);
     }
 }

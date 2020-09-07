@@ -1596,12 +1596,12 @@ public class CreatePathManager : MonoBehaviour
         // return (spline.GetPoints().First().position + spline.GetPoints().Last().position) / 2;
     }
 
-    List<Crossroad> GetRefCrossroads(SplineComputer spline)
+    public List<Crossroad> GetRefCrossroads(SplineComputer spline)
     {
         return crossroads.Where(cros => cros.getRoads().Contains(spline)).ToList();
     }
 
-    Crossroad GetCrossroad(Vector3 pos)
+    public Crossroad GetCrossroad(Vector3 pos)
     {
         return crossroads.Find(cros => cros.getPosition() == pos);
     }

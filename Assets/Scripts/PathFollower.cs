@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -9,10 +10,22 @@ using UnityEngine.EventSystems;
 public class PathFollower : MonoBehaviour
 {
     private SplineFollower splineFollower;
+    private CreatePathManager pathManager;
+
+    public List<SplineComputer> path;
+    public int pathIndex = 0;
 
     public bool isStraight = true; // Reset on the end
     public float defY = 0.35f;
 
+    public void setPath(List<SplineComputer> _path, int _startIndex = 0)
+    {
+        path = _path;
+        pathIndex = _startIndex;
+        
+        setSpline(path[pathIndex]);
+    }
+    
     public void setSpline(SplineComputer _spline)
     {
         splineFollower.spline = _spline;
@@ -49,6 +62,9 @@ public class PathFollower : MonoBehaviour
                         splineFollower.motion.offset = new Vector2(0.65f, defY);
 
                         isStraight = true;
+                        
+                        splineFollower.onBeginningReached -= EndReach;
+                        splineFollower.onEndReached += EndReach;
                     }
                     else
                     {
@@ -57,6 +73,9 @@ public class PathFollower : MonoBehaviour
                         splineFollower.motion.offset = new Vector2(-0.65f, defY);
                         
                         isStraight = false;
+                        
+                        splineFollower.onBeginningReached += EndReach;
+                        splineFollower.onEndReached -= EndReach;
                     }
                     break;
             }
@@ -89,9 +108,39 @@ public class PathFollower : MonoBehaviour
         }
     }
 
+    private void EndReach(double percent)
+    {
+        var nextSpline = path[++pathIndex];
+        Crossroad connectedCrossroad;
+        
+        if (isStraight)
+        {
+            connectedCrossroad = pathManager.GetCrossroad(splineFollower.spline.GetPoints().Last().position);
+        }
+        else
+        {
+            connectedCrossroad = pathManager.GetCrossroad(splineFollower.spline.GetPoints().First().position);
+        }
+        
+        setSpline(nextSpline);
+
+        if (nextSpline.GetPoints().Last().position == connectedCrossroad.getPosition())
+        {
+            setMoveDir(false);
+        }
+        else
+        {
+            setMoveDir(true);
+        }
+        
+        Reset();
+    }
+
     void Start()
     {
         splineFollower = GetComponent<SplineFollower>();
+        pathManager = GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>();
+        
         splineFollower.motion.velocityHandleMode = TransformModule.VelocityHandleMode.Preserve;
     }
 
