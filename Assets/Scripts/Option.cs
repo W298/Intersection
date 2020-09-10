@@ -8,22 +8,17 @@ using UnityEngine.PlayerLoop;
 
 public class Option : MonoBehaviour
 {
-    // Start is called before the first frame update
     void Start()
     {
         SROptions.Current.pathManager = GetComponent<CreatePathManager>();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        SROptions.Current.pathFinder = GetComponent<PathFinder>();
     }
 }
 
 public partial class SROptions
 {
     public CreatePathManager pathManager;
+    public PathFinder pathFinder;
 
     [Category("Path Manager")]
     public void ResetAllMeshClip()
@@ -95,7 +90,16 @@ public partial class SROptions
     [Category("Path Follower")]
     public void SetSpline()
     {
+        pathManager.car.GetComponent<PathFollower>().setPath(pathFinder.shortPathList[1]);
+    }
+
+    [Category("Path Finder")]
+    public void Find()
+    {
         var roads = GameObject.FindObjectsOfType<SplineComputer>().ToList();
-        pathManager.car.GetComponent<PathFollower>().setPath(roads, 1);
+        var sel = roads.Where(road =>
+            road.roadMode == SplineComputer.MODE.LAST_OPEN || road.roadMode == SplineComputer.MODE.FIRST_OPEN).ToList();
+        
+        pathFinder.Run(sel[0], sel[1]);
     }
 }

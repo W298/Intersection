@@ -3,6 +3,7 @@ using System.Collections;
 using Dreamteck.Splines;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting;
 using System.Security.Cryptography;
 using UnityEditor;
 using UnityEditor.Rendering;
@@ -275,7 +276,7 @@ public class CreatePathManager : MonoBehaviour
         }
     }
 
-    public void LogTextOnPos(string text, Vector3 onPos)
+    public void LogTextOnPos(string text, Vector3 onPos, bool isImportant = false , bool isUpdate = true)
     {
         GameObject obj;
         if (texts.FirstOrDefault(o => (o.transform.position == onPos) && (o.GetComponent<TextMesh>().text != text)) !=
@@ -291,15 +292,23 @@ public class CreatePathManager : MonoBehaviour
         obj.GetComponent<TextMesh>().text = text;
         obj.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
 
+        if (isImportant)
+        {
+            obj.GetComponent<TextMesh>().color = Color.red;
+        }
+
         texts.Add(obj);
 
-        StartCoroutine(Stop());
-
-        IEnumerator Stop()
+        if (isUpdate)
         {
-            yield return 0;
-            texts.Remove(obj);
-            Destroy(obj);
+            StartCoroutine(Stop());
+
+            IEnumerator Stop()
+            {
+                yield return 0;
+                texts.Remove(obj);
+                Destroy(obj);
+            }
         }
     }
 
@@ -1205,7 +1214,7 @@ public class CreatePathManager : MonoBehaviour
         }
     }
     
-    void debugPoint(Vector3 pos)
+    public void debugPoint(Vector3 pos)
     {
         var obj = Instantiate(debugobj2, pos, Quaternion.identity);
 
@@ -1590,7 +1599,7 @@ public class CreatePathManager : MonoBehaviour
         return null;
     }
 
-    Vector3 GetSplinePosition(SplineComputer spline)
+    public Vector3 GetSplinePosition(SplineComputer spline)
     {
         return spline.GetPoint(spline.GetPoints().Length / 2).position;
         // return (spline.GetPoints().First().position + spline.GetPoints().Last().position) / 2;

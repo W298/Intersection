@@ -2297,6 +2297,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81baa6618175f1948a52d40e97586e1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  path: []
+  pathIndex: 0
+  isStraight: 1
   defY: 0.35
 --- !u!114 &1691486493
 MonoBehaviour:
@@ -3250,8 +3253,8 @@ GameObject:
   - component: {fileID: 2135375422}
   - component: {fileID: 2135375423}
   - component: {fileID: 2135375425}
-  - component: {fileID: 2135375424}
   - component: {fileID: 2135375426}
+  - component: {fileID: 2135375424}
   m_Layer: 9
   m_Name: Player
   m_TagString: Player
@@ -3343,13 +3346,11 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2135375420}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7eb5c974f52444a4ba8315c5c46097ba, type: 3}
+  m_Script: {fileID: 11500000, guid: 45901995564f04a48951d06f9672f650, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  zoom_speed: 5000
-  move_speed: 50
 --- !u!114 &2135375425
 MonoBehaviour:
   m_ObjectHideFlags: 0
