@@ -180,6 +180,7 @@ public class CreatePathManager : MonoBehaviour
     public GameObject car;
 
     private List<GameObject> texts = new List<GameObject>();
+    
     public List<Crossroad> crossroads = new List<Crossroad>();
 
     private void SetMeshClip(SplineComputer spline, int direction, bool isTo, double per)

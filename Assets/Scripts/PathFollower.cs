@@ -11,17 +11,28 @@ public class PathFollower : MonoBehaviour
 {
     private SplineFollower splineFollower;
     private CreatePathManager pathManager;
+    
+    public List<List<SplineComputer>> pathList;
 
+    public List<List<SplineComputer>> shortPathList
+    {
+        get
+        {
+            var minCount = pathList.Select(p => p.Count).Min();
+            return pathList.Where(p => p.Count == minCount).ToList();
+        }
+    }
+    
     public List<SplineComputer> path;
     public int pathIndex = 0;
 
-    public bool isStraight = true; // Reset on the end
+    public bool isStraight = true;
     public float defY = 0.35f;
 
-    public void setPath(List<SplineComputer> _path, int _startIndex = 0)
+    public void selectPath(int index = 0, bool shortPathOnly = true)
     {
-        path = _path;
-        pathIndex = _startIndex;
+        path = shortPathOnly ? shortPathList[index] : pathList[index];
+        pathIndex = 0;
         
         setSpline(path[pathIndex]);
     }

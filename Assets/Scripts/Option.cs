@@ -12,6 +12,7 @@ public class Option : MonoBehaviour
     {
         SROptions.Current.pathManager = GetComponent<CreatePathManager>();
         SROptions.Current.pathFinder = GetComponent<PathFinder>();
+        SROptions.Current.carManager = GetComponent<CarManager>();
     }
 }
 
@@ -19,6 +20,7 @@ public partial class SROptions
 {
     public CreatePathManager pathManager;
     public PathFinder pathFinder;
+    public CarManager carManager;
 
     [Category("Path Manager")]
     public void ResetAllMeshClip()
@@ -64,6 +66,15 @@ public partial class SROptions
     }
     
     [Category("Path Follower")]
+    public void MoveAll()
+    {
+        foreach (var car in carManager.cars)
+        {
+            car.GetComponent<PathFollower>().Run();
+        }
+    }
+    
+    [Category("Path Follower")]
     public void Stop()
     {
         pathManager.car.GetComponent<PathFollower>().Stop();
@@ -88,18 +99,29 @@ public partial class SROptions
     }
     
     [Category("Path Follower")]
-    public void SetSpline()
+    public void SelectSpline()
     {
-        pathManager.car.GetComponent<PathFollower>().setPath(pathFinder.shortPathList[1]);
+        foreach (var car in carManager.cars)
+        {
+            car.GetComponent<PathFollower>().selectPath(0, true);
+        }
     }
 
     [Category("Path Finder")]
     public void Find()
     {
-        var roads = GameObject.FindObjectsOfType<SplineComputer>().ToList();
-        var sel = roads.Where(road =>
-            road.roadMode == SplineComputer.MODE.LAST_OPEN || road.roadMode == SplineComputer.MODE.FIRST_OPEN).ToList();
-        
-        pathFinder.Run(sel[0], sel[1]);
+        carManager.FindAndSetPath();
+    }
+
+    [Category("Car Manager")]
+    public void Spawn()
+    {
+        carManager.Spawn();
+    }
+
+    [Category("Car Manager")]
+    public int carCount
+    {
+        get { return carManager.cars.Count; }
     }
 }
