@@ -73,9 +73,6 @@ public class PathFollower : MonoBehaviour
                         splineFollower.motion.offset = new Vector2(0.65f, defY);
 
                         isStraight = true;
-                        
-                        splineFollower.onBeginningReached -= EndReach;
-                        splineFollower.onEndReached += EndReach;
                     }
                     else
                     {
@@ -84,9 +81,6 @@ public class PathFollower : MonoBehaviour
                         splineFollower.motion.offset = new Vector2(-0.65f, defY);
                         
                         isStraight = false;
-                        
-                        splineFollower.onBeginningReached += EndReach;
-                        splineFollower.onEndReached -= EndReach;
                     }
                     break;
             }
@@ -121,30 +115,53 @@ public class PathFollower : MonoBehaviour
 
     private void EndReach(double percent)
     {
-        var nextSpline = path[++pathIndex];
-        Crossroad connectedCrossroad;
-        
         if (isStraight)
         {
+            pathIndex += 1;
+            var nextSpline = path[pathIndex];
+            Crossroad connectedCrossroad;
+        
             connectedCrossroad = pathManager.GetCrossroad(splineFollower.spline.GetPoints().Last().position);
-        }
-        else
-        {
-            connectedCrossroad = pathManager.GetCrossroad(splineFollower.spline.GetPoints().First().position);
-        }
         
-        setSpline(nextSpline);
+            setSpline(nextSpline);
 
-        if (nextSpline.GetPoints().Last().position == connectedCrossroad.getPosition())
-        {
-            setMoveDir(false);
+            if (nextSpline.GetPoints().Last().position == connectedCrossroad.getPosition())
+            {
+                setMoveDir(false);
+            }
+            else
+            {
+                setMoveDir(true);
+            }
+        
+            Reset();
         }
-        else
+    }
+
+    private void BeginReach(double percent)
+    {
+        if (!isStraight)
         {
-            setMoveDir(true);
+            pathIndex += 1;
+            var nextSpline = path[pathIndex];
+            Crossroad connectedCrossroad;
+            
+            connectedCrossroad = pathManager.GetCrossroad(splineFollower.spline.GetPoints().First().position);
+            
+            setSpline(nextSpline);
+            
+            if (nextSpline.GetPoints().Last().position == connectedCrossroad.getPosition())
+            {
+                setMoveDir(false);
+            }
+            else
+            {
+                setMoveDir(true);
+            }
+        
+            Reset();
         }
         
-        Reset();
     }
 
     void Start()
@@ -153,6 +170,9 @@ public class PathFollower : MonoBehaviour
         pathManager = GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>();
         
         splineFollower.motion.velocityHandleMode = TransformModule.VelocityHandleMode.Preserve;
+
+        splineFollower.onBeginningReached += BeginReach;
+        splineFollower.onEndReached += EndReach;
     }
 
     void Update()

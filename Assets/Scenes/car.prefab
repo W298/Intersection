@@ -212,7 +212,7 @@ MonoBehaviour:
   autoStartPosition: 0
   follow: 0
   preserveUniformSpeedWithOffset: 0
-  _followSpeed: 10
+  _followSpeed: 5
   _followDuration: 1
   _startPosition: 0
   editorSetPosition: 1
