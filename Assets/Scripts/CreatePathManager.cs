@@ -280,16 +280,31 @@ public class CreatePathManager : MonoBehaviour
     public void LogTextOnPos(string text, Vector3 onPos, bool isImportant = false , bool isUpdate = true)
     {
         GameObject obj;
-        if (texts.FirstOrDefault(o => (o.transform.position == onPos) && (o.GetComponent<TextMesh>().text != text)) !=
-            null)
+
+        if (isUpdate)
         {
-            obj = Instantiate(textObj, onPos - new Vector3(0, 0, 1), Quaternion.Euler(90, 0, 0));
+            if (texts.FirstOrDefault(o => (o.transform.position == onPos) && (o.GetComponent<TextMesh>().text != text)) !=
+                null)
+            {
+                obj = Instantiate(textObj, onPos - new Vector3(0, 0, 1), Quaternion.Euler(90, 0, 0));
+            }
+            else
+            {
+                obj = Instantiate(textObj, onPos, Quaternion.Euler(90, 0, 0));
+            }
         }
         else
         {
-            obj = Instantiate(textObj, onPos, Quaternion.Euler(90, 0, 0));
+            if (texts.FirstOrDefault(o => (o.transform.position == onPos) != null))
+            {
+                obj = Instantiate(textObj, onPos - new Vector3(0, 0, 1), Quaternion.Euler(90, 0, 0));
+            }
+            else
+            {
+                obj = Instantiate(textObj, onPos, Quaternion.Euler(90, 0, 0));
+            }
         }
-
+        
         obj.GetComponent<TextMesh>().text = text;
         obj.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
 

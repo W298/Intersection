@@ -45,9 +45,6 @@ public class PathFinder : MonoBehaviour
     
     public List<List<SplineComputer>> Run(SplineComputer departure, SplineComputer arrival)
     {
-        pathManager.LogTextOnPos("Departure", pathManager.GetSplinePosition(departure), true, false);
-        pathManager.LogTextOnPos("Arrival", pathManager.GetSplinePosition(arrival), true, false);
-
         foreach (var crossroad in pathManager.crossroads)
         {
             foreach (var road in crossroad.getRoads())

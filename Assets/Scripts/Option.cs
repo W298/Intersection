@@ -108,6 +108,12 @@ public partial class SROptions
     }
 
     [Category("Path Finder")]
+    public void Prepare()
+    {
+        carManager.Prepare();
+    }
+    
+    [Category("Path Finder")]
     public void Find()
     {
         carManager.FindAndSetPath();
