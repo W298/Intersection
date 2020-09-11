@@ -85,6 +85,20 @@ public class CarManager : MonoBehaviour
         }
     }
 
+    public void MoveAll()
+    {
+        IEnumerator MoveAllCar()
+        {
+            foreach (var car in cars)
+            {
+                car.GetComponent<PathFollower>().Run();
+                yield return new WaitForSeconds(0.5f);
+            }
+        }
+
+        StartCoroutine(MoveAllCar());
+    }
+    
     private void Start()
     {
         pathFinder = GetComponent<PathFinder>();

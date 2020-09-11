@@ -89,6 +89,7 @@ public class CreatePathManager : MonoBehaviour
         BUILD,
         APPEND,
         REMOVE,
+        CHOOSE,
         NONE
     };
 
@@ -178,6 +179,9 @@ public class CreatePathManager : MonoBehaviour
 
     public float changer = 0.0f;
     public GameObject car;
+
+    public SplineComputer chosenSpline;
+    public GameObject chosenSplineIndi;
 
     private List<GameObject> texts = new List<GameObject>();
     
@@ -1280,7 +1284,7 @@ public class CreatePathManager : MonoBehaviour
         return cond1 && cond2 && cond3;
     }
 
-    List<SplineComputer> GetSplineComputers(Vector3 pos, bool heightFunc = true)
+    public List<SplineComputer> GetSplineComputers(Vector3 pos, bool heightFunc = true)
     {
         var spline_list = GameObject.FindObjectsOfType<SplineComputer>();
         var return_list = new List<SplineComputer>();
@@ -2046,6 +2050,11 @@ public class CreatePathManager : MonoBehaviour
             UnityEngine.Debug.LogWarning("Remove Mode Enabled!");
             currentMode = MODE.REMOVE;
         }
+        else if (Input.GetKeyDown(KeyCode.C))
+        {
+            UnityEngine.Debug.LogWarning("Choose Mode Enabled!");
+            currentMode = MODE.CHOOSE;
+        }
         else if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             currentRoadLane = ROADLANE.RL1;
@@ -2303,6 +2312,20 @@ public class CreatePathManager : MonoBehaviour
 
                 lastX = 0;
                 lastZ = 0;
+            }
+        }
+        else if (currentMode == MODE.CHOOSE)
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                chosenSpline = GetSplineComputers(snapPos)[0];
+                chosenSplineIndi = Instantiate(debugobj2, GetSplinePosition(chosenSpline), Quaternion.identity);
+            }
+            else if (Input.GetMouseButtonDown(1))
+            {
+                chosenSpline = null;
+                Destroy(chosenSplineIndi.gameObject);
+                chosenSplineIndi = null;
             }
         }
     }

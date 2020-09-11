@@ -22,6 +22,8 @@ public partial class SROptions
     public PathFinder pathFinder;
     public CarManager carManager;
 
+    public int index = 0;
+
     [Category("Path Manager")]
     public void ResetAllMeshClip()
     {
@@ -60,50 +62,26 @@ public partial class SROptions
     }
 
     [Category("Path Follower")]
-    public void Move()
+    public void MoveAll()
     {
-        pathManager.car.GetComponent<PathFollower>().Run();
+        carManager.MoveAll();
     }
     
     [Category("Path Follower")]
-    public void MoveAll()
+    public void StopAll()
     {
         foreach (var car in carManager.cars)
         {
-            car.GetComponent<PathFollower>().Run();
+            car.GetComponent<PathFollower>().Stop();
         }
-    }
-    
-    [Category("Path Follower")]
-    public void Stop()
-    {
-        pathManager.car.GetComponent<PathFollower>().Stop();
-    }
-    
-    [Category("Path Follower")]
-    public void Reset()
-    {
-        pathManager.car.GetComponent<PathFollower>().Reset();
     }
 
     [Category("Path Follower")]
-    public void SetMoveDirStraight()
-    {
-        pathManager.car.GetComponent<PathFollower>().setMoveDir(true);
-    }
-    
-    [Category("Path Follower")]
-    public void SetMoveDirReverse()
-    {
-        pathManager.car.GetComponent<PathFollower>().setMoveDir(false);
-    }
-    
-    [Category("Path Follower")]
-    public void SelectSpline()
+    public void SelectSplineFromPath()
     {
         foreach (var car in carManager.cars)
         {
-            car.GetComponent<PathFollower>().selectPath(0, true);
+            car.GetComponent<PathFollower>().selectPath(index, true);
         }
     }
 
@@ -129,5 +107,35 @@ public partial class SROptions
     public int carCount
     {
         get { return carManager.cars.Count; }
+    }
+    
+    [Category("Car Manager")]
+    public void IncreaseChosenSplineWeight()
+    {
+        for (var i = 0; i < carManager.roadTuple.Count; i++)
+        {
+            var tuple = carManager.roadTuple[i];
+            if (tuple.Item1 == pathManager.chosenSpline)
+            {
+                carManager.weightList[i] += 1.0f;
+            }
+        }
+    }
+    
+    [Category("Car Manager")]
+    public void DecreaseChosenSplineWeight()
+    {
+        for (var i = 0; i < carManager.roadTuple.Count; i++)
+        {
+            var tuple = carManager.roadTuple[i];
+            if (tuple.Item1 == pathManager.chosenSpline)
+            {
+                carManager.weightList[i] -= 1.0f;
+                if (carManager.weightList[i] < 0)
+                {
+                    carManager.weightList[i] = 0.0f;
+                }
+            }
+        }
     }
 }
