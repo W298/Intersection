@@ -1663,7 +1663,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1221757541}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -10, y: 1, z: 490}
+  m_LocalPosition: {x: -10, y: 0, z: 490}
   m_LocalScale: {x: 7.5, y: 4, z: 7.5}
   m_Children: []
   m_Father: {fileID: 0}
@@ -1681,8 +1681,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e75665832ed0b244881356c382b7b65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  position: {x: 0, y: 0, z: 0}
-  parentRoad: {fileID: 0}
   capacity: 10
   upgrade: 0
 --- !u!1001 &1230798359
@@ -3224,6 +3222,7 @@ MonoBehaviour:
   - 0
   - 0
   - 12
+  def_normal: {x: 0, y: 1, z: 0}
   currentSpline: {fileID: 0}
   currentMode: 3
   joinMode: 4
