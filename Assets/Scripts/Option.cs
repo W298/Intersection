@@ -138,4 +138,16 @@ public partial class SROptions
             }
         }
     }
+
+    [Category("Building")]
+    public void SetRoadParent()
+    {
+        var building = GameObject.FindObjectOfType<Building>();
+    }
+
+    [Category("Building")]
+    public void CheckCanEnterBuilding()
+    {
+        var building = GameObject.FindObjectOfType<Building>();
+    }
 }

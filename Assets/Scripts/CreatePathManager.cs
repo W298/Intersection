@@ -143,7 +143,7 @@ public class CreatePathManager : MonoBehaviour
         12.0f
     };
 
-    private Vector3 def_normal = new Vector3(0, 1, 0);
+    public Vector3 def_normal = new Vector3(0, 1, 0);
 
     public SplineComputer currentSpline;
     public MODE currentMode = MODE.NONE;
@@ -469,22 +469,9 @@ public class CreatePathManager : MonoBehaviour
         meshReform(currentSpline);
     }
 
-    // Spawn SplineComputer independently.
-    SplineComputer InsPath(Vector3 pos)
-    {
-        SplinePrefab = roadPrefabs[(int) currentRoadLane];
-
-        var spline = Instantiate(SplinePrefab, pos, Quaternion.identity);
-        spline.roadLane = currentRoadLane;
-
-        meshReform(spline);
-
-        return spline;
-    }
-
     // TODO - 2차로 90도 굽어지는거 완전 삭제
 
-    SplineComputer InsPath(Vector3 pos, ROADLANE roadlane)
+    public SplineComputer InsPath(Vector3 pos, ROADLANE roadlane)
     {
         var prefab = roadPrefabs[(int) currentRoadLane];
 
@@ -634,7 +621,7 @@ public class CreatePathManager : MonoBehaviour
     private void RemovePoint(SplineComputer spline, SplinePoint point, bool countRoad = true)
     {
         // Remove Pillar
-        var splineIndex = getSplinePointIndex(spline, point);
+        var splineIndex = GetSplinePointIndex(spline, point);
 
         if (splineIndex == 0)
         {
@@ -764,7 +751,7 @@ public class CreatePathManager : MonoBehaviour
 
                         if (check_spline != null)
                         {
-                            selectedIndex = getSplinePointIndex(check_spline, getSplinePoint(snapPos, check_spline));
+                            selectedIndex = GetSplinePointIndex(check_spline, GetSplinePoint(snapPos, check_spline));
                         }
 
                         var isPosCrossroad = false;
@@ -833,8 +820,8 @@ public class CreatePathManager : MonoBehaviour
                                 {
                                     UnityEngine.Debug.LogWarning("Join 3-crossroad (HEAD)");
                                     
-                                    var index = getSplinePointIndex(check_spline,
-                                        getSplinePoint(snapPos, check_spline));
+                                    var index = GetSplinePointIndex(check_spline,
+                                        GetSplinePoint(snapPos, check_spline));
                                     
                                     if (CheckCrossroadCreationValid(check_spline, selectedSpline, index))
                                     {
@@ -927,7 +914,7 @@ public class CreatePathManager : MonoBehaviour
 
                     if (check_spline != null)
                     {
-                        selectedIndex = getSplinePointIndex(check_spline, getSplinePoint(snapPos, check_spline));
+                        selectedIndex = GetSplinePointIndex(check_spline, GetSplinePoint(snapPos, check_spline));
                     }
 
                     var isPosCrossroad = false;
@@ -1259,8 +1246,8 @@ public class CreatePathManager : MonoBehaviour
         var cond2 = (originSpline.GetPoint(joinIndex).position.y == originSpline.GetPoint(joinIndex + 1).position.y);
         var cond3 = false;
         
-        var point = getSplinePoint(originSpline.GetPoint(joinIndex).position, newSpline);
-        var pointIndex = getSplinePointIndex(newSpline, point);
+        var point = GetSplinePoint(originSpline.GetPoint(joinIndex).position, newSpline);
+        var pointIndex = GetSplinePointIndex(newSpline, point);
 
         if (pointIndex == 0)
         {
@@ -1315,7 +1302,7 @@ public class CreatePathManager : MonoBehaviour
         return return_list;
     }
 
-    SplinePoint getSplinePoint(Vector3 pos, SplineComputer spline)
+    public SplinePoint GetSplinePoint(Vector3 pos, SplineComputer spline)
     {
         foreach (var point in spline.GetPoints())
         {
@@ -1344,7 +1331,7 @@ public class CreatePathManager : MonoBehaviour
         return points;
     }
 
-    int getSplinePointIndex(SplineComputer spline, SplinePoint point)
+    public int GetSplinePointIndex(SplineComputer spline, SplinePoint point)
     {
         var points = spline.GetPoints();
 
@@ -1357,6 +1344,11 @@ public class CreatePathManager : MonoBehaviour
         }
 
         return -1;
+    }
+
+    public int GetSplinePointIndex(SplineComputer spline, Vector3 pos)
+    {
+        return GetSplinePointIndex(spline, GetSplinePoint(pos, spline));
     }
 
     // Split Spline and return newly spawned SplineComputer.
@@ -1416,6 +1408,18 @@ public class CreatePathManager : MonoBehaviour
 
     // Check two vector create Clockwise or Counterclockwise.
     bool isVectorGoClockwise(Vector3 from, Vector3 to)
+    {
+        if (Vector3.SignedAngle(from, to, new Vector3(0, 1, 0)) <= 0)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+    
+    public static bool isTwoVectorClockwise(Vector3 from, Vector3 to)
     {
         if (Vector3.SignedAngle(from, to, new Vector3(0, 1, 0)) <= 0)
         {
@@ -2123,8 +2127,8 @@ public class CreatePathManager : MonoBehaviour
                     {
                         spline = splines[0];
 
-                        var point = getSplinePoint(snapPos, spline);
-                        var point_index = getSplinePointIndex(spline, point);
+                        var point = GetSplinePoint(snapPos, spline);
+                        var point_index = GetSplinePointIndex(spline, point);
 
                         if (point_index != -1)
                         {
@@ -2218,8 +2222,8 @@ public class CreatePathManager : MonoBehaviour
                         spline = GetSplineComputers(snapPos).First();
                     }
 
-                    var point = getSplinePoint(snapPos, spline);
-                    var pointIndex = getSplinePointIndex(spline, point);
+                    var point = GetSplinePoint(snapPos, spline);
+                    var pointIndex = GetSplinePointIndex(spline, point);
                     var lastIndex = spline.GetPoints().Length - 1;
 
                     if (removeMode == REMOVEMODE.STANDBY)
@@ -2247,7 +2251,7 @@ public class CreatePathManager : MonoBehaviour
                                 {
                                     removePoint = spline.GetPoints()
                                         .FirstOrDefault(po => po.position == crossroadRef.getPosition());
-                                    removePointIndex = getSplinePointIndex(spline, removePoint);
+                                    removePointIndex = GetSplinePointIndex(spline, removePoint);
                                     RemovePoint(spline, removePoint);
 
                                     CheckRoadConnectedValid(crossroadRef, spline, true);
