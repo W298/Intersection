@@ -36,10 +36,12 @@ public class Building : MonoBehaviour
     void Start()
     {
         pathManager = GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>();
+        pathManager.buildingPosList.Add(position);
     }
 
     void Update()
     {
         UnityEngine.Debug.LogWarning(enterRoad == null);
+        UnityEngine.Debug.LogWarning(exitRoad == null);
     }
 }

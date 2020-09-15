@@ -5,12 +5,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
+using SRF;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Analytics;
 using UnityEngine.Serialization;
 using ArrayUtility = Dreamteck.ArrayUtility;
 using Object = System.Object;
+using Random = UnityEngine.Random;
 
 public class Crossroad
 {
@@ -188,6 +190,9 @@ public class CreatePathManager : MonoBehaviour
     private List<GameObject> texts = new List<GameObject>();
 
     public List<Crossroad> crossroads = new List<Crossroad>();
+    public List<Vector3> buildingPosList = new List<Vector3>();
+
+    public List<int> splineNameList = new List<int>();
 
     private void SetMeshClip(SplineComputer spline, int direction, bool isTo, double per)
     {
@@ -469,6 +474,9 @@ public class CreatePathManager : MonoBehaviour
         SplinePrefab = roadPrefabs[(int) currentRoadLane];
 
         currentSpline = Instantiate(SplinePrefab, pos, Quaternion.identity);
+        currentSpline.name = splineNameList[0].ToString();
+        splineNameList.RemoveAt(0);
+
         currentSpline.roadLane = currentRoadLane;
 
         meshReform(currentSpline);
@@ -481,6 +489,9 @@ public class CreatePathManager : MonoBehaviour
         var prefab = roadPrefabs[(int) currentRoadLane];
 
         var spline = Instantiate(prefab, pos, Quaternion.identity);
+        spline.name = splineNameList[0].ToString();
+        splineNameList.RemoveAt(0);
+
         spline.roadLane = roadlane;
         meshReform(spline);
 
@@ -748,7 +759,7 @@ public class CreatePathManager : MonoBehaviour
                         SplineComputer check_spline = null;
                         foreach (var spline in GetSplineComputers(snapPos))
                         {
-                            if (spline != selectedSpline && !spline.isConnectedToBuilding)
+                            if (spline != selectedSpline && !buildingPosList.Contains(snapPos))
                             {
                                 check_spline = spline;
                             }
@@ -911,7 +922,7 @@ public class CreatePathManager : MonoBehaviour
 
                     foreach (var spline in GetSplineComputers(snapPos))
                     {
-                        if (spline != currentSpline && !spline.isConnectedToBuilding)
+                        if (spline != currentSpline && !buildingPosList.Contains(snapPos))
                         {
                             check_spline = spline;
                         }
@@ -1680,6 +1691,8 @@ public class CreatePathManager : MonoBehaviour
     {
         cm = GetComponentInChildren<Camera>();
         itemManager = GetComponent<ItemManager>();
+        
+        splineNameList = Enumerable.Range(1, 100).ToList();
     }
 
     void Update()
@@ -2104,7 +2117,6 @@ public class CreatePathManager : MonoBehaviour
             if (Input.GetMouseButtonDown(0))
             {
                 var crossroad = crossroads.FirstOrDefault(cros => snapPos == cros.getPosition());
-
                 if (crossroad != null)
                 {
                     if (crossroad.getRoads().Count == 3)
@@ -2126,15 +2138,15 @@ public class CreatePathManager : MonoBehaviour
                 }
                 else
                 {
-                    var splines = GetSplineComputers(snapPos);
-                    SplineComputer check_spline = null;
-                    
-                    if (splines.Count == 1)
+                    if (!buildingPosList.Contains(snapPos))
                     {
-                        check_spline = splines[0];
-                        
-                        if (!check_spline.isConnectedToBuilding)
+                        var splines = GetSplineComputers(snapPos);
+                        SplineComputer check_spline = null;
+
+                        if (splines.Count == 1)
                         {
+                            check_spline = splines[0];
+
                             var point = GetSplinePoint(snapPos, check_spline);
                             var point_index = GetSplinePointIndex(check_spline, point);
 
@@ -2177,20 +2189,12 @@ public class CreatePathManager : MonoBehaviour
                             {
                                 UnityEngine.Debug.LogWarning("ERROR - Can't find Point in Spline");
                             }
-
                         }
-                        else
+                        else if (splines.Count == 0)
                         {
                             runBuildMode();
                         }
-                    }
-                    else if (splines.Count == 0)
-                    {
-                        runBuildMode();
-                    }
-                    else if (splines.Count == 2)
-                    {
-                        if (!splines.Any(spline => spline.isConnectedToBuilding))
+                        else if (splines.Count == 2)
                         {
                             // Not Crossroad, But Splines are splitted.
                             UnityEngine.Debug.LogWarning("SPLIT TO3");
@@ -2202,17 +2206,14 @@ public class CreatePathManager : MonoBehaviour
 
                             runBuildMode();
                         }
-                        else
+                        else if (splines.Count == 3)
                         {
                             runBuildMode();
                         }
                     }
-                    else if (splines.Count == 3)
+                    else
                     {
-                        if (splines.Any(spline => spline.isConnectedToBuilding))
-                        {
-                            runBuildMode();
-                        }
+                        runBuildMode();
                     }
                 }
             }

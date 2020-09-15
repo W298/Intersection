@@ -3237,6 +3237,7 @@ MonoBehaviour:
   changer: 0
   chosenSpline: {fileID: 0}
   chosenSplineIndi: {fileID: 0}
+  buildingPosList: []
 --- !u!114 &2135375424
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3287,7 +3288,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d18ce2e0cbfcab148960363c3153fcfd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  carPrefab: {fileID: 6288652958450202706, guid: d5b89dac7bf1f8a4490cd9f7eb0152f8,
+  carPrefab: {fileID: 187966573924055861, guid: 65e5e1aff3488564fba5e97fa2a92ae2,
     type: 3}
   cars: []
   weightList: []

@@ -104,6 +104,15 @@ public partial class SROptions
     }
 
     [Category("Car Manager")]
+    public void Spawn_10()
+    {
+        for (int i = 0; i < 10; i++)
+        {
+             carManager.Spawn();
+        }
+    }
+
+    [Category("Car Manager")]
     public int carCount
     {
         get { return carManager.cars.Count; }
@@ -137,17 +146,5 @@ public partial class SROptions
                 }
             }
         }
-    }
-
-    [Category("Building")]
-    public void SetRoadParent()
-    {
-        var building = GameObject.FindObjectOfType<Building>();
-    }
-
-    [Category("Building")]
-    public void CheckCanEnterBuilding()
-    {
-        var building = GameObject.FindObjectOfType<Building>();
     }
 }

@@ -51,17 +51,25 @@ public class CarManager : MonoBehaviour
     public void Prepare()
     {
         var roads = GameObject.FindObjectsOfType<SplineComputer>().ToList();
-        var sel = roads.Where(road => road.roadMode == SplineComputer.MODE.LAST_OPEN || road.roadMode == SplineComputer.MODE.FIRST_OPEN).ToList();
+        
+        var externalRoadList = roads.Where(road => 
+            (!(road.isExitRoad || road.isEnterRoad) && 
+             (road.roadMode == SplineComputer.MODE.LAST_OPEN || road.roadMode == SplineComputer.MODE.FIRST_OPEN))).ToList();
+        var enterRoadList = roads.Where(road => road.isEnterRoad).ToList();
+        var exitRoadList = roads.Where(road => road.isExitRoad).ToList();
 
-        foreach (var d in sel)
+        foreach (var externalRoad in externalRoadList)
         {
-            foreach (var a in sel)
+            foreach (var enterRoad in enterRoadList)
             {
-                if (a != d)
-                {
-                    var t = new Tuple<SplineComputer, SplineComputer>(d, a);
-                    roadTuple.Add(t);
-                }
+                var tuple = new Tuple<SplineComputer, SplineComputer>(externalRoad, enterRoad);
+                roadTuple.Add(tuple);
+            }
+
+            foreach (var exitRoad in exitRoadList)
+            {
+                var tuple = new Tuple<SplineComputer, SplineComputer>(exitRoad, externalRoad);
+                roadTuple.Add(tuple);
             }
         }
         
@@ -77,16 +85,12 @@ public class CarManager : MonoBehaviour
             var pathList = pathFinder.Run(selectedTuple.Item1, selectedTuple.Item2);
             SetPathList(car, pathList);
         }
-
-        for (var i = 0; i < roadTuple.Count; i++)
-        {
-            var str = i + " weight : " + weightList[i];
-            pathManager.LogTextOnPos(str, pathManager.GetSplinePosition(roadTuple[i].Item1), true, false);
-        }
     }
 
     public void MoveAll()
     {
+        var groupList = cars.GroupBy(car => car.GetComponent<PathFollower>().path).ToList();
+        
         IEnumerator MoveAllCar()
         {
             foreach (var car in cars)
