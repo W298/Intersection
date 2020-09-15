@@ -4,6 +4,7 @@ using Dreamteck.Splines;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Threading;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Analytics;
@@ -120,6 +121,12 @@ public class CreatePathManager : MonoBehaviour
         NONE
     };
 
+    public enum REMOVEMODE
+    {
+        STANDBY,
+        EXECUTE
+    };
+
     public int height = 0;
 
     public SplineComputer[] roadPrefabs;
@@ -156,7 +163,6 @@ public class CreatePathManager : MonoBehaviour
     public Vector3 lastPos;
     public Vector3 pos;
     public Vector3 snapPos;
-    public Vector3 snapPosWithY;
 
     private SplineComputer selectedSpline;
     private List<SplineComputer> selectedSplines;
@@ -172,17 +178,15 @@ public class CreatePathManager : MonoBehaviour
     private bool _rebuildLateBool = false;
     private SplineComputer _rebuildLateSpline = null;
 
-    public bool needDebug = false;
     private bool useSnapToGridPoint = false;
 
     public float changer = 0.0f;
-    public GameObject car;
 
     public SplineComputer chosenSpline;
     public GameObject chosenSplineIndi;
 
     private List<GameObject> texts = new List<GameObject>();
-    
+
     public List<Crossroad> crossroads = new List<Crossroad>();
 
     private void SetMeshClip(SplineComputer spline, int direction, bool isTo, double per)
@@ -279,13 +283,14 @@ public class CreatePathManager : MonoBehaviour
         }
     }
 
-    public void LogTextOnPos(string text, Vector3 onPos, bool isImportant = false , bool isUpdate = true)
+    public void LogTextOnPos(string text, Vector3 onPos, bool isImportant = false, bool isUpdate = true)
     {
         GameObject obj;
 
         if (isUpdate)
         {
-            if (texts.FirstOrDefault(o => (o.transform.position == onPos) && (o.GetComponent<TextMesh>().text != text)) !=
+            if (texts.FirstOrDefault(o =>
+                    (o.transform.position == onPos) && (o.GetComponent<TextMesh>().text != text)) !=
                 null)
             {
                 obj = Instantiate(textObj, onPos - new Vector3(0, 0, 1), Quaternion.Euler(90, 0, 0));
@@ -306,7 +311,7 @@ public class CreatePathManager : MonoBehaviour
                 obj = Instantiate(textObj, onPos, Quaternion.Euler(90, 0, 0));
             }
         }
-        
+
         obj.GetComponent<TextMesh>().text = text;
         obj.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
 
@@ -345,7 +350,7 @@ public class CreatePathManager : MonoBehaviour
     Vector3 SnapToGridPoint(Vector3 pos, int _snapsize)
     {
         var snapsize = (float) _snapsize;
-        
+
         if (!isVectorInXZArea(pos, -snapsize + lastPos.x, snapsize + lastPos.x,
             -snapsize + lastPos.z, snapsize + lastPos.z))
         {
@@ -413,7 +418,7 @@ public class CreatePathManager : MonoBehaviour
 
         var dirProj = new Vector3(dir.x, 0, dir.z);
         var dirAppendProj = new Vector3(dirAppend.x, 0, dirAppend.z);
-        
+
         var overlapped = false;
 
         var refSplineList = GetSplineComputers(addPoint, false);
@@ -598,7 +603,7 @@ public class CreatePathManager : MonoBehaviour
         {
             UnityEngine.Debug.LogWarning("ERROR");
         }
-        
+
         var points = spline.spline.points;
 
         if (index < points.Length && index >= 0)
@@ -743,7 +748,7 @@ public class CreatePathManager : MonoBehaviour
                         SplineComputer check_spline = null;
                         foreach (var spline in GetSplineComputers(snapPos))
                         {
-                            if (spline != selectedSpline)
+                            if (spline != selectedSpline && !spline.isConnectedToBuilding)
                             {
                                 check_spline = spline;
                             }
@@ -819,10 +824,10 @@ public class CreatePathManager : MonoBehaviour
                                 else
                                 {
                                     UnityEngine.Debug.LogWarning("Join 3-crossroad (HEAD)");
-                                    
+
                                     var index = GetSplinePointIndex(check_spline,
                                         GetSplinePoint(snapPos, check_spline));
-                                    
+
                                     if (CheckCrossroadCreationValid(check_spline, selectedSpline, index))
                                     {
                                         var new_spline = SplitSpline(index, check_spline);
@@ -906,7 +911,7 @@ public class CreatePathManager : MonoBehaviour
 
                     foreach (var spline in GetSplineComputers(snapPos))
                     {
-                        if (spline != currentSpline)
+                        if (spline != currentSpline && !spline.isConnectedToBuilding)
                         {
                             check_spline = spline;
                         }
@@ -981,7 +986,7 @@ public class CreatePathManager : MonoBehaviour
                             else
                             {
                                 UnityEngine.Debug.LogWarning("Join 3-crossroad (APPEND)");
-                                
+
                                 var points = check_spline.GetPoints();
                                 var index = 0;
 
@@ -992,7 +997,7 @@ public class CreatePathManager : MonoBehaviour
                                         index = i;
                                     }
                                 }
-                                
+
                                 if (CheckCrossroadCreationValid(check_spline, currentSpline, index))
                                 {
                                     var new_spline = SplitSpline(index, check_spline);
@@ -1100,7 +1105,7 @@ public class CreatePathManager : MonoBehaviour
                             else
                             {
                                 UnityEngine.Debug.LogWarning("Join 3-crossroad (BUILD)");
-                                
+
                                 if (CheckCrossroadCreationValid(selectedSpline, currentSpline, selectedIndex))
                                 {
                                     crossNewSpline = SplitSpline(selectedIndex, selectedSpline);
@@ -1125,6 +1130,7 @@ public class CreatePathManager : MonoBehaviour
                                     {
                                         Destroy(pillar.gameObject);
                                     }
+
                                     Destroy(currentSpline.gameObject);
 
                                     joinMode = JOINMODE.NONE;
@@ -1193,7 +1199,7 @@ public class CreatePathManager : MonoBehaviour
         else if (Input.GetMouseButtonUp(0))
         {
             useSnapToGridPoint = false;
-            
+
             if (currentSpline)
             {
                 if (currentSpline.GetPoints().Length <= 1)
@@ -1218,7 +1224,7 @@ public class CreatePathManager : MonoBehaviour
             currentMode = MODE.BUILD;
         }
     }
-    
+
     public void debugPoint(Vector3 pos)
     {
         var obj = Instantiate(debugobj2, pos, Quaternion.identity);
@@ -1245,7 +1251,7 @@ public class CreatePathManager : MonoBehaviour
         var cond1 = (originSpline.GetPoint(joinIndex - 1).position.y == originSpline.GetPoint(joinIndex).position.y);
         var cond2 = (originSpline.GetPoint(joinIndex).position.y == originSpline.GetPoint(joinIndex + 1).position.y);
         var cond3 = false;
-        
+
         var point = GetSplinePoint(originSpline.GetPoint(joinIndex).position, newSpline);
         var pointIndex = GetSplinePointIndex(newSpline, point);
 
@@ -1265,7 +1271,7 @@ public class CreatePathManager : MonoBehaviour
                 cond3 = true;
             }
         }
-        
+
         return cond1 && cond2 && cond3;
     }
 
@@ -1418,7 +1424,7 @@ public class CreatePathManager : MonoBehaviour
             return true;
         }
     }
-    
+
     public static bool isTwoVectorClockwise(Vector3 from, Vector3 to)
     {
         if (Vector3.SignedAngle(from, to, new Vector3(0, 1, 0)) <= 0)
@@ -1679,8 +1685,8 @@ public class CreatePathManager : MonoBehaviour
     void Update()
     {
         RayTrace();
-        
-        if (currentSpline) 
+
+        if (currentSpline)
             UnityEngine.Debug.LogWarning(currentSpline.roadMode);
 
         if (!useSnapToGridPoint)
@@ -1978,7 +1984,7 @@ public class CreatePathManager : MonoBehaviour
                             }
 
                             var per = roads[i]
-                                .Project(cros.getPosition() + dirList[i] / dividerList[(int)roads[i].roadLane])
+                                .Project(cros.getPosition() + dirList[i] / dividerList[(int) roads[i].roadLane])
                                 .percent;
 
                             var mesh = roads[i].GetComponent<SplineMesh>();
@@ -2016,7 +2022,7 @@ public class CreatePathManager : MonoBehaviour
                             }
 
                             var per = roads[i]
-                                .Project(cros.getPosition() + dirList[i] / dividerList[(int)roads[i].roadLane])
+                                .Project(cros.getPosition() + dirList[i] / dividerList[(int) roads[i].roadLane])
                                 .percent;
 
                             var mesh = roads[i].GetComponent<SplineMesh>();
@@ -2121,53 +2127,61 @@ public class CreatePathManager : MonoBehaviour
                 else
                 {
                     var splines = GetSplineComputers(snapPos);
-                    SplineComputer spline = null;
-
+                    SplineComputer check_spline = null;
+                    
                     if (splines.Count == 1)
                     {
-                        spline = splines[0];
-
-                        var point = GetSplinePoint(snapPos, spline);
-                        var point_index = GetSplinePointIndex(spline, point);
-
-                        if (point_index != -1)
+                        check_spline = splines[0];
+                        
+                        if (!check_spline.isConnectedToBuilding)
                         {
-                            if (point_index == spline.GetPoints().Count() - 1)
+                            var point = GetSplinePoint(snapPos, check_spline);
+                            var point_index = GetSplinePointIndex(check_spline, point);
+
+                            if (point_index != -1)
                             {
-                                UnityEngine.Debug.LogWarning("Tail Append");
+                                if (point_index == check_spline.GetPoints().Count() - 1)
+                                {
+                                    UnityEngine.Debug.LogWarning("Tail Append");
 
-                                newIndex = point_index;
-                                currentSpline = spline;
+                                    newIndex = point_index;
+                                    currentSpline = check_spline;
 
-                                currentMode = MODE.APPEND;
-                            }
-                            else if (point_index == 0)
-                            {
-                                UnityEngine.Debug.LogWarning("Head Append");
+                                    currentMode = MODE.APPEND;
+                                }
+                                else if (point_index == 0)
+                                {
+                                    UnityEngine.Debug.LogWarning("Head Append");
 
-                                selectedSpline = spline;
+                                    selectedSpline = check_spline;
 
-                                currentMode = MODE.APPEND;
-                                joinMode = JOINMODE.HEAD;
+                                    currentMode = MODE.APPEND;
+                                    joinMode = JOINMODE.HEAD;
 
-                                lastX = snapPos.x;
-                                lastZ = snapPos.z;
+                                    lastX = snapPos.x;
+                                    lastZ = snapPos.z;
+                                }
+                                else
+                                {
+                                    UnityEngine.Debug.LogWarning("Split for Join");
+
+                                    selectedSpline = check_spline;
+                                    selectedIndex = point_index;
+
+                                    joinMode = JOINMODE.TO3;
+
+                                    runBuildMode();
+                                }
                             }
                             else
                             {
-                                UnityEngine.Debug.LogWarning("Split for Join");
-
-                                selectedSpline = spline;
-                                selectedIndex = point_index;
-
-                                joinMode = JOINMODE.TO3;
-
-                                runBuildMode();
+                                UnityEngine.Debug.LogWarning("ERROR - Can't find Point in Spline");
                             }
+
                         }
                         else
                         {
-                            UnityEngine.Debug.LogWarning("ERROR - Can't find Point in Spline");
+                            runBuildMode();
                         }
                     }
                     else if (splines.Count == 0)
@@ -2176,15 +2190,29 @@ public class CreatePathManager : MonoBehaviour
                     }
                     else if (splines.Count == 2)
                     {
-                        // Not Crossroad, But Splines are splitted.
-                        UnityEngine.Debug.LogWarning("SPLIT TO3");
+                        if (!splines.Any(spline => spline.isConnectedToBuilding))
+                        {
+                            // Not Crossroad, But Splines are splitted.
+                            UnityEngine.Debug.LogWarning("SPLIT TO3");
 
-                        selectedSplines = splines;
+                            selectedSplines = splines;
 
-                        currentMode = MODE.APPEND;
-                        joinMode = JOINMODE.TO3_SPLIT;
+                            currentMode = MODE.APPEND;
+                            joinMode = JOINMODE.TO3_SPLIT;
 
-                        runBuildMode();
+                            runBuildMode();
+                        }
+                        else
+                        {
+                            runBuildMode();
+                        }
+                    }
+                    else if (splines.Count == 3)
+                    {
+                        if (splines.Any(spline => spline.isConnectedToBuilding))
+                        {
+                            runBuildMode();
+                        }
                     }
                 }
             }
@@ -2330,12 +2358,6 @@ public class CreatePathManager : MonoBehaviour
                 chosenSplineIndi = null;
             }
         }
-    }
-
-    public enum REMOVEMODE
-    {
-        STANDBY,
-        EXECUTE
     }
 
     private void RebuildLate(SplineComputer spline)

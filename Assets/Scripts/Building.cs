@@ -18,7 +18,7 @@ public class Building : MonoBehaviour
     {
         get
         {
-            return FindObjectsOfType<SplineComputer>().FirstOrDefault(road => road.GetPoints().Last().position == position);
+            return FindObjectsOfType<SplineComputer>().FirstOrDefault(road => road.isEnterRoad);
         }
     }
 
@@ -26,7 +26,7 @@ public class Building : MonoBehaviour
     {
         get
         {
-            return FindObjectsOfType<SplineComputer>().FirstOrDefault(road => road.GetPoints().First().position == position);
+            return FindObjectsOfType<SplineComputer>().FirstOrDefault(road => road.isExitRoad);
         }
     }
 

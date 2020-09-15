@@ -3233,11 +3233,8 @@ MonoBehaviour:
   lastPos: {x: 0, y: 0, z: 0}
   pos: {x: 0, y: 0, z: 0}
   snapPos: {x: 0, y: 0, z: 0}
-  snapPosWithY: {x: 0, y: 0, z: 0}
   removeMode: 0
-  needDebug: 0
   changer: 0
-  car: {fileID: 0}
   chosenSpline: {fileID: 0}
   chosenSplineIndi: {fileID: 0}
 --- !u!114 &2135375424
