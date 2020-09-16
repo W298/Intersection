@@ -3239,6 +3239,8 @@ MonoBehaviour:
   chosenSplineIndi: {fileID: 0}
   buildingPosList: []
   splineNameList: 
+  originalSplineComputer: {fileID: 1279254871874675638, guid: 7531c08656c85bc419f04b44ef3aa2cb,
+    type: 3}
 --- !u!114 &2135375424
 MonoBehaviour:
   m_ObjectHideFlags: 0

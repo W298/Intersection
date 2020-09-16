@@ -16,11 +16,18 @@ using Random = UnityEngine.Random;
 
 public class Crossroad
 {
+    private CreatePathManager pathManager;
+    
     private Vector3 position;
     private List<SplineComputer> roads = new List<SplineComputer>();
 
+    private int lastRoadCount;
+    private int currentRoadCount;
+
     public Crossroad()
     {
+        lastRoadCount = 0;
+        pathManager = GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>();
     }
 
     public Crossroad(List<SplineComputer> _roads)
@@ -32,6 +39,52 @@ public class Crossroad
     {
         SetRoads(_roads);
         position = _position;
+    }
+
+    public void ConnectRoad()
+    {
+        foreach (var departRoad in roads)
+        {
+            foreach (var arivRoad in roads)
+            {
+                if (departRoad != arivRoad)
+                {
+                    var spline = pathManager.InsSpline(getPosition());
+
+                    Vector3 departPoint;
+                    if (departRoad.GetPoints().Last().position == getPosition())
+                    {
+                        departPoint = departRoad.EvaluatePosition(0.8f);
+                    }
+                    else
+                    {
+                        departPoint = departRoad.EvaluatePosition(0.2f);
+                    }
+
+                    Vector3 arivPoint;
+                    if (arivRoad.GetPoints().Last().position == getPosition())
+                    {
+                        arivPoint = arivRoad.EvaluatePosition(0.8f);
+                    }
+                    else
+                    {
+                        arivPoint = arivRoad.EvaluatePosition(0.2f);
+                    }
+
+                    spline.SetPointNormal(0, pathManager.def_normal);
+                    spline.SetPointSize(0, 1);
+                    spline.SetPointPosition(0, departPoint);
+
+                    spline.SetPointNormal(1, pathManager.def_normal);
+                    spline.SetPointSize(1, 1);
+                    spline.SetPointPosition(1, getPosition());
+                    
+                    spline.SetPointNormal(2, pathManager.def_normal);
+                    spline.SetPointSize(2, 1);
+                    spline.SetPointPosition(2, arivPoint);
+                }
+            }
+        }
     }
 
     public List<SplineComputer> getRoads()
@@ -55,15 +108,6 @@ public class Crossroad
         roads.Remove(road);
     }
 
-    public void SetRoads(SplineComputer[] list)
-    {
-        if (list != null)
-        {
-            roads.Clear();
-            roads = list.ToList();
-        }
-    }
-
     public void SetRoads(List<SplineComputer> list)
     {
         if (list != null)
@@ -78,8 +122,25 @@ public class Crossroad
         position = pos;
     }
 
+    public void OnRoadUpdate()
+    {
+        foreach (var road in roads)
+        {
+            road.crossroad = this;
+        }
+        
+        ConnectRoad();
+    }
+
     public void Update()
     {
+        currentRoadCount = roads.Count;
+
+        if (currentRoadCount != lastRoadCount)
+        {
+            OnRoadUpdate();
+            lastRoadCount = currentRoadCount;
+        }
     }
 }
 
@@ -194,6 +255,13 @@ public class CreatePathManager : MonoBehaviour
 
     public List<int> splineNameList = new List<int>();
 
+    public SplineComputer originalSplineComputer;
+
+    public SplineComputer InsSpline(Vector3 pos)
+    {
+        return Instantiate(originalSplineComputer, pos, Quaternion.identity);
+    }
+    
     private void SetMeshClip(SplineComputer spline, int direction, bool isTo, double per)
     {
         var mesh = spline.GetComponent<SplineMesh>();
@@ -1697,6 +1765,11 @@ public class CreatePathManager : MonoBehaviour
 
     void Update()
     {
+        foreach (var crossroad in crossroads)
+        {
+            crossroad.Update();
+        }
+        
         RayTrace();
 
         if (currentSpline)
