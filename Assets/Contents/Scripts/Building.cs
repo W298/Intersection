@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Dreamteck.Splines;
+using SensorToolkit;
 using UnityEngine;
 
 public class Building : MonoBehaviour
@@ -29,19 +30,35 @@ public class Building : MonoBehaviour
             return FindObjectsOfType<SplineComputer>().FirstOrDefault(road => road.isExitRoad);
         }
     }
-
+    
+    public int upgrade = 1;
+    public int speed;
+    public int lane = 1;
     public int capacity = 10;
-    public int upgrade = 0;
+
+    public List<GameObject> detectedCars
+    {
+        get { return GetComponent<TriggerSensor>().
+            DetectedObjects.Select(sen => sen.gameObject).ToList(); }
+    }
+
+    public List<GameObject> insideCarList;
 
     void Start()
     {
         pathManager = GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>();
         pathManager.buildingPosList.Add(position);
+
+        GetComponent<TriggerSensor>().OnDetected.AddListener(OnDetected);
+    }
+
+    void OnDetected(GameObject obj, Sensor sensor)
+    {
+        insideCarList.Add(obj);
     }
 
     void Update()
     {
-        UnityEngine.Debug.LogWarning(enterRoad == null);
-        UnityEngine.Debug.LogWarning(exitRoad == null);
+        
     }
 }

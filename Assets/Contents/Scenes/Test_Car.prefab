@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 1932710759}
   m_Layer: 0
   m_Name: Sensor
-  m_TagString: Car
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -28,7 +28,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1932710755}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 1.4}
+  m_LocalPosition: {x: 0, y: 0, z: 2.08}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 280478964747061264}
@@ -76,9 +76,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 645baa5ef8f256c4b9101fdcf8bc6534, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Length: 3.5
-  BaseSize: 0.5
-  FOVAngle: 60
+  Length: 2.5
+  BaseSize: 0.65
+  FOVAngle: 60.7
   ElevationAngle: 40
   Resolution: 0
 --- !u!114 &1932710759
@@ -124,9 +124,11 @@ GameObject:
   - component: {fileID: 280478964747061264}
   - component: {fileID: 1183302102937039493}
   - component: {fileID: 7169116717330756252}
+  - component: {fileID: 1778626934022375717}
+  - component: {fileID: 110163100294622072}
   m_Layer: 0
   m_Name: Test_Car
-  m_TagString: Untagged
+  m_TagString: Car
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -271,6 +273,35 @@ MonoBehaviour:
   _followDuration: 1
   _startPosition: 0
   editorSetPosition: 1
+--- !u!65 &1778626934022375717
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3331329374028197592}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.6420355, y: 0.44887567, z: 1.5791016}
+  m_Center: {x: -0.0027632713, y: -0.017920613, z: 1.24823}
+--- !u!54 &110163100294622072
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3331329374028197592}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0
+  m_UseGravity: 0
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1001 &8470469222416275521
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -286,7 +317,7 @@ PrefabInstance:
     - target: {fileID: 9209471912748722087, guid: 3f7630ce6e2a5244986d7bdd882cf4a5,
         type: 3}
       propertyPath: m_TagString
-      value: Untagged
+      value: Car
       objectReference: {fileID: 0}
     - target: {fileID: 9209471912748914245, guid: 3f7630ce6e2a5244986d7bdd882cf4a5,
         type: 3}
