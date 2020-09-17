@@ -502,7 +502,14 @@ public class CreatePathManager : MonoBehaviour
 
             foreach (var refSpline in refSplineList)
             {
-                overlapped = refSpline.pillars.Any(p => CheckVectorXZEqual(p.transform.position, checkPos));
+                if (refSpline.pillars.Count != 0)
+                {
+                    overlapped = refSpline.pillars.Any(p => CheckVectorXZEqual(p.transform.position, checkPos));
+                }
+                else
+                {
+                    overlapped = false;
+                }
             }
         }
 
@@ -1354,9 +1361,9 @@ public class CreatePathManager : MonoBehaviour
         return cond1 && cond2 && cond3;
     }
 
-    public List<SplineComputer> GetSplineComputers(Vector3 pos, bool heightFunc = true)
+    public List<SplineComputer> GetSplineComputers(Vector3 pos, bool heightFunc = true, bool includeFix = false)
     {
-        var spline_list = GameObject.FindObjectsOfType<SplineComputer>();
+        var spline_list = FindAllSplineComputers(includeFix);
         var return_list = new List<SplineComputer>();
 
         foreach (var spline in spline_list)
@@ -1706,6 +1713,18 @@ public class CreatePathManager : MonoBehaviour
         return null;
     }
 
+    public static List<SplineComputer> FindAllSplineComputers(bool includeFix = false)
+    {
+        var list = GameObject.FindObjectsOfType<SplineComputer>().ToList();
+
+        if (!includeFix)
+        {
+            list.RemoveAll(spline => spline.isFixed);
+        }
+
+        return list;
+    }
+
     public Vector3 GetSplinePosition(SplineComputer spline)
     {
         return spline.GetPoint(spline.GetPoints().Length / 2).position;
@@ -1724,7 +1743,7 @@ public class CreatePathManager : MonoBehaviour
 
     SplineComputer GetOwnSpline(SplinePoint point)
     {
-        var splineList = GameObject.FindObjectsOfType<SplineComputer>();
+        var splineList = FindAllSplineComputers();
         return splineList.FirstOrDefault(spline => spline.GetPoints().Contains(point));
     }
 

@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
+using SensorToolkit;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -83,6 +84,24 @@ public class PathFollower : MonoBehaviour
                         isStraight = false;
                     }
                     break;
+                case CreatePathManager.ROADLANE.RL05:
+                    if (_isStraight)
+                    {
+                        splineFollower.direction = Spline.Direction.Forward;
+                        splineFollower.startPosition = 0;
+                        splineFollower.motion.offset = new Vector2(0, defY);
+
+                        isStraight = true;
+                    }
+                    else
+                    {
+                        splineFollower.direction = Spline.Direction.Backward;
+                        splineFollower.startPosition = 1;
+                        splineFollower.motion.offset = new Vector2(0, defY);
+                        
+                        isStraight = false;
+                    }
+                    break;
             }
         }
         else
@@ -119,22 +138,36 @@ public class PathFollower : MonoBehaviour
         {
             pathIndex += 1;
             var nextSpline = path[pathIndex];
-            Crossroad connectedCrossroad;
-        
-            connectedCrossroad = pathManager.GetCrossroad(splineFollower.spline.GetPoints().Last().position);
-        
-            setSpline(nextSpline);
 
-            if (nextSpline.GetPoints().Last().position == connectedCrossroad.getPosition())
+            if (nextSpline.isFixed)
             {
-                setMoveDir(false);
+                setSpline(nextSpline);
+                setMoveDir(true);
+                Reset();
             }
             else
             {
-                setMoveDir(true);
-            }
+                if (nextSpline.isEnterRoad)
+                {
+                    path.Add(nextSpline.connectedBuilding.GetComponentInChildren<SplineComputer>());
+                }
+                
+                Crossroad connectedCrossroad;
+                connectedCrossroad = pathManager.GetCrossroad(splineFollower.spline.GetPoints().Last().position);
+                
+                setSpline(nextSpline);
+
+                if (nextSpline.GetPoints().Last().position == connectedCrossroad.getPosition())
+                {
+                    setMoveDir(false);
+                }
+                else
+                {
+                    setMoveDir(true);
+                }
         
-            Reset();
+                Reset();
+            }
         }
     }
 
@@ -144,22 +177,36 @@ public class PathFollower : MonoBehaviour
         {
             pathIndex += 1;
             var nextSpline = path[pathIndex];
-            Crossroad connectedCrossroad;
-            
-            connectedCrossroad = pathManager.GetCrossroad(splineFollower.spline.GetPoints().First().position);
-            
-            setSpline(nextSpline);
-            
-            if (nextSpline.GetPoints().Last().position == connectedCrossroad.getPosition())
+
+            if (nextSpline.isFixed)
             {
-                setMoveDir(false);
+                setSpline(nextSpline);
+                setMoveDir(true);
+                Reset();
             }
             else
             {
-                setMoveDir(true);
-            }
+                if (nextSpline.isEnterRoad)
+                {
+                    path.Add(nextSpline.connectedBuilding.GetComponentInChildren<SplineComputer>());
+                }
+
+                Crossroad connectedCrossroad;
+                connectedCrossroad = pathManager.GetCrossroad(splineFollower.spline.GetPoints().First().position);
+                
+                setSpline(nextSpline);
+
+                if (nextSpline.GetPoints().Last().position == connectedCrossroad.getPosition())
+                {
+                    setMoveDir(false);
+                }
+                else
+                {
+                    setMoveDir(true);
+                }
         
-            Reset();
+                Reset();
+            }
         }
         
     }

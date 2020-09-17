@@ -72,8 +72,17 @@ public class CarManager : MonoBehaviour
                 roadTuple.Add(tuple);
             }
         }
-        
+
         weightList = new List<float>(Enumerable.Repeat(1.0f, roadTuple.Count));
+        
+        // Block Exit Road Tuple Path Creation
+        for (int i = 0; i < roadTuple.Count; i++)
+        {
+            if (exitRoadList.Contains(roadTuple[i].Item1))
+            {
+                weightList[i] = 0f;
+            }
+        }
     }
 
     public void FindAndSetPath()

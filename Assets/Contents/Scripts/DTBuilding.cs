@@ -6,8 +6,9 @@ using Dreamteck.Splines;
 using SensorToolkit;
 using UnityEngine;
 
-public class Building : MonoBehaviour
+public class DTBuilding : MonoBehaviour
 {
+    public ConnectingRoadScript connectingRoadScript;
     private CreatePathManager pathManager;
     public Vector3 position
     {
@@ -17,22 +18,16 @@ public class Building : MonoBehaviour
 
     public SplineComputer enterRoad
     {
-        get
-        {
-            return FindObjectsOfType<SplineComputer>().FirstOrDefault(road => road.isEnterRoad);
-        }
+        get { return connectingRoadScript.enterRoad; }
     }
 
     public SplineComputer exitRoad
     {
-        get
-        {
-            return FindObjectsOfType<SplineComputer>().FirstOrDefault(road => road.isExitRoad);
-        }
+        get { return connectingRoadScript.exitRoad; }
     }
     
     public int upgrade = 1;
-    public int speed;
+    public int speed = 10;
     public int lane = 1;
     public int capacity = 10;
 
@@ -46,6 +41,7 @@ public class Building : MonoBehaviour
 
     void Start()
     {
+        connectingRoadScript = GetComponentInChildren<ConnectingRoadScript>();
         pathManager = GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>();
         pathManager.buildingPosList.Add(position);
 
@@ -54,7 +50,12 @@ public class Building : MonoBehaviour
 
     void OnDetected(GameObject obj, Sensor sensor)
     {
-        insideCarList.Add(obj);
+        // Add Unique Car
+        if (!insideCarList.Contains(obj))
+        {
+            insideCarList.Add(obj);
+            // obj.GetComponent<CarBehavior>().RunDTBehavior(this);
+        }
     }
 
     void Update()
