@@ -12,33 +12,44 @@ public class PathFollower : MonoBehaviour
 {
     private SplineFollower splineFollower;
     private CreatePathManager pathManager;
-    
-    public List<List<SplineComputer>> pathList;
+    private GameObject player;
+    private CarManager carManager;
 
-    public List<List<SplineComputer>> shortPathList
-    {
-        get
-        {
-            var minCount = pathList.Select(p => p.Count).Min();
-            return pathList.Where(p => p.Count == minCount).ToList();
-        }
-    }
-    
-    public List<SplineComputer> path;
-    public int pathIndex = 0;
+    public PathFindData pathFindData;
+
+    public List<List<SplineComputer>> pathList;
+    public List<SplineComputer> selectedPath;
+    public int currentPathIndex;
 
     public bool isStraight = true;
     public float defY = 0.35f;
 
+    // Select Path from pathList variable : Need To delete
     public void selectPath(int index = 0, bool shortPathOnly = true)
     {
-        path = shortPathOnly ? shortPathList[index] : pathList[index];
-        pathIndex = 0;
+        selectedPath = shortPathOnly ? GetShortPathList(pathList)[index] : pathList[index];
+        currentPathIndex = 0;
         
-        setSpline(path[pathIndex]);
+        SetCurrentRoad(selectedPath[currentPathIndex]);
     }
     
-    public void setSpline(SplineComputer _spline)
+    // Select Short Path List from PathList
+    public static List<List<SplineComputer>> GetShortPathList(List<List<SplineComputer>> pathList)
+    {
+        var minCount = pathList.Select(p => p.Count).Min();
+        var shortPathList = pathList.Where(p => p.Count == minCount).ToList();
+
+        return shortPathList;
+    }
+
+    // Select Path from pathList parameter
+    public static List<SplineComputer> SelectPath(List<List<SplineComputer>> pathList, int index = 0, bool shortPathOnly = true)
+    {
+        return shortPathOnly ? GetShortPathList(pathList)[index] : pathList[index];
+    }
+
+    // Set Spline to splineFollower.spline
+    public void SetCurrentRoad(SplineComputer _spline)
     {
         splineFollower.spline = _spline;
 
@@ -48,10 +59,10 @@ public class PathFollower : MonoBehaviour
                 switch (_spline.roadMode)
                 {
                     case SplineComputer.MODE.FIRST_OPEN:
-                        setMoveDir(true);
+                        SetMoveDir(true);
                         break;
                     case SplineComputer.MODE.LAST_OPEN:
-                        setMoveDir(false);
+                        SetMoveDir(false);
                         break;
                 }
                 break;
@@ -60,20 +71,21 @@ public class PathFollower : MonoBehaviour
         }
     }
 
-    public void setMoveDir(bool _isStraight)
+    // Set Move Direction & Position by is_straight parameter
+    public void SetMoveDir(bool isSt)
     {
         if (splineFollower.spline)
         {
             switch (splineFollower.spline.roadLane)
             {
                 case CreatePathManager.ROADLANE.RL1:
-                    if (_isStraight)
+                    if (isSt)
                     {
                         splineFollower.direction = Spline.Direction.Forward;
                         splineFollower.startPosition = 0;
                         splineFollower.motion.offset = new Vector2(0.65f, defY);
 
-                        isStraight = true;
+                        this.isStraight = true;
                     }
                     else
                     {
@@ -81,17 +93,17 @@ public class PathFollower : MonoBehaviour
                         splineFollower.startPosition = 1;
                         splineFollower.motion.offset = new Vector2(-0.65f, defY);
                         
-                        isStraight = false;
+                        this.isStraight = false;
                     }
                     break;
                 case CreatePathManager.ROADLANE.RL05:
-                    if (_isStraight)
+                    if (isSt)
                     {
                         splineFollower.direction = Spline.Direction.Forward;
                         splineFollower.startPosition = 0;
                         splineFollower.motion.offset = new Vector2(0, defY);
 
-                        isStraight = true;
+                        this.isStraight = true;
                     }
                     else
                     {
@@ -99,7 +111,7 @@ public class PathFollower : MonoBehaviour
                         splineFollower.startPosition = 1;
                         splineFollower.motion.offset = new Vector2(0, defY);
                         
-                        isStraight = false;
+                        this.isStraight = false;
                     }
                     break;
             }
@@ -110,16 +122,19 @@ public class PathFollower : MonoBehaviour
         }
     }
 
+    // Enable following
     public void Run()
     {
         splineFollower.follow = true;
     }
 
+    // Disable following
     public void Stop()
     {
         splineFollower.follow = false;
     }
 
+    // Re-set Position for start following
     public void Reset()
     {
         if (isStraight)
@@ -132,38 +147,52 @@ public class PathFollower : MonoBehaviour
         }
     }
 
+    // Only If Current Road is Straight
     private void EndReach(double percent)
     {
         if (isStraight)
         {
-            pathIndex += 1;
-            var nextSpline = path[pathIndex];
+            if (splineFollower.spline.isFixed)
+            {
+                /*
+                var exitTupleList = carManager.exToEnterTupleList.Where(tuple => tuple.Item1 == splineFollower.spline.connectedBuilding.GetComponent<DTBuilding>().exitRoad).ToList();
+                var selectedTuple = carManager.WeightedRandom(exitTupleList, new List<float>(Enumerable.Repeat<float>(1f, exitTupleList.Count)));
+
+                var pathList = PathFinder.Run(selectedTuple.Item1, selectedTuple.Item2);
+                var pathToAdd = SelectPath(pathList);
+                
+                selectedPath.AddRange(pathToAdd);
+                */
+            }
+            
+            currentPathIndex += 1;
+            var nextSpline = selectedPath[currentPathIndex];
 
             if (nextSpline.isFixed)
             {
-                setSpline(nextSpline);
-                setMoveDir(true);
+                SetCurrentRoad(nextSpline);
+                SetMoveDir(true);
                 Reset();
             }
-            else
+            else if (nextSpline != null)
             {
                 if (nextSpline.isEnterRoad)
                 {
-                    path.Add(nextSpline.connectedBuilding.GetComponentInChildren<SplineComputer>());
+                    selectedPath.Add(nextSpline.connectedBuilding.GetComponentInChildren<SplineComputer>());
                 }
                 
                 Crossroad connectedCrossroad;
                 connectedCrossroad = pathManager.GetCrossroad(splineFollower.spline.GetPoints().Last().position);
                 
-                setSpline(nextSpline);
+                SetCurrentRoad(nextSpline);
 
                 if (nextSpline.GetPoints().Last().position == connectedCrossroad.getPosition())
                 {
-                    setMoveDir(false);
+                    SetMoveDir(false);
                 }
                 else
                 {
-                    setMoveDir(true);
+                    SetMoveDir(true);
                 }
         
                 Reset();
@@ -171,38 +200,39 @@ public class PathFollower : MonoBehaviour
         }
     }
 
+    // Only If Current Road is Reverse
     private void BeginReach(double percent)
     {
         if (!isStraight)
         {
-            pathIndex += 1;
-            var nextSpline = path[pathIndex];
+            currentPathIndex += 1;
+            var nextSpline = selectedPath[currentPathIndex];
 
             if (nextSpline.isFixed)
             {
-                setSpline(nextSpline);
-                setMoveDir(true);
+                SetCurrentRoad(nextSpline);
+                SetMoveDir(true);
                 Reset();
             }
-            else
+            else if (nextSpline != null)
             {
                 if (nextSpline.isEnterRoad)
                 {
-                    path.Add(nextSpline.connectedBuilding.GetComponentInChildren<SplineComputer>());
+                    selectedPath.Add(nextSpline.connectedBuilding.GetComponentInChildren<SplineComputer>());
                 }
 
                 Crossroad connectedCrossroad;
                 connectedCrossroad = pathManager.GetCrossroad(splineFollower.spline.GetPoints().First().position);
                 
-                setSpline(nextSpline);
+                SetCurrentRoad(nextSpline);
 
                 if (nextSpline.GetPoints().Last().position == connectedCrossroad.getPosition())
                 {
-                    setMoveDir(false);
+                    SetMoveDir(false);
                 }
                 else
                 {
-                    setMoveDir(true);
+                    SetMoveDir(true);
                 }
         
                 Reset();
@@ -214,15 +244,25 @@ public class PathFollower : MonoBehaviour
     void Start()
     {
         splineFollower = GetComponent<SplineFollower>();
-        pathManager = GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>();
-        
+        player = GameObject.FindGameObjectWithTag("Player");
+        pathManager = player.GetComponent<CreatePathManager>();
+        carManager = player.GetComponent<CarManager>();
+
         splineFollower.motion.velocityHandleMode = TransformModule.VelocityHandleMode.Preserve;
 
         splineFollower.onBeginningReached += BeginReach;
         splineFollower.onEndReached += EndReach;
+        
+        currentPathIndex = 0;
     }
 
     void Update()
     {
+        if (pathFindData != null)
+        {
+            pathFindData.FindPathList();
+            pathFindData.SelectPath(true);
+            pathFindData.PrintData();
+        }
     }
 }

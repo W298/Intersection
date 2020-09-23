@@ -8,9 +8,7 @@ using UnityEngine;
 
 public class PathFinder : MonoBehaviour
 {
-    private CreatePathManager pathManager;
-    
-    private void AppendSplineList(List<SplineComputer> origin, List<SplineComputer> list)
+    private static void AppendSplineList(List<SplineComputer> origin, List<SplineComputer> list)
     {
         foreach (var item in list)
         {
@@ -21,7 +19,7 @@ public class PathFinder : MonoBehaviour
         }
     }
 
-    public void Loop(SplineComputer departure, SplineComputer arrival, List<SplineComputer> path,
+    private static void Loop(SplineComputer departure, SplineComputer arrival, List<SplineComputer> path,
         List<List<SplineComputer>> pathList)
     {
         foreach (var connectedSpline in departure.connectedSplineList)
@@ -43,8 +41,10 @@ public class PathFinder : MonoBehaviour
         }
     }
     
-    public List<List<SplineComputer>> Run(SplineComputer departure, SplineComputer arrival)
+    public static List<List<SplineComputer>> Run(SplineComputer departure, SplineComputer arrival)
     {
+        var pathManager = GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>();
+        
         foreach (var crossroad in pathManager.crossroads)
         {
             foreach (var road in crossroad.getRoads())
@@ -63,10 +63,5 @@ public class PathFinder : MonoBehaviour
         Loop(departure, arrival, path, pathList);
 
         return pathList;
-    }
-
-    void Start()
-    {
-        pathManager = GetComponent<CreatePathManager>();
     }
 }

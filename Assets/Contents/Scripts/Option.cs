@@ -86,15 +86,18 @@ public partial class SROptions
     }
 
     [Category("Path Finder")]
-    public void Prepare()
+    public void SetPathFindDataList()
     {
-        carManager.Prepare();
+        carManager.SetPathFindDataList();
     }
     
     [Category("Path Finder")]
-    public void Find()
+    public void SelectPathFindDataEach()
     {
-        carManager.FindAndSetPath();
+        foreach (var car in carManager.cars)
+        {
+            CarManager.SelectPathFindDataToCar(car, carManager.pathFindDataList, carManager.weightList);
+        }
     }
 
     [Category("Car Manager")]
@@ -121,9 +124,9 @@ public partial class SROptions
     [Category("Car Manager")]
     public void IncreaseChosenSplineWeight()
     {
-        for (var i = 0; i < carManager.roadTuple.Count; i++)
+        for (var i = 0; i < carManager.exToEnterTupleList.Count; i++)
         {
-            var tuple = carManager.roadTuple[i];
+            var tuple = carManager.exToEnterTupleList[i];
             if (tuple.Item1 == pathManager.chosenSpline)
             {
                 carManager.weightList[i] += 1.0f;
@@ -134,9 +137,9 @@ public partial class SROptions
     [Category("Car Manager")]
     public void DecreaseChosenSplineWeight()
     {
-        for (var i = 0; i < carManager.roadTuple.Count; i++)
+        for (var i = 0; i < carManager.exToEnterTupleList.Count; i++)
         {
-            var tuple = carManager.roadTuple[i];
+            var tuple = carManager.exToEnterTupleList[i];
             if (tuple.Item1 == pathManager.chosenSpline)
             {
                 carManager.weightList[i] -= 1.0f;

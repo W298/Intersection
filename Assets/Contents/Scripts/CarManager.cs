@@ -6,6 +6,8 @@ using Dreamteck.Splines;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
+using StartEndTuple = System.Tuple<Dreamteck.Splines.SplineComputer, Dreamteck.Splines.SplineComputer>;
+
 public class CarManager : MonoBehaviour
 {
     private PathFinder pathFinder;
@@ -14,8 +16,43 @@ public class CarManager : MonoBehaviour
     public GameObject carPrefab;
 
     public List<GameObject> cars;
-    public List<Tuple<SplineComputer, SplineComputer>> roadTuple = new List<Tuple<SplineComputer, SplineComputer>>();
+    
+    public List<StartEndTuple> exToEnterTupleList = new List<StartEndTuple>();
+    public List<StartEndTuple> exitToExTupleList = new List<StartEndTuple>();
+    
+    public List<PathFindData> pathFindDataList = new List<PathFindData>();
+    
     public List<float> weightList;
+
+    public List<SplineComputer> externalRoadList
+    {
+        get
+        {
+            var roads = CreatePathManager.FindAllSplineComputers(true);
+            return roads.Where(road => 
+                (!(road.isExitRoad || road.isEnterRoad) && 
+                 (road.roadMode == SplineComputer.MODE.LAST_OPEN || road.roadMode == SplineComputer.MODE.FIRST_OPEN)))
+                .ToList();
+        }
+    }
+
+    public List<SplineComputer> enterRoadList
+    {
+        get
+        {
+            var roads = CreatePathManager.FindAllSplineComputers(true);
+            return roads.Where(road => road.isEnterRoad).ToList();
+        }
+    }
+
+    public List<SplineComputer> exitRoadList
+    {
+        get
+        {
+            var roads = CreatePathManager.FindAllSplineComputers(true);
+            return roads.Where(road => road.isExitRoad).ToList();
+        }
+    }
     
     public GameObject Spawn()
     {
@@ -25,81 +62,79 @@ public class CarManager : MonoBehaviour
         return car;
     }
 
-    public void SetPathList(GameObject car, List<List<SplineComputer>> pathList)
+    public static PathFindData WeightedRandom(List<PathFindData> inputPathFindData, List<float> inputWeightList)
     {
-        car.GetComponent<PathFollower>().pathList = pathList;
-    }
-
-    public Tuple<SplineComputer, SplineComputer> WeightedRandom(List<Tuple<SplineComputer, SplineComputer>> _roadTuple, List<float> weightList)
-    {
-        var n = Random.Range(0, weightList.Sum());
+        var n = Random.Range(0, inputWeightList.Sum());
 
         var preValue = 0.0f;
-        for (var index = 0; index < weightList.Count; index++)
+        for (var index = 0; index < inputWeightList.Count; index++)
         {
-            if (preValue <= n && n <= preValue + weightList[index])
+            if (preValue <= n && n <= preValue + inputWeightList[index])
             {
-                return _roadTuple[index];
+                return inputPathFindData[index];
             }
 
-            preValue += weightList[index];
+            preValue += inputWeightList[index];
         }
 
         return null;
     }
 
-    public void Prepare()
+    public void SetPathFindDataList()
     {
-        var roads = GameObject.FindObjectsOfType<SplineComputer>().ToList();
+        exToEnterTupleList.Clear();
+        exitToExTupleList.Clear();
+        pathFindDataList.Clear();
+        weightList.Clear();
         
-        var externalRoadList = roads.Where(road => 
-            (!(road.isExitRoad || road.isEnterRoad) && 
-             (road.roadMode == SplineComputer.MODE.LAST_OPEN || road.roadMode == SplineComputer.MODE.FIRST_OPEN))).ToList();
-        var enterRoadList = roads.Where(road => road.isEnterRoad).ToList();
-        var exitRoadList = roads.Where(road => road.isExitRoad).ToList();
-
         foreach (var externalRoad in externalRoadList)
         {
             foreach (var enterRoad in enterRoadList)
             {
-                var tuple = new Tuple<SplineComputer, SplineComputer>(externalRoad, enterRoad);
-                roadTuple.Add(tuple);
-            }
-
-            foreach (var exitRoad in exitRoadList)
-            {
-                var tuple = new Tuple<SplineComputer, SplineComputer>(exitRoad, externalRoad);
-                roadTuple.Add(tuple);
+                if (externalRoad != enterRoad)
+                {
+                    var tuple = new StartEndTuple(externalRoad, enterRoad);
+                    exToEnterTupleList.Add(tuple);
+                }
             }
         }
 
-        weightList = new List<float>(Enumerable.Repeat(1.0f, roadTuple.Count));
-        
-        // Block Exit Road Tuple Path Creation
-        for (int i = 0; i < roadTuple.Count; i++)
+        foreach (var exitRoad in exitRoadList)
         {
-            if (exitRoadList.Contains(roadTuple[i].Item1))
+            foreach (var externalRoad in externalRoadList)
             {
-                weightList[i] = 0f;
+                if (exitRoad != externalRoad)
+                {
+                    var tuple = new StartEndTuple(exitRoad, externalRoad);
+                    exitToExTupleList.Add(tuple);
+                }
             }
         }
+        
+        foreach (var exToEnterTuple in exToEnterTupleList)
+        {
+            foreach (var exitToExTuple in exitToExTupleList)
+            {
+                if (exToEnterTuple.Item2.connectedBuilding.GetComponent<DTBuilding>().exitRoad == exitToExTuple.Item1)
+                {
+                    pathFindDataList.Add(new PathFindData(
+                        exToEnterTuple, 
+                        exitToExTuple, 
+                        exToEnterTuple.Item2.connectedBuilding));
+                }
+            }
+        }
+
+        weightList = new List<float>(Enumerable.Repeat(1.0f, pathFindDataList.Count));
     }
 
-    public void FindAndSetPath()
+    public static void SelectPathFindDataToCar(GameObject car, List<PathFindData> pathFindDataList, List<float> weightList)
     {
-        foreach (var car in cars)
-        {
-            var selectedTuple = WeightedRandom(roadTuple, weightList);
-
-            var pathList = pathFinder.Run(selectedTuple.Item1, selectedTuple.Item2);
-            SetPathList(car, pathList);
-        }
+        car.GetComponent<PathFollower>().pathFindData = WeightedRandom(pathFindDataList, weightList);
     }
 
     public void MoveAll()
     {
-        var groupList = cars.GroupBy(car => car.GetComponent<PathFollower>().path).ToList();
-        
         IEnumerator MoveAllCar()
         {
             foreach (var car in cars)

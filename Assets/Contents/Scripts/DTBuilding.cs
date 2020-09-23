@@ -25,6 +25,11 @@ public class DTBuilding : MonoBehaviour
     {
         get { return connectingRoadScript.exitRoad; }
     }
+
+    public SplineComputer connectingRoad
+    {
+        get { return GetComponentInChildren<SplineComputer>(); }
+    }
     
     public int upgrade = 1;
     public int speed = 10;

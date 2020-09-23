@@ -4,7 +4,7 @@ using System.Linq;
 using Dreamteck.Splines;
 using UnityEngine;
 
-public class CarBehavior : MonoBehaviour
+public class CarAI : MonoBehaviour
 {
     private CarManager carManager;
     private PathFinder pathFinder;
@@ -13,12 +13,11 @@ public class CarBehavior : MonoBehaviour
     private DTBuilding dtBuilding;
     public void RunDTBehavior(DTBuilding dt)
     {
+        /*
         dtBuilding = dt;
 
         var connetingSpline = dtBuilding.connectingRoadScript.connectingSpline;
         
-        
-        /*
         StartCoroutine(AfterWait());
 
         IEnumerator AfterWait()
@@ -36,6 +35,7 @@ public class CarBehavior : MonoBehaviour
             pathFollower.Reset();
         }
         */
+        
     }
     
     void Start()
