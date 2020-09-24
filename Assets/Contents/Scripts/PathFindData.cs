@@ -18,10 +18,22 @@ public class PathFindData
     public List<Path> pathList;
     public Path currentPath;
     public int currentMode;
+
+    public GameObject possesCar;
     
     public SplineComputer connectingRoad
     {
         get { return targetBuilding.GetComponent<DTBuilding>().connectingRoad; }
+    }
+
+    public PathFindData(PathFindData origin, GameObject possesCar)
+    {
+        exToEnter = origin.exToEnter;
+        exitToEx = origin.exitToEx;
+        targetBuilding = origin.targetBuilding;
+        this.currentMode = 0;
+
+        this.possesCar = possesCar;
     }
 
     // Constructor
@@ -31,6 +43,22 @@ public class PathFindData
         this.exitToEx = exitToEx;
         this.targetBuilding = targetBuilding;
         this.currentMode = 0;
+    }
+
+    public bool IncreaseMode()
+    {
+        currentMode++;
+        if (currentMode > 2)
+        {
+            return true;
+        }
+        
+        if (currentMode == 1)
+        {
+            possesCar.GetComponent<CarAI>().RunDTBehavior(targetBuilding.GetComponent<DTBuilding>());
+        }
+        
+        return false;
     }
 
     public void FindPathList()
@@ -49,7 +77,7 @@ public class PathFindData
         }
     }
 
-    public void SelectPath(bool shortestPath, int index = 0)
+    public void SelectPath(bool shortestPath = true, int index = 0)
     {
         if (shortestPath)
         {

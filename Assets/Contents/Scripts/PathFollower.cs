@@ -6,50 +6,34 @@ using System.Linq;
 using System.Security;
 using SensorToolkit;
 using UnityEngine;
+using UnityEngine.Analytics;
 using UnityEngine.EventSystems;
 
 public class PathFollower : MonoBehaviour
 {
     private SplineFollower splineFollower;
-    private CreatePathManager pathManager;
-    private GameObject player;
-    private CarManager carManager;
 
     public PathFindData pathFindData;
-
-    public List<List<SplineComputer>> pathList;
-    public List<SplineComputer> selectedPath;
     public int currentPathIndex;
 
     public bool isStraight = true;
     public float defY = 0.35f;
 
-    // Select Path from pathList variable : Need To delete
-    public void selectPath(int index = 0, bool shortPathOnly = true)
+    // Initiate Running
+    public void Initiate(int startIndex = 0)
     {
-        selectedPath = shortPathOnly ? GetShortPathList(pathList)[index] : pathList[index];
-        currentPathIndex = 0;
+        if (pathFindData == null) return;
         
-        SetCurrentRoad(selectedPath[currentPathIndex]);
-    }
-    
-    // Select Short Path List from PathList
-    public static List<List<SplineComputer>> GetShortPathList(List<List<SplineComputer>> pathList)
-    {
-        var minCount = pathList.Select(p => p.Count).Min();
-        var shortPathList = pathList.Where(p => p.Count == minCount).ToList();
-
-        return shortPathList;
-    }
-
-    // Select Path from pathList parameter
-    public static List<SplineComputer> SelectPath(List<List<SplineComputer>> pathList, int index = 0, bool shortPathOnly = true)
-    {
-        return shortPathOnly ? GetShortPathList(pathList)[index] : pathList[index];
+        pathFindData.FindPathList();
+        pathFindData.SelectPath();
+        
+        // Set First Road
+        SetRunningRoad(pathFindData.currentPath[startIndex]);
+        currentPathIndex = 0;
     }
 
     // Set Spline to splineFollower.spline
-    public void SetCurrentRoad(SplineComputer _spline)
+    public void SetRunningRoad(SplineComputer _spline)
     {
         splineFollower.spline = _spline;
 
@@ -66,12 +50,10 @@ public class PathFollower : MonoBehaviour
                         break;
                 }
                 break;
-            default:
-                break;
         }
     }
 
-    // Set Move Direction & Position by is_straight parameter
+    // Set Move Direction & Position by isSt parameter
     public void SetMoveDir(bool isSt)
     {
         if (splineFollower.spline)
@@ -150,103 +132,122 @@ public class PathFollower : MonoBehaviour
     // Only If Current Road is Straight
     private void EndReach(double percent)
     {
-        if (isStraight)
+        if (pathFindData.currentPath.Count <= currentPathIndex + 1)
         {
-            if (splineFollower.spline.isFixed)
+            if (pathFindData.IncreaseMode())
             {
-                /*
-                var exitTupleList = carManager.exToEnterTupleList.Where(tuple => tuple.Item1 == splineFollower.spline.connectedBuilding.GetComponent<DTBuilding>().exitRoad).ToList();
-                var selectedTuple = carManager.WeightedRandom(exitTupleList, new List<float>(Enumerable.Repeat<float>(1f, exitTupleList.Count)));
+                Destroy(this.gameObject);
+                return;
+            }
 
-                var pathList = PathFinder.Run(selectedTuple.Item1, selectedTuple.Item2);
-                var pathToAdd = SelectPath(pathList);
-                
-                selectedPath.AddRange(pathToAdd);
-                */
+            var connectingPos = pathFindData.currentPath[currentPathIndex].GetPoints().Last().position;
+
+            Initiate();
+
+            if (pathFindData.currentPath[currentPathIndex].GetPoints().Last().position == connectingPos)
+            {
+                SetMoveDir(false);
+            }
+            else if (pathFindData.currentPath[currentPathIndex].GetPoints().First().position == connectingPos)
+            {
+                SetMoveDir(true);
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning("ERROR");
             }
             
-            currentPathIndex += 1;
-            var nextSpline = selectedPath[currentPathIndex];
-
-            if (nextSpline.isFixed)
-            {
-                SetCurrentRoad(nextSpline);
-                SetMoveDir(true);
-                Reset();
-            }
-            else if (nextSpline != null)
-            {
-                if (nextSpline.isEnterRoad)
-                {
-                    selectedPath.Add(nextSpline.connectedBuilding.GetComponentInChildren<SplineComputer>());
-                }
-                
-                Crossroad connectedCrossroad;
-                connectedCrossroad = pathManager.GetCrossroad(splineFollower.spline.GetPoints().Last().position);
-                
-                SetCurrentRoad(nextSpline);
-
-                if (nextSpline.GetPoints().Last().position == connectedCrossroad.getPosition())
-                {
-                    SetMoveDir(false);
-                }
-                else
-                {
-                    SetMoveDir(true);
-                }
+            Reset();
+            return;
+        }
         
-                Reset();
+        if (isStraight)
+        {
+            var connectingPos = pathFindData.currentPath[currentPathIndex].GetPoints().Last().position;
+
+            currentPathIndex++;
+            var nextSpline = pathFindData.currentPath[currentPathIndex];
+            
+            SetRunningRoad(nextSpline);
+
+            if (nextSpline.GetPoints().Last().position == connectingPos)
+            {
+                SetMoveDir(false);
             }
+            else if (nextSpline.GetPoints().First().position == connectingPos)
+            {
+                SetMoveDir(true);
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning("ERROR");
+            }
+            
+            Reset();
         }
     }
 
     // Only If Current Road is Reverse
     private void BeginReach(double percent)
     {
-        if (!isStraight)
+        if (pathFindData.currentPath.Count <= currentPathIndex + 1)
         {
-            currentPathIndex += 1;
-            var nextSpline = selectedPath[currentPathIndex];
-
-            if (nextSpline.isFixed)
+            if (pathFindData.IncreaseMode())
             {
-                SetCurrentRoad(nextSpline);
+                Destroy(this.gameObject);
+                return;
+            }
+            
+            var connectingPos = pathFindData.currentPath[currentPathIndex].GetPoints().First().position;
+            
+            Initiate();
+
+            if (pathFindData.currentPath[currentPathIndex].GetPoints().Last().position == connectingPos)
+            {
+                SetMoveDir(false);
+            }
+            else if (pathFindData.currentPath[currentPathIndex].GetPoints().First().position == connectingPos)
+            {
                 SetMoveDir(true);
-                Reset();
             }
-            else if (nextSpline != null)
+            else
             {
-                if (nextSpline.isEnterRoad)
-                {
-                    selectedPath.Add(nextSpline.connectedBuilding.GetComponentInChildren<SplineComputer>());
-                }
-
-                Crossroad connectedCrossroad;
-                connectedCrossroad = pathManager.GetCrossroad(splineFollower.spline.GetPoints().First().position);
-                
-                SetCurrentRoad(nextSpline);
-
-                if (nextSpline.GetPoints().Last().position == connectedCrossroad.getPosition())
-                {
-                    SetMoveDir(false);
-                }
-                else
-                {
-                    SetMoveDir(true);
-                }
-        
-                Reset();
+                UnityEngine.Debug.LogWarning("ERROR");
             }
+            
+            Reset();
+            return;
         }
         
+        if (!isStraight)
+        {
+            var connectingPos = pathFindData.currentPath[currentPathIndex].GetPoints().First().position;
+
+            currentPathIndex++;
+            var nextSpline = pathFindData.currentPath[currentPathIndex];
+
+            SetRunningRoad(nextSpline);
+            
+            if (nextSpline.GetPoints().Last().position == connectingPos)
+            {
+                SetMoveDir(false);
+            }
+            else if (nextSpline.GetPoints().First().position == connectingPos)
+            {
+                SetMoveDir(true);
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning("ERROR");
+            }
+            
+            Reset();
+        }
     }
 
     void Start()
     {
         splineFollower = GetComponent<SplineFollower>();
-        player = GameObject.FindGameObjectWithTag("Player");
-        pathManager = player.GetComponent<CreatePathManager>();
-        carManager = player.GetComponent<CarManager>();
 
         splineFollower.motion.velocityHandleMode = TransformModule.VelocityHandleMode.Preserve;
 
@@ -258,11 +259,6 @@ public class PathFollower : MonoBehaviour
 
     void Update()
     {
-        if (pathFindData != null)
-        {
-            pathFindData.FindPathList();
-            pathFindData.SelectPath(true);
-            pathFindData.PrintData();
-        }
+        
     }
 }

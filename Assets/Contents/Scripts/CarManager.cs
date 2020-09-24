@@ -130,7 +130,7 @@ public class CarManager : MonoBehaviour
 
     public static void SelectPathFindDataToCar(GameObject car, List<PathFindData> pathFindDataList, List<float> weightList)
     {
-        car.GetComponent<PathFollower>().pathFindData = WeightedRandom(pathFindDataList, weightList);
+        car.GetComponent<PathFollower>().pathFindData = new PathFindData(WeightedRandom(pathFindDataList, weightList), car);
     }
 
     public void MoveAll()
@@ -145,6 +145,14 @@ public class CarManager : MonoBehaviour
         }
 
         StartCoroutine(MoveAllCar());
+    }
+
+    public void StopAll()
+    {
+        foreach (var car in cars)
+        {
+            car.GetComponent<PathFollower>().Stop();
+        }
     }
     
     private void Start()

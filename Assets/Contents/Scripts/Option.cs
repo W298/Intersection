@@ -70,18 +70,15 @@ public partial class SROptions
     [Category("Path Follower")]
     public void StopAll()
     {
-        foreach (var car in carManager.cars)
-        {
-            car.GetComponent<PathFollower>().Stop();
-        }
+        carManager.StopAll();
     }
 
     [Category("Path Follower")]
-    public void SelectSplineFromPath()
+    public void InitAllCar()
     {
         foreach (var car in carManager.cars)
         {
-            car.GetComponent<PathFollower>().selectPath(index, true);
+            car.GetComponent<PathFollower>().Initiate();
         }
     }
 
@@ -124,30 +121,12 @@ public partial class SROptions
     [Category("Car Manager")]
     public void IncreaseChosenSplineWeight()
     {
-        for (var i = 0; i < carManager.exToEnterTupleList.Count; i++)
-        {
-            var tuple = carManager.exToEnterTupleList[i];
-            if (tuple.Item1 == pathManager.chosenSpline)
-            {
-                carManager.weightList[i] += 1.0f;
-            }
-        }
+        
     }
     
     [Category("Car Manager")]
     public void DecreaseChosenSplineWeight()
     {
-        for (var i = 0; i < carManager.exToEnterTupleList.Count; i++)
-        {
-            var tuple = carManager.exToEnterTupleList[i];
-            if (tuple.Item1 == pathManager.chosenSpline)
-            {
-                carManager.weightList[i] -= 1.0f;
-                if (carManager.weightList[i] < 0)
-                {
-                    carManager.weightList[i] = 0.0f;
-                }
-            }
-        }
+        
     }
 }
