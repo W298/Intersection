@@ -140,7 +140,7 @@ public class CarManager : MonoBehaviour
             foreach (var car in cars)
             {
                 car.GetComponent<PathFollower>().Run();
-                yield return new WaitForSeconds(0.5f);
+                yield return new WaitForSeconds(1f);
             }
         }
 

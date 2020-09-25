@@ -28,7 +28,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1932710755}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 2.08}
+  m_LocalPosition: {x: 0, y: 0, z: 2.06}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 280478964747061264}
@@ -78,8 +78,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Length: 2.5
   BaseSize: 0.65
-  FOVAngle: 60.7
-  ElevationAngle: 40
+  FOVAngle: 25.5
+  ElevationAngle: 22
   Resolution: 0
 --- !u!114 &1932710759
 MonoBehaviour:
@@ -142,7 +142,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3331329374028197592}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 11.159633, y: -13.363438, z: 499.71146}
+  m_LocalPosition: {x: 11.159633, y: -13.363438, z: 499.717}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 739640407714319876}
@@ -162,8 +162,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81baa6618175f1948a52d40e97586e1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  path: []
-  pathIndex: 0
+  currentPathIndex: 0
   isStraight: 1
   defY: 0.35
 --- !u!114 &7169116717330756252
@@ -315,6 +314,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31e126d89ce0b9e42874d3caaeba5abb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  pathFollower: {fileID: 0}
+  sensor: {fileID: 0}
 --- !u!1001 &8470469222416275521
 PrefabInstance:
   m_ObjectHideFlags: 0
