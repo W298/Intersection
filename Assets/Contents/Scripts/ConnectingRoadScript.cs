@@ -23,7 +23,7 @@ public class ConnectingRoadScript : MonoBehaviour
     
     void Update()
     {
-        var enterList = pathManager.GetSplineComputers(connectingSpline.GetPoints().First().position);
+        var enterList = CreatePathManager.GetSplineComputers(connectingSpline.GetPoints().First().position);
         if (enterList.Count != 0)
         {
             enterRoad = enterList[0];
@@ -36,7 +36,7 @@ public class ConnectingRoadScript : MonoBehaviour
             }
         }
 
-        var exitList = pathManager.GetSplineComputers(connectingSpline.GetPoints().Last().position);
+        var exitList = CreatePathManager.GetSplineComputers(connectingSpline.GetPoints().Last().position);
         if (exitList.Count != 0)
         {
             exitRoad = exitList[0];

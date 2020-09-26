@@ -129,4 +129,24 @@ public partial class SROptions
     {
         
     }
+
+    [Category("Ground")]
+    public int allConnected
+    {
+        get
+        {
+            var pointList = GameObject.FindGameObjectWithTag("Ground").GetComponent<Ground>().externalPoint;
+
+            foreach (var point in pointList)
+            {
+                var splines = CreatePathManager.GetSplineComputers(point, false, false);
+                if (splines.Count == 0)
+                {
+                    return 0;
+                }
+            }
+
+            return 1;
+        }
+    }
 }

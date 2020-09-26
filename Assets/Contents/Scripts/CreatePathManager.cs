@@ -408,7 +408,7 @@ public class CreatePathManager : MonoBehaviour
         }
     }
 
-    float SnapGrid(float value, int snapsize)
+    public static float SnapGrid(float value, int snapsize)
     {
         if (value < 0)
         {
@@ -1361,7 +1361,7 @@ public class CreatePathManager : MonoBehaviour
         return cond1 && cond2 && cond3;
     }
 
-    public List<SplineComputer> GetSplineComputers(Vector3 pos, bool heightFunc = true, bool includeFix = false)
+    public static List<SplineComputer> GetSplineComputers(Vector3 pos, bool heightFunc = true, bool includeFix = false)
     {
         var spline_list = FindAllSplineComputers(includeFix);
         var return_list = new List<SplineComputer>();
