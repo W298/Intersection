@@ -9,25 +9,25 @@ using UnityEngine.Events;
 public class CarAI : MonoBehaviour
 {
     public PathFollower pathFollower;
-    public TriggerSensor sensor;
+    public TriggerSensor carSensor;
 
     public void RunDTBehavior(DTBuilding dt)
     {
-        UnityEngine.Debug.LogWarning(dt.name);
+        
     }
 
     void Start()
     {
         pathFollower = GetComponent<PathFollower>();
-        sensor = GetComponentInChildren<TriggerSensor>();
+        carSensor = GetComponentInChildren<TriggerSensor>();
         
-        sensor.OnDetected.AddListener(OnDetected);
-        sensor.OnLostDetection.AddListener(OnLost);
+        carSensor.OnDetected.AddListener(OnDetected);
+        carSensor.OnLostDetection.AddListener(OnLost);
     }
 
     void OnDetected(GameObject obj, Sensor sensor)
     {
-        if (this.sensor.DetectedObjects.Count != 0)
+        if (this.carSensor.DetectedObjects.Count != 0)
         {
             pathFollower.Stop();
         }
@@ -35,7 +35,7 @@ public class CarAI : MonoBehaviour
 
     void OnLost(GameObject obj, Sensor sensor)
     {
-        if (this.sensor.DetectedObjects.Count == 0)
+        if (this.carSensor.DetectedObjects.Count == 0)
         {
             pathFollower.Run();
         }

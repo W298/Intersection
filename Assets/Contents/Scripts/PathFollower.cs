@@ -19,6 +19,11 @@ public class PathFollower : MonoBehaviour
     public bool isStraight = true;
     public float defY = 0.35f;
 
+    public void SetSpeed(float speed = 5.0f)
+    {
+        splineFollower.followSpeed = speed;
+    }
+    
     // Initiate Running
     public void Initiate(int startIndex = 0)
     {
@@ -255,10 +260,19 @@ public class PathFollower : MonoBehaviour
         splineFollower.onEndReached += EndReach;
         
         currentPathIndex = 0;
+
+        splineFollower.followSpeed = 0;
     }
 
     void Update()
     {
-        
+        if (splineFollower.follow)
+        {
+            splineFollower.followSpeed = Mathf.Lerp(splineFollower.followSpeed, 5, Time.deltaTime);
+        }
+        else
+        {
+            splineFollower.followSpeed = Mathf.Lerp(splineFollower.followSpeed, 0, Time.deltaTime);
+        }
     }
 }

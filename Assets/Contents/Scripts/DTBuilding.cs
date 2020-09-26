@@ -8,6 +8,9 @@ using UnityEngine;
 
 public class DTBuilding : MonoBehaviour
 {
+    private TriggerSensor orderCollision;
+    private TriggerSensor getItemCollision;
+    
     public ConnectingRoadScript connectingRoadScript;
     private CreatePathManager pathManager;
     public Vector3 position
@@ -36,30 +39,43 @@ public class DTBuilding : MonoBehaviour
     public int lane = 1;
     public int capacity = 10;
 
-    public List<GameObject> detectedCars
-    {
-        get { return GetComponent<TriggerSensor>().
-            DetectedObjects.Select(sen => sen.gameObject).ToList(); }
-    }
-
-    public List<GameObject> insideCarList;
-
     void Start()
     {
+        var collisions = GetComponentsInChildren<TriggerSensor>();
+        orderCollision = collisions[0];
+        getItemCollision = collisions[1];
+        
         connectingRoadScript = GetComponentInChildren<ConnectingRoadScript>();
         pathManager = GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>();
         pathManager.buildingPosList.Add(position);
-
-        GetComponent<TriggerSensor>().OnDetected.AddListener(OnDetected);
+        
+        orderCollision.OnDetected.AddListener(OnOrderCollision);
+        getItemCollision.OnDetected.AddListener(OnGetItemCollision);
     }
 
-    void OnDetected(GameObject obj, Sensor sensor)
+    void OnOrderCollision(GameObject obj, Sensor sensor)
     {
-        // Add Unique Car
-        if (!insideCarList.Contains(obj))
+        obj.GetComponent<PathFollower>().Stop();
+        StartCoroutine(OrderEnd());
+
+        IEnumerator OrderEnd()
         {
-            insideCarList.Add(obj);
-            // obj.GetComponent<CarBehavior>().RunDTBehavior(this);
+            yield return new WaitForSeconds(5f);
+            obj.GetComponent<PathFollower>().SetSpeed(2.5f);
+            obj.GetComponent<PathFollower>().Run();
+        }
+    }
+
+    void OnGetItemCollision(GameObject obj, Sensor sensor)
+    {
+        obj.GetComponent<PathFollower>().Stop();
+        StartCoroutine(OrderEnd());
+
+        IEnumerator OrderEnd()
+        {
+            yield return new WaitForSeconds(5f);
+            obj.GetComponent<PathFollower>().SetSpeed();
+            obj.GetComponent<PathFollower>().Run();
         }
     }
 
