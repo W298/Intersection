@@ -131,7 +131,7 @@ public partial class SROptions
     }
 
     [Category("Ground")]
-    public int allConnected
+    public bool allConnected
     {
         get
         {
@@ -142,11 +142,25 @@ public partial class SROptions
                 var splines = CreatePathManager.GetSplineComputers(point, false, false);
                 if (splines.Count == 0)
                 {
-                    return 0;
+                    return false;
+                }
+                else
+                {
+                    foreach (var exRoad in splines)
+                    {
+                        foreach (var enterRoad in carManager.enterRoadList)
+                        {
+                            var pathList = PathFinder.Run(exRoad, enterRoad);
+                            if (pathList.Count == 0)
+                            {
+                                return false;
+                            }
+                        }
+                    }
                 }
             }
 
-            return 1;
+            return true;
         }
     }
 }
