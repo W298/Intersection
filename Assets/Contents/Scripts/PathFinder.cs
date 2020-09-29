@@ -47,9 +47,9 @@ public class PathFinder : MonoBehaviour
         
         foreach (var crossroad in pathManager.crossroads)
         {
-            foreach (var road in crossroad.getRoads())
+            foreach (var road in crossroad.GetRoads())
             {
-                var addList = new List<SplineComputer>(crossroad.getRoads());
+                var addList = new List<SplineComputer>(crossroad.GetRoads());
                 addList.Remove(road);
                 
                 AppendSplineList(road.connectedSplineList, addList);
