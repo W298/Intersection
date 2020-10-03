@@ -40,26 +40,24 @@ public class Crossroad
             {
                 if (departRoad != arrivRoad)
                 {
-                    var spline = pathManager.InsSpline(GetPosition());
-
                     Vector3 departPoint;
                     if (departRoad.GetPoints().Last().position == GetPosition())
                     {
-                        departPoint = departRoad.EvaluatePosition(0.8f);
+                        departPoint = departRoad.EvaluatePosition(0.7f);
                     }
                     else
                     {
-                        departPoint = departRoad.EvaluatePosition(0.2f);
+                        departPoint = departRoad.EvaluatePosition(0.3f);
                     }
 
                     Vector3 arrivPoint;
                     if (arrivRoad.GetPoints().Last().position == GetPosition())
                     {
-                        arrivPoint = arrivRoad.EvaluatePosition(0.8f);
+                        arrivPoint = arrivRoad.EvaluatePosition(0.7f);
                     }
                     else
                     {
-                        arrivPoint = arrivRoad.EvaluatePosition(0.2f);
+                        arrivPoint = arrivRoad.EvaluatePosition(0.3f);
                     }
 
                     Vector3 departDir;
@@ -92,27 +90,63 @@ public class Crossroad
                         arrivOffsetDir = Quaternion.AngleAxis(90, Vector3.up) * arrivDir;
                     }
 
+                    
+                    // Normalize Offset Vectors
                     departOffsetDir.Normalize();
                     arrivOffsetDir.Normalize();
 
-                    spline.SetPointNormal(0, pathManager.def_normal);
-                    spline.SetPointSize(0, 1);
-                    spline.SetPointPosition(0, departPoint + departOffsetDir * 0.65f);
-                    pathManager.debugPointPer(departPoint + departOffsetDir * 0.65f);
+                    
+                    // Offset List
+                    var rightOffsetList = new List<float>();
+                    
+                    switch (roads[0].roadLane)
+                    {
+                        case CreatePathManager.ROADLANE.RL1:
+                            rightOffsetList.Add(0.65f);
+                            break;
+                        case CreatePathManager.ROADLANE.RL2:
+                            rightOffsetList.Add(0.65f);
+                            rightOffsetList.Add(0.65f * 3);
+                            break;
+                    }
 
-                    Vector3 interPoint;
-                    LineLineIntersection(out interPoint, departPoint + departOffsetDir * 0.65f, departDir,
-                        arrivPoint + arrivOffsetDir * 0.65f, -arrivDir);
-                    
-                    spline.SetPointNormal(1, pathManager.def_normal);
-                    spline.SetPointSize(1, 1);
-                    spline.SetPointPosition(1, interPoint);
-                    pathManager.debugPointPer(interPoint);
-                    
-                    spline.SetPointNormal(2, pathManager.def_normal);
-                    spline.SetPointSize(2, 1);
-                    spline.SetPointPosition(2, arrivPoint + arrivOffsetDir * 0.65f);
-                    pathManager.debugPointPer(arrivPoint + arrivOffsetDir * 0.65f);
+                    foreach (var dRightOffset in rightOffsetList)
+                    {
+                        foreach (var aRightOffset in rightOffsetList)
+                        {
+                            // Set Point Position by Offset
+                            var departPointOA = departPoint + departOffsetDir * dRightOffset;
+                            var arrivPointOA = arrivPoint + arrivOffsetDir * aRightOffset;
+                            
+                            // Calc Inter Point
+                            Vector3 interPoint;
+                            if (CreatePathManager.isVectorParallel(departDir, arrivDir))
+                            {
+                                interPoint = (departPointOA + arrivPointOA) / 2;
+                            }
+                            else
+                            {
+                                LineLineIntersection(out interPoint, departPointOA, departDir, arrivPointOA, -arrivDir);
+                            }
+                            
+                            var spline = pathManager.InsSpline(GetPosition());
+                            
+                            // Spawn Depart Point
+                            spline.SetPointNormal(0, CreatePathManager.def_normal);
+                            spline.SetPointSize(0, 1);
+                            spline.SetPointPosition(0, departPointOA);
+                            
+                            // Spawn Inter Point
+                            spline.SetPointNormal(1, CreatePathManager.def_normal);
+                            spline.SetPointSize(1, 1);
+                            spline.SetPointPosition(1, interPoint);
+                            
+                            // Spawn Arriv Point
+                            spline.SetPointNormal(2, CreatePathManager.def_normal);
+                            spline.SetPointSize(2, 1);
+                            spline.SetPointPosition(2, arrivPointOA);
+                        }
+                    }
                 }
             }
         }

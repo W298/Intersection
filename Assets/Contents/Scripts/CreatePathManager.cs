@@ -84,7 +84,7 @@ public class CreatePathManager : MonoBehaviour
         12.0f
     };
 
-    public Vector3 def_normal = new Vector3(0, 1, 0);
+    public static Vector3 def_normal = new Vector3(0, 1, 0);
 
     public SplineComputer currentSpline;
     public MODE currentMode = MODE.NONE;
@@ -1400,7 +1400,7 @@ public class CreatePathManager : MonoBehaviour
     }
 
     // Check two vector is Parallel.
-    bool isVectorParallel(Vector3 v1, Vector3 v2)
+    public static bool isVectorParallel(Vector3 v1, Vector3 v2)
     {
         if (Vector3.Angle(v1, v2) == 0 || Vector3.Angle(v1, v2) == 180)
         {
