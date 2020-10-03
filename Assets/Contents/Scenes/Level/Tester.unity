@@ -3484,7 +3484,6 @@ MonoBehaviour:
   - 0
   - 0
   - 12
-  def_normal: {x: 0, y: 1, z: 0}
   currentSpline: {fileID: 0}
   currentMode: 3
   joinMode: 4
@@ -3553,7 +3552,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d18ce2e0cbfcab148960363c3153fcfd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  carPrefab: {fileID: 3331329374028197592, guid: 3a4af77f74b711d46900e86de1770e6f,
+  carPrefab: {fileID: 2302131270989475118, guid: b3882c75335e88b4a85a3fddcbe7cf2d,
     type: 3}
   cars: []
   weightList: []

@@ -33,28 +33,44 @@ public class PathFollower : MonoBehaviour
         pathFindData.SelectPath();
         
         // Set First Road
-        SetRunningRoad(pathFindData.currentPath[startIndex]);
+        SetNextRoad(pathFindData.currentPath[startIndex], false);
         currentPathIndex = 0;
     }
 
     // Set Spline to splineFollower.spline
-    public void SetRunningRoad(SplineComputer _spline)
+    public void SetNextRoad(SplineComputer _spline, bool toConnectingRoad)
     {
-        splineFollower.spline = _spline;
-
-        switch (_spline.roadLane)
+        if (toConnectingRoad)
         {
-            case CreatePathManager.ROADLANE.RL1:
-                switch (_spline.roadMode)
-                {
-                    case SplineComputer.MODE.FIRST_OPEN:
-                        SetMoveDir(true);
-                        break;
-                    case SplineComputer.MODE.LAST_OPEN:
-                        SetMoveDir(false);
-                        break;
-                }
-                break;
+            var roadConnection = splineFollower.spline.roadConnectionList.FirstOrDefault(rc => rc.GetconnectedRoad() == _spline);
+            var cs = roadConnection.GetConnectingSpline(0);
+            splineFollower.spline = cs;
+
+            foreach (var point in cs.GetPoints())
+            {
+                GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>().debugPointPer(point.position);
+            }
+
+            SetMoveDir(true);
+        }
+        else
+        {
+            splineFollower.spline = _spline;
+            
+            switch (_spline.roadLane)
+            {
+                case CreatePathManager.ROADLANE.RL1:
+                    switch (_spline.roadMode)
+                    {
+                        case SplineComputer.MODE.FIRST_OPEN:
+                            SetMoveDir(true);
+                            break;
+                        case SplineComputer.MODE.LAST_OPEN:
+                            SetMoveDir(false);
+                            break;
+                    }
+                    break;
+            }
         }
     }
 
@@ -63,6 +79,17 @@ public class PathFollower : MonoBehaviour
     {
         if (splineFollower.spline)
         {
+            if (splineFollower.spline.isConnectingRoad)
+            {
+                splineFollower.direction = Spline.Direction.Forward;
+                splineFollower.startPosition = 0;
+                splineFollower.motion.offset = new Vector2(0, defY);
+
+                this.isStraight = true;
+                
+                return;
+            }
+            
             switch (splineFollower.spline.roadLane)
             {
                 case CreatePathManager.ROADLANE.RL1:
@@ -160,6 +187,7 @@ public class PathFollower : MonoBehaviour
             else
             {
                 UnityEngine.Debug.LogWarning("ERROR");
+                SetMoveDir(true);
             }
             
             Reset();
@@ -169,23 +197,32 @@ public class PathFollower : MonoBehaviour
         if (isStraight)
         {
             var connectingPos = pathFindData.currentPath[currentPathIndex].GetPoints().Last().position;
-
-            currentPathIndex++;
-            var nextSpline = pathFindData.currentPath[currentPathIndex];
+            SplineComputer nextSpline;
             
-            SetRunningRoad(nextSpline);
-
-            if (nextSpline.GetPoints().Last().position == connectingPos)
+            if (splineFollower.spline.isConnectingRoad)
             {
-                SetMoveDir(false);
-            }
-            else if (nextSpline.GetPoints().First().position == connectingPos)
-            {
-                SetMoveDir(true);
+                nextSpline = pathFindData.currentPath[currentPathIndex];
+                SetNextRoad(nextSpline, false);
             }
             else
             {
-                UnityEngine.Debug.LogWarning("ERROR");
+                currentPathIndex++;
+                nextSpline = pathFindData.currentPath[currentPathIndex];
+                SetNextRoad(nextSpline, true);
+                
+                if (nextSpline.GetPoints().Last().position == connectingPos)
+                {
+                    SetMoveDir(false);
+                }
+                else if (nextSpline.GetPoints().First().position == connectingPos)
+                {
+                    SetMoveDir(true);
+                }
+                else
+                {
+                    UnityEngine.Debug.LogWarning("ERROR");
+                    SetMoveDir(true);
+                }
             }
             
             Reset();
@@ -218,6 +255,7 @@ public class PathFollower : MonoBehaviour
             else
             {
                 UnityEngine.Debug.LogWarning("ERROR");
+                SetMoveDir(true);
             }
             
             Reset();
@@ -226,24 +264,33 @@ public class PathFollower : MonoBehaviour
         
         if (!isStraight)
         {
-            var connectingPos = pathFindData.currentPath[currentPathIndex].GetPoints().First().position;
-
-            currentPathIndex++;
-            var nextSpline = pathFindData.currentPath[currentPathIndex];
-
-            SetRunningRoad(nextSpline);
+            var connectingPos = pathFindData.currentPath[currentPathIndex].GetPoints().Last().position;
+            SplineComputer nextSpline;
             
-            if (nextSpline.GetPoints().Last().position == connectingPos)
+            if (splineFollower.spline.isConnectingRoad)
             {
-                SetMoveDir(false);
-            }
-            else if (nextSpline.GetPoints().First().position == connectingPos)
-            {
-                SetMoveDir(true);
+                nextSpline = pathFindData.currentPath[currentPathIndex];
+                SetNextRoad(nextSpline, false);
             }
             else
             {
-                UnityEngine.Debug.LogWarning("ERROR");
+                currentPathIndex++;
+                nextSpline = pathFindData.currentPath[currentPathIndex];
+                SetNextRoad(nextSpline, true);
+                
+                if (nextSpline.GetPoints().Last().position == connectingPos)
+                {
+                    SetMoveDir(false);
+                }
+                else if (nextSpline.GetPoints().First().position == connectingPos)
+                {
+                    SetMoveDir(true);
+                }
+                else
+                {
+                    UnityEngine.Debug.LogWarning("ERROR");
+                    SetMoveDir(true);
+                }
             }
             
             Reset();

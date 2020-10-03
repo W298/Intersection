@@ -8,6 +8,7 @@ using UnityEngine.PlayerLoop;
 
 public class Option : MonoBehaviour
 {
+    public static bool debugOn = false;
     void Start()
     {
         SROptions.Current.pathManager = GetComponent<CreatePathManager>();
@@ -162,5 +163,11 @@ public partial class SROptions
 
             return true;
         }
+    }
+
+    public bool DebugOn
+    {
+        get { return Option.debugOn; }
+        set { Option.debugOn = value; }
     }
 }

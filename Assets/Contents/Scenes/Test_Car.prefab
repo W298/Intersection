@@ -333,6 +333,11 @@ PrefabInstance:
       propertyPath: m_TagString
       value: Car
       objectReference: {fileID: 0}
+    - target: {fileID: 9209471912748722087, guid: 3f7630ce6e2a5244986d7bdd882cf4a5,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 9209471912748914245, guid: 3f7630ce6e2a5244986d7bdd882cf4a5,
         type: 3}
       propertyPath: m_LocalPosition.x

@@ -32,7 +32,7 @@ public class Crossroad
         position = _position;
     }
 
-    public void ConnectRoad()
+    public bool ConnectRoad()
     {
         foreach (var departRoad in roads)
         {
@@ -43,21 +43,28 @@ public class Crossroad
                     Vector3 departPoint;
                     if (departRoad.GetPoints().Last().position == GetPosition())
                     {
-                        departPoint = departRoad.EvaluatePosition(0.7f);
+                        departPoint = departRoad.EvaluatePosition(0.8f);
                     }
                     else
                     {
-                        departPoint = departRoad.EvaluatePosition(0.3f);
+                        departPoint = departRoad.EvaluatePosition(0.2f);
                     }
 
                     Vector3 arrivPoint;
                     if (arrivRoad.GetPoints().Last().position == GetPosition())
                     {
-                        arrivPoint = arrivRoad.EvaluatePosition(0.7f);
+                        arrivPoint = arrivRoad.EvaluatePosition(0.8f);
                     }
                     else
                     {
-                        arrivPoint = arrivRoad.EvaluatePosition(0.3f);
+                        arrivPoint = arrivRoad.EvaluatePosition(0.2f);
+                    }
+
+                    // If failed to get Point Value, Re-try
+                    if (Vector3.Distance(departPoint, arrivPoint) >= 20)
+                    {
+                        ConnectRoad();
+                        return false;
                     }
 
                     Vector3 departDir;
@@ -129,27 +136,42 @@ public class Crossroad
                                 LineLineIntersection(out interPoint, departPointOA, departDir, arrivPointOA, -arrivDir);
                             }
                             
-                            var spline = pathManager.InsSpline(GetPosition());
+                            var connectingSpline = pathManager.InsSpline(GetPosition());
+                            connectingSpline.name = departRoad.name + " - " + arrivRoad.name;
                             
                             // Spawn Depart Point
-                            spline.SetPointNormal(0, CreatePathManager.def_normal);
-                            spline.SetPointSize(0, 1);
-                            spline.SetPointPosition(0, departPointOA);
-                            
+                            connectingSpline.SetPointNormal(0, CreatePathManager.def_normal);
+                            connectingSpline.SetPointSize(0, 1);
+                            connectingSpline.SetPointPosition(0, departPointOA);
+
                             // Spawn Inter Point
-                            spline.SetPointNormal(1, CreatePathManager.def_normal);
-                            spline.SetPointSize(1, 1);
-                            spline.SetPointPosition(1, interPoint);
+                            connectingSpline.SetPointNormal(1, CreatePathManager.def_normal);
+                            connectingSpline.SetPointSize(1, 1);
+                            connectingSpline.SetPointPosition(1, interPoint);
                             
                             // Spawn Arriv Point
-                            spline.SetPointNormal(2, CreatePathManager.def_normal);
-                            spline.SetPointSize(2, 1);
-                            spline.SetPointPosition(2, arrivPointOA);
+                            connectingSpline.SetPointNormal(2, CreatePathManager.def_normal);
+                            connectingSpline.SetPointSize(2, 1);
+                            connectingSpline.SetPointPosition(2, arrivPointOA);
+
+                            var roadConnection = departRoad.roadConnectionList.FirstOrDefault(rc => rc.GetconnectedRoad() == arrivRoad);
+                            if (roadConnection != null)
+                            {
+                                roadConnection.AddConnectingSpline(connectingSpline);
+                            }
+                            else
+                            {
+                                var rc = new RoadConnection(arrivRoad);
+                                rc.AddConnectingSpline(connectingSpline);
+                                departRoad.roadConnectionList.Add(rc);
+                            }
                         }
                     }
                 }
             }
         }
+
+        return true;
     }
     
     public static bool LineLineIntersection(out Vector3 intersection, Vector3 linePoint1,

@@ -8,13 +8,14 @@ using UnityEngine;
 
 public class PathFinder : MonoBehaviour
 {
-    private static void AppendSplineList(List<SplineComputer> origin, List<SplineComputer> list)
+    private static void AddUnique(List<RoadConnection> origin, List<SplineComputer> list)
     {
         foreach (var item in list)
         {
-            if (!origin.Contains(item))
+            if (origin.All(rc => rc.GetconnectedRoad() != item))
             {
-                origin.Add(item);
+                var roadConnection = new RoadConnection(item);
+                origin.Add(roadConnection);
             }
         }
     }
@@ -22,11 +23,12 @@ public class PathFinder : MonoBehaviour
     private static void Loop(SplineComputer departure, SplineComputer arrival, List<SplineComputer> path,
         List<List<SplineComputer>> pathList)
     {
-        foreach (var connectedSpline in departure.connectedSplineList)
+        foreach (var roadConnection in departure.roadConnectionList)
         {
-            if (!path.Contains(connectedSpline))
+            var connectedRoad = roadConnection.GetconnectedRoad();
+            if (!path.Contains(connectedRoad))
             {
-                if (connectedSpline == arrival)
+                if (connectedRoad == arrival)
                 {
                     path.Add(arrival);
                     pathList.Add(path);
@@ -34,8 +36,8 @@ public class PathFinder : MonoBehaviour
                 else
                 {
                     var clonedPath = new List<SplineComputer>(path);
-                    clonedPath.Add(connectedSpline);
-                    Loop(connectedSpline, arrival, clonedPath, pathList);
+                    clonedPath.Add(connectedRoad);
+                    Loop(connectedRoad, arrival, clonedPath, pathList);
                 }
             }
         }
@@ -45,6 +47,7 @@ public class PathFinder : MonoBehaviour
     {
         var pathManager = GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>();
         
+        /*
         foreach (var crossroad in pathManager.crossroads)
         {
             foreach (var road in crossroad.GetRoads())
@@ -52,9 +55,10 @@ public class PathFinder : MonoBehaviour
                 var addList = new List<SplineComputer>(crossroad.GetRoads());
                 addList.Remove(road);
                 
-                AppendSplineList(road.connectedSplineList, addList);
+                AddUnique(road.roadConnectionList, addList);
             }
         }
+        */
         
         var pathList = new List<List<SplineComputer>>();
 

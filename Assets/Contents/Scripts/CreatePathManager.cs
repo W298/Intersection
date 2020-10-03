@@ -128,6 +128,11 @@ public class CreatePathManager : MonoBehaviour
 
     public SplineComputer originalSplineComputer;
 
+    public static void DestroySpline(SplineComputer spline)
+    {
+        Destroy(spline.gameObject);
+    }
+    
     public SplineComputer InsSpline(Vector3 pos)
     {
         return Instantiate(originalSplineComputer, pos, Quaternion.identity);
