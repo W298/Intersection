@@ -135,7 +135,15 @@ public class Crossroad
                             {
                                 LineLineIntersection(out interPoint, departPointOA, departDir, arrivPointOA, -arrivDir);
                             }
-                            
+
+                            if (Vector3.Distance(departPointOA, arrivPointOA) >= 20 ||
+                                Vector3.Distance(departPointOA, interPoint) >= 20 ||
+                                Vector3.Distance(interPoint, arrivPointOA) >= 20)
+                            {
+                                ConnectRoad();
+                                return false;
+                            }
+
                             var connectingSpline = pathManager.InsSpline(GetPosition());
                             connectingSpline.name = departRoad.name + " - " + arrivRoad.name;
                             
