@@ -99,8 +99,11 @@ public class PathFindData
         
         UnityEngine.Debug.LogWarning("Exit-Ex : ");
         UnityEngine.Debug.LogWarning(exitToEx.Item1.name + ", " + exitToEx.Item2.name);
-        
-        UnityEngine.Debug.LogWarning("Current Path : ");
-        UnityEngine.Debug.LogWarning(currentPath.Aggregate("", (current, road) => current + (road.name + ", ")));
+
+        if (currentPath != null)
+        {
+            UnityEngine.Debug.LogWarning("Current Path : ");
+            UnityEngine.Debug.LogWarning(currentPath.Aggregate("", (current, road) => current + (road.name + ", ")));
+        }
     }
 }

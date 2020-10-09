@@ -28,7 +28,7 @@ public class PathFollower : MonoBehaviour
     public void Initiate(int startIndex = 0)
     {
         if (pathFindData == null) return;
-        
+
         pathFindData.FindPathList();
         pathFindData.SelectPath();
         
@@ -157,118 +157,41 @@ public class PathFollower : MonoBehaviour
             splineFollower.SetPercent(1.0f);
         }
     }
-
+    
     // Only If Current Road is Straight
     private void EndReach(double percent)
     {
-        if (pathFindData.currentPath.Count <= currentPathIndex + 1)
-        {
-            if (pathFindData.IncreaseMode())
-            {
-                Destroy(this.gameObject);
-                return;
-            }
-            
-            var lastPoints = pathFindData.currentPath[currentPathIndex].GetPoints();
-            
-            Initiate();  // Warning : currentPath is changed
-            
-            var curPoints = pathFindData.currentPath[currentPathIndex].GetPoints();
-
-            var connectingPoint = curPoints.FirstOrDefault(cur_point =>
-                lastPoints.Any(last_point => cur_point.position == last_point.position));
-
-            var connectingPos = connectingPoint.position;
-
-            if (pathFindData.currentPath[currentPathIndex].GetPoints().Last().position == connectingPos)
-            {
-                SetMoveDir(false);
-            }
-            else if (pathFindData.currentPath[currentPathIndex].GetPoints().First().position == connectingPos)
-            {
-                SetMoveDir(true);
-            }
-            else
-            {
-                UnityEngine.Debug.LogWarning("ERROR");
-            }
-            
-            Reset();
-            return;
-        }
-        
         if (isStraight)
         {
-            SplineComputer nextSpline;
-            
-            if (splineFollower.spline.isConnectingRoad)
-            {
-                var connectingPos = new Vector3();
-                if (currentPathIndex - 1 >= 0)
-                {
-                    var curPoints = pathFindData.currentPath[currentPathIndex].GetPoints();
-                    var lastPoints = pathFindData.currentPath[currentPathIndex - 1].GetPoints();
-
-                    var connectingPoint = curPoints.FirstOrDefault(cur_point =>
-                        lastPoints.Any(last_point => cur_point.position == last_point.position));
-
-                    connectingPos = connectingPoint.position;
-                }
-                
-                nextSpline = pathFindData.currentPath[currentPathIndex];
-                SetNextRoad(nextSpline, false);
-                
-                if (nextSpline.GetPoints().Last().position == connectingPos)
-                {
-                    SetMoveDir(false);
-                }
-                else if (nextSpline.GetPoints().First().position == connectingPos)
-                {
-                    SetMoveDir(true);
-                }
-                else
-                {
-                    UnityEngine.Debug.LogWarning("ERROR");
-                }
-            }
-            else
-            {
-                currentPathIndex++;
-                nextSpline = pathFindData.currentPath[currentPathIndex];
-                SetNextRoad(nextSpline, true);
-            }
-            
-            Reset();
+            PrepareNextRoad();
         }
     }
 
     // Only If Current Road is Reverse
     private void BeginReach(double percent)
     {
-        if (pathFindData.currentPath.Count <= currentPathIndex + 1)
+        if (!isStraight)
         {
-            if (pathFindData.IncreaseMode())
-            {
-                Destroy(this.gameObject);
-                return;
-            }
+            PrepareNextRoad();
+        }
+    }
 
-            var lastPoints = pathFindData.currentPath[currentPathIndex].GetPoints();
+    private void PrepareNextRoad()
+    {
+        SplineComputer nextSpline;
             
-            Initiate();
-            
-            var curPoints = pathFindData.currentPath[currentPathIndex].GetPoints();
-
-            var connectingPoint = curPoints.FirstOrDefault(cur_point =>
-                lastPoints.Any(last_point => cur_point.position == last_point.position));
-
-            var connectingPos = connectingPoint.position;
-
-            if (pathFindData.currentPath[currentPathIndex].GetPoints().Last().position == connectingPos)
+        if (splineFollower.spline.isConnectingRoad)
+        {
+            var connectingPos = GetConnectingPos();
+                
+            nextSpline = pathFindData.currentPath[currentPathIndex];
+            SetNextRoad(nextSpline, false);
+                
+            if (nextSpline.GetPoints().Last().position == connectingPos)
             {
                 SetMoveDir(false);
             }
-            else if (pathFindData.currentPath[currentPathIndex].GetPoints().First().position == connectingPos)
+            else if (nextSpline.GetPoints().First().position == connectingPos)
             {
                 SetMoveDir(true);
             }
@@ -276,54 +199,74 @@ public class PathFollower : MonoBehaviour
             {
                 UnityEngine.Debug.LogWarning("ERROR");
             }
+        }
+        else
+        {
+            currentPathIndex++;
+                
+            if (pathFindData.currentPath.Count - 1 < currentPathIndex)
+            {
+                NextMode();
+                return;
+            }
+                
+            nextSpline = pathFindData.currentPath[currentPathIndex];
+            SetNextRoad(nextSpline, true);
+        }
             
-            Reset();
+        Reset();
+    }
+    
+    private void NextMode()
+    {
+        if (pathFindData.IncreaseMode())
+        {
+            Destroy(this.gameObject);
             return;
         }
-        
-        if (!isStraight)
+            
+        var lastPoints = pathFindData.currentPath[currentPathIndex - 1].GetPoints();
+            
+        Initiate();  // Warning : currentPath is changed
+            
+        var curPoints = pathFindData.currentPath[currentPathIndex].GetPoints();
+
+        var connectingPoint = curPoints.FirstOrDefault(cur_point =>
+            lastPoints.Any(last_point => cur_point.position == last_point.position));
+        var connectingPos = connectingPoint.position;
+
+        if (pathFindData.currentPath[currentPathIndex].GetPoints().Last().position == connectingPos)
         {
-            SplineComputer nextSpline;
-            
-            if (splineFollower.spline.isConnectingRoad)
-            {
-                var connectingPos = new Vector3();
-                if (currentPathIndex - 1 >= 0)
-                {
-                    var curPoints = pathFindData.currentPath[currentPathIndex].GetPoints();
-                    var lastPoints = pathFindData.currentPath[currentPathIndex - 1].GetPoints();
-
-                    var connectingPoint = curPoints.FirstOrDefault(cur_point =>
-                        lastPoints.Any(last_point => cur_point.position == last_point.position));
-
-                    connectingPos = connectingPoint.position;
-                }
-                
-                nextSpline = pathFindData.currentPath[currentPathIndex];
-                SetNextRoad(nextSpline, false);
-                
-                if (nextSpline.GetPoints().Last().position == connectingPos)
-                {
-                    SetMoveDir(false);
-                }
-                else if (nextSpline.GetPoints().First().position == connectingPos)
-                {
-                    SetMoveDir(true);
-                }
-                else
-                {
-                    UnityEngine.Debug.LogWarning("ERROR");
-                }
-            }
-            else
-            {
-                currentPathIndex++;
-                nextSpline = pathFindData.currentPath[currentPathIndex];
-                SetNextRoad(nextSpline, true);
-            }
-            
-            Reset();
+            SetMoveDir(false);
         }
+        else if (pathFindData.currentPath[currentPathIndex].GetPoints().First().position == connectingPos)
+        {
+            SetMoveDir(true);
+        }
+        else
+        {
+            UnityEngine.Debug.LogWarning("ERROR");
+        }
+            
+        Reset();
+    }
+
+    private Vector3 GetConnectingPos()
+    {
+        var connectingPos = new Vector3();
+        if (currentPathIndex - 1 >= 0)
+        {
+            var curPoints = pathFindData.currentPath[currentPathIndex].GetPoints();
+            var lastPoints = pathFindData.currentPath[currentPathIndex - 1].GetPoints();
+
+            var connectingPoint = curPoints.FirstOrDefault(cur_point =>
+                lastPoints.Any(last_point => cur_point.position == last_point.position));
+
+            connectingPos = connectingPoint.position;
+            return connectingPos;
+        }
+
+        return Vector3.zero;
     }
 
     void Start()
