@@ -40,33 +40,6 @@ public class Crossroad
             {
                 if (departRoad != arrivRoad)
                 {
-                    Vector3 departPoint;
-                    if (departRoad.GetPoints().Last().position == GetPosition())
-                    {
-                        departPoint = departRoad.EvaluatePosition(0.8f);
-                    }
-                    else
-                    {
-                        departPoint = departRoad.EvaluatePosition(0.2f);
-                    }
-
-                    Vector3 arrivPoint;
-                    if (arrivRoad.GetPoints().Last().position == GetPosition())
-                    {
-                        arrivPoint = arrivRoad.EvaluatePosition(0.8f);
-                    }
-                    else
-                    {
-                        arrivPoint = arrivRoad.EvaluatePosition(0.2f);
-                    }
-
-                    // If failed to get Point Value, Re-try
-                    if (Vector3.Distance(departPoint, arrivPoint) >= 20)
-                    {
-                        ConnectRoad();
-                        return false;
-                    }
-
                     Vector3 departDir;
                     Vector3 departOffsetDir;
                     if (departRoad.GetPoints().Last().position == this.GetPosition())
@@ -88,7 +61,7 @@ public class Crossroad
                     {
                         int lastIndex = arrivRoad.GetPoints().Length - 1;
                         arrivDir = arrivRoad.GetPoint(lastIndex - 1).position -
-                                       arrivRoad.GetPoint(lastIndex).position;
+                                   arrivRoad.GetPoint(lastIndex).position;
                         arrivOffsetDir = Quaternion.AngleAxis(90, Vector3.up) * arrivDir;
                     }
                     else
@@ -97,6 +70,20 @@ public class Crossroad
                         arrivOffsetDir = Quaternion.AngleAxis(90, Vector3.up) * arrivDir;
                     }
 
+
+                    var per_depart = departRoad.Project(GetPosition() - departDir / 7f).percent;
+                    var departPoint = departRoad.EvaluatePosition(per_depart);
+
+                    var per_arriv = arrivRoad.Project(GetPosition() + arrivDir / 7f).percent;
+                    var arrivPoint = arrivRoad.EvaluatePosition(per_arriv);
+
+                    // If failed to get Point Value, Re-try
+                    if (Vector3.Distance(departPoint, arrivPoint) >= 20)
+                    {
+                        ConnectRoad();
+                        return false;
+                    }
+                    
                     
                     // Normalize Offset Vectors
                     departOffsetDir.Normalize();
@@ -124,7 +111,7 @@ public class Crossroad
                             // Set Point Position by Offset
                             var departPointOA = departPoint + departOffsetDir * dRightOffset;
                             var arrivPointOA = arrivPoint + arrivOffsetDir * aRightOffset;
-                            
+
                             // Calc Inter Point
                             Vector3 interPoint;
                             if (CreatePathManager.isVectorParallel(departDir, arrivDir))
