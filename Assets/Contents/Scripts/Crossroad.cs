@@ -71,10 +71,10 @@ public class Crossroad
                     }
 
 
-                    var per_depart = departRoad.Project(GetPosition() - departDir / 7f).percent;
+                    var per_depart = departRoad.Project(GetPosition() - departDir / 5f).percent;
                     var departPoint = departRoad.EvaluatePosition(per_depart);
 
-                    var per_arriv = arrivRoad.Project(GetPosition() + arrivDir / 7f).percent;
+                    var per_arriv = arrivRoad.Project(GetPosition() + arrivDir / 5f).percent;
                     var arrivPoint = arrivRoad.EvaluatePosition(per_arriv);
 
                     // If failed to get Point Value, Re-try

@@ -19,11 +19,13 @@ public class PathFollower : MonoBehaviour
     public bool isStraight = true;
     public float defY = 0.35f;
 
+    private bool bk = false;
+
     public void SetSpeed(float speed = 5.0f)
     {
         splineFollower.followSpeed = speed;
     }
-    
+
     // Initiate Running
     public void Initiate(int startIndex = 0)
     {
@@ -157,9 +159,8 @@ public class PathFollower : MonoBehaviour
             splineFollower.SetPercent(1.0f);
         }
     }
-    
-    // Only If Current Road is Straight
-    private void EndReach(double percent)
+
+    private void OnEnd()
     {
         if (isStraight)
         {
@@ -167,8 +168,7 @@ public class PathFollower : MonoBehaviour
         }
     }
 
-    // Only If Current Road is Reverse
-    private void BeginReach(double percent)
+    private void OnBegin()
     {
         if (!isStraight)
         {
@@ -275,11 +275,7 @@ public class PathFollower : MonoBehaviour
 
         splineFollower.motion.velocityHandleMode = TransformModule.VelocityHandleMode.Preserve;
 
-        splineFollower.onBeginningReached += BeginReach;
-        splineFollower.onEndReached += EndReach;
-        
         currentPathIndex = 0;
-
         splineFollower.followSpeed = 0;
     }
 
@@ -292,6 +288,37 @@ public class PathFollower : MonoBehaviour
         else
         {
             splineFollower.followSpeed = Mathf.Lerp(splineFollower.followSpeed, 0, Time.deltaTime);
+        }
+        
+        
+        if (pathFindData != null && !bk)
+        {
+            var cs = pathFindData.currentPath[0].roadConnectionList
+                .FirstOrDefault(rc => rc.GetconnectedRoad() == pathFindData.currentPath[1]);
+
+            var po = cs.GetConnectingSpline().GetPoint(0).position;
+            GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>().debugPointPer(po);
+
+            Vector2 poV2 = new Vector2(po.x, po.z);
+            Vector2 cpV2 = new Vector2(transform.position.x, transform.position.z);
+
+            var dist = Vector2.Distance(poV2, cpV2);
+            
+            if (dist <= 0.1f && Mathf.Abs(po.y - transform.position.y) <= 0.5f)
+            {
+                if (isStraight)
+                {
+                    UnityEngine.Debug.LogWarning("END");
+                    OnEnd();
+                    bk = true;
+                }
+                else
+                {
+                    UnityEngine.Debug.LogWarning("BEGIN");
+                    OnBegin();
+                    bk = true;
+                }
+            }
         }
     }
 }
