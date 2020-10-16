@@ -12,14 +12,14 @@ using UnityEngine.EventSystems;
 public class PathFollower : MonoBehaviour
 {
     private SplineFollower splineFollower;
-
+    
     public PathFindData pathFindData;
     public int currentPathIndex;
 
     public bool isStraight = true;
-    public float defY = 0.35f;
+    public const float DefY = 0.35f;
 
-    private bool bk = false;
+    public Vector3 checkingPos;
 
     public void SetSpeed(float speed = 5.0f)
     {
@@ -37,6 +37,11 @@ public class PathFollower : MonoBehaviour
         // Set First Road
         SetNextRoad(pathFindData.currentPath[startIndex], false);
         currentPathIndex = 0;
+
+        if (pathFindData.currentMode == 0)
+        {
+            EndBeginEventChecker_Prepare();
+        }
     }
 
     // Set Spline to splineFollower.spline
@@ -47,15 +52,17 @@ public class PathFollower : MonoBehaviour
             var roadConnection = splineFollower.spline.roadConnectionList.FirstOrDefault(rc => rc.GetconnectedRoad() == _spline);
             var cs = roadConnection.GetConnectingSpline(0);
             cs.Rebuild(true);
-
+            
             splineFollower.spline = cs;
-
             SetMoveDir(true);
+
+            checkingPos = cs.GetPoints().Last().position;
+            GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>().debugPointPer(checkingPos);
         }
         else
         {
             splineFollower.spline = _spline;
-            
+
             switch (_spline.roadLane)
             {
                 case CreatePathManager.ROADLANE.RL1:
@@ -82,7 +89,7 @@ public class PathFollower : MonoBehaviour
             {
                 splineFollower.direction = Spline.Direction.Forward;
                 splineFollower.startPosition = 0;
-                splineFollower.motion.offset = new Vector2(0, defY);
+                splineFollower.motion.offset = new Vector2(0, DefY);
 
                 this.isStraight = true;
                 
@@ -96,7 +103,7 @@ public class PathFollower : MonoBehaviour
                     {
                         splineFollower.direction = Spline.Direction.Forward;
                         splineFollower.startPosition = 0;
-                        splineFollower.motion.offset = new Vector2(0.65f, defY);
+                        splineFollower.motion.offset = new Vector2(0.65f, DefY);
 
                         this.isStraight = true;
                     }
@@ -104,7 +111,7 @@ public class PathFollower : MonoBehaviour
                     {
                         splineFollower.direction = Spline.Direction.Backward;
                         splineFollower.startPosition = 1;
-                        splineFollower.motion.offset = new Vector2(-0.65f, defY);
+                        splineFollower.motion.offset = new Vector2(-0.65f, DefY);
                         
                         this.isStraight = false;
                     }
@@ -114,7 +121,7 @@ public class PathFollower : MonoBehaviour
                     {
                         splineFollower.direction = Spline.Direction.Forward;
                         splineFollower.startPosition = 0;
-                        splineFollower.motion.offset = new Vector2(0, defY);
+                        splineFollower.motion.offset = new Vector2(0, DefY);
 
                         this.isStraight = true;
                     }
@@ -122,7 +129,7 @@ public class PathFollower : MonoBehaviour
                     {
                         splineFollower.direction = Spline.Direction.Backward;
                         splineFollower.startPosition = 1;
-                        splineFollower.motion.offset = new Vector2(0, defY);
+                        splineFollower.motion.offset = new Vector2(0, DefY);
                         
                         this.isStraight = false;
                     }
@@ -213,6 +220,8 @@ public class PathFollower : MonoBehaviour
             nextSpline = pathFindData.currentPath[currentPathIndex];
             SetNextRoad(nextSpline, true);
         }
+        
+        EndBeginEventChecker_Prepare();
             
         Reset();
     }
@@ -269,6 +278,74 @@ public class PathFollower : MonoBehaviour
         return Vector3.zero;
     }
 
+    private void EndBeginEventChecker_Prepare()
+    {
+        // Only If pathFindData is valid
+        if (pathFindData == null)
+        {
+            Debug.LogError("PathFind Data is not set, but tried to access.");
+            return;
+        }
+
+        SplineComputer curSpline, nextSpline;
+
+        try
+        {
+            curSpline = pathFindData.currentPath[currentPathIndex];
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            Debug.LogError("From curSpline, index is out of range");
+            return;
+        }
+        
+        try
+        {
+            nextSpline = pathFindData.currentPath[currentPathIndex + 1];
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            Debug.LogError("From nextSpline, index is out of range");
+
+            return;
+        }
+        
+        var crc = curSpline.roadConnectionList.FirstOrDefault(rc => rc.GetconnectedRoad() == nextSpline);
+
+        if (crc == null)
+        {
+            Debug.LogError("Road is not connected!");
+            return;
+        }
+        
+        checkingPos = crc.GetConnectingSpline().GetPoint(0).position;
+        GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>().debugPointPer(checkingPos);
+    }
+
+    private void EndBeginEventChecker()
+    {
+        if (checkingPos == Vector3.zero) return;
+        
+        Vector2 poV2 = new Vector2(checkingPos.x, checkingPos.z);
+        Vector2 cpV2 = new Vector2(transform.position.x, transform.position.z);
+
+        var dist = Vector2.Distance(poV2, cpV2);
+            
+        if (dist <= 0.1f && Mathf.Abs(checkingPos.y - transform.position.y) <= 0.5f)
+        {
+            if (isStraight)
+            {
+                UnityEngine.Debug.LogWarning("END");
+                OnEnd();
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning("BEGIN");
+                OnBegin();
+            }
+        }
+    }
+
     void Start()
     {
         splineFollower = GetComponent<SplineFollower>();
@@ -290,35 +367,6 @@ public class PathFollower : MonoBehaviour
             splineFollower.followSpeed = Mathf.Lerp(splineFollower.followSpeed, 0, Time.deltaTime);
         }
         
-        
-        if (pathFindData != null && !bk)
-        {
-            var cs = pathFindData.currentPath[0].roadConnectionList
-                .FirstOrDefault(rc => rc.GetconnectedRoad() == pathFindData.currentPath[1]);
-
-            var po = cs.GetConnectingSpline().GetPoint(0).position;
-            GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>().debugPointPer(po);
-
-            Vector2 poV2 = new Vector2(po.x, po.z);
-            Vector2 cpV2 = new Vector2(transform.position.x, transform.position.z);
-
-            var dist = Vector2.Distance(poV2, cpV2);
-            
-            if (dist <= 0.1f && Mathf.Abs(po.y - transform.position.y) <= 0.5f)
-            {
-                if (isStraight)
-                {
-                    UnityEngine.Debug.LogWarning("END");
-                    OnEnd();
-                    bk = true;
-                }
-                else
-                {
-                    UnityEngine.Debug.LogWarning("BEGIN");
-                    OnBegin();
-                    bk = true;
-                }
-            }
-        }
+        EndBeginEventChecker();
     }
 }
