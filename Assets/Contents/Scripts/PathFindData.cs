@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Dreamteck.Splines;
 using UnityEngine;
 
@@ -15,7 +16,9 @@ public class PathFindData
 
     public GameObject targetBuilding;
 
+    public List<Path> preCalculatedData = new List<Path>();
     public List<Path> pathList;
+    
     public Path currentPath;
     public int currentMode;
 
@@ -90,6 +93,32 @@ public class PathFindData
         {
             currentPath = pathList[index];
         }
+    }
+
+    public Path SelectPath(List<Path> pL, bool shortestPath, int index)
+    {
+        if (shortestPath)
+        {
+            var minCount = pL.Select(p => p.Count).Min();
+            var shortPathList = pL.Where(p => p.Count == minCount).ToList();
+
+            return shortPathList[index];
+        }
+        else
+        {
+            return pL[index];
+        }
+    }
+
+    public void PreCalcAllData(bool shortestPath = true, int index = 0)
+    {
+        var p1 = PathFinder.Run(exToEnter.Item1, exToEnter.Item2);
+        var p2 = new List<Path>() {new Path() {connectingRoad}};
+        var p3 = PathFinder.Run(exitToEx.Item1, exitToEx.Item2);
+
+        preCalculatedData.Add(SelectPath(p1, shortestPath, index));
+        preCalculatedData.Add(SelectPath(p2, shortestPath, index));
+        preCalculatedData.Add(SelectPath(p3, shortestPath, index));
     }
 
     public void PrintData()

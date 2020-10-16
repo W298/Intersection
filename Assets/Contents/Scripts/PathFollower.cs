@@ -35,12 +35,12 @@ public class PathFollower : MonoBehaviour
         pathFindData.SelectPath();
         
         // Set First Road
-        SetNextRoad(pathFindData.currentPath[startIndex], false);
         currentPathIndex = 0;
+        SetNextRoad(pathFindData.currentPath[startIndex], false);
 
         if (pathFindData.currentMode == 0)
         {
-            EndBeginEventChecker_Prepare();
+            pathFindData.PreCalcAllData();
         }
     }
 
@@ -77,6 +77,8 @@ public class PathFollower : MonoBehaviour
                     }
                     break;
             }
+            
+            EndBeginEventChecker_Prepare();
         }
     }
 
@@ -220,9 +222,7 @@ public class PathFollower : MonoBehaviour
             nextSpline = pathFindData.currentPath[currentPathIndex];
             SetNextRoad(nextSpline, true);
         }
-        
-        EndBeginEventChecker_Prepare();
-            
+
         Reset();
     }
     
@@ -291,7 +291,14 @@ public class PathFollower : MonoBehaviour
 
         try
         {
-            curSpline = pathFindData.currentPath[currentPathIndex];
+            if (splineFollower.spline.isFixed)
+            {
+                curSpline = splineFollower.spline;
+            }
+            else
+            {
+                curSpline = pathFindData.currentPath[currentPathIndex];
+            }
         }
         catch (ArgumentOutOfRangeException e)
         {
@@ -301,24 +308,65 @@ public class PathFollower : MonoBehaviour
         
         try
         {
-            nextSpline = pathFindData.currentPath[currentPathIndex + 1];
+            if (curSpline.isFixed)
+            {
+                nextSpline = pathFindData.preCalculatedData[pathFindData.currentMode + 1][0];
+            }
+            else if (currentPathIndex == pathFindData.currentPath.Count - 1)
+            {
+                if (pathFindData.currentMode >= 2)
+                {
+                    checkingPos = pathFindData.currentPath[currentPathIndex].GetPoints().Last().position;
+                    GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>().debugPointPer(checkingPos);
+                    return;
+                }
+                else
+                {
+                    nextSpline = pathFindData.preCalculatedData[pathFindData.currentMode + 1][0];
+                }
+            }
+            else
+            {
+                nextSpline = pathFindData.currentPath[currentPathIndex + 1];
+            }
         }
         catch (ArgumentOutOfRangeException e)
         {
             Debug.LogError("From nextSpline, index is out of range");
-
             return;
         }
-        
-        var crc = curSpline.roadConnectionList.FirstOrDefault(rc => rc.GetconnectedRoad() == nextSpline);
 
-        if (crc == null)
+        if (curSpline.isFixed)
         {
-            Debug.LogError("Road is not connected!");
-            return;
+            checkingPos = curSpline.GetPoints().Last().position;
         }
-        
-        checkingPos = crc.GetConnectingSpline().GetPoint(0).position;
+        else if (currentPathIndex == pathFindData.currentPath.Count - 1)
+        {
+            int last = curSpline.GetPoints().Length - 1;
+
+            var po = curSpline.GetPoint(last).position;
+
+            var dir = curSpline.GetPoint(last).position - curSpline.GetPoint(last - 1).position;
+            var rightDir = Quaternion.AngleAxis(90, Vector3.up) * dir;
+            rightDir.Normalize();
+
+            po += rightDir * 0.65f;
+
+            checkingPos = po;
+        }
+        else
+        {
+            var crc = curSpline.roadConnectionList.FirstOrDefault(rc => rc.GetconnectedRoad() == nextSpline);
+
+            if (crc == null)
+            {
+                Debug.LogError("Road is not connected!");
+                return;
+            }
+
+            checkingPos = crc.GetConnectingSpline().GetPoint(0).position;
+        }
+
         GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>().debugPointPer(checkingPos);
     }
 
