@@ -156,19 +156,6 @@ public class PathFollower : MonoBehaviour
         splineFollower.follow = false;
     }
 
-    // Re-set Position for start following
-    public void Reset()
-    {
-        if (isStraight)
-        {
-            splineFollower.SetPercent(0.0f);
-        }
-        else
-        {
-            splineFollower.SetPercent(1.0f);
-        }
-    }
-
     private void OnEnd()
     {
         if (isStraight)
@@ -222,8 +209,15 @@ public class PathFollower : MonoBehaviour
             nextSpline = pathFindData.currentPath[currentPathIndex];
             SetNextRoad(nextSpline, true);
         }
+        
+        ProjectToSpline(transform.position, splineFollower.spline);
+    }
 
-        Reset();
+
+    private void ProjectToSpline(Vector3 pos, SplineComputer spline)
+    {
+        var per = spline.Project(pos).percent;
+        splineFollower.SetPercent(per);
     }
     
     private void NextMode()
@@ -256,8 +250,8 @@ public class PathFollower : MonoBehaviour
         {
             UnityEngine.Debug.LogWarning("ERROR");
         }
-            
-        Reset();
+           
+        ProjectToSpline(transform.position, splineFollower.spline);
     }
 
     private Vector3 GetConnectingPos()
