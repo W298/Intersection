@@ -2083,6 +2083,50 @@ public class CreatePathManager : MonoBehaviour
                 height = 0;
             }
         }
+        else if (Input.GetKeyDown(KeyCode.Backspace))
+        {
+            var carManager = GetComponent<CarManager>();
+            
+            carManager.SetPathFindDataList();
+            
+            for (int i = 0; i < 10; i++)
+            {
+                carManager.Spawn();
+            }
+
+            StartCoroutine(_SetPathFindData());
+
+            IEnumerator _SetPathFindData()
+            {
+                yield return new WaitForSeconds(1f);
+                
+                foreach (var car in carManager.cars)
+                {
+                    CarManager.SelectPathFindDataToCar(car, carManager.pathFindDataList, carManager.weightList);
+                }
+
+                StartCoroutine(_Initiate());
+            }
+            
+            IEnumerator _Initiate()
+            {
+                yield return new WaitForSeconds(1f);
+                
+                foreach (var car in carManager.cars)
+                {
+                    car.GetComponent<PathFollower>().Initiate();
+                }
+
+                StartCoroutine(_MoveAll());
+            }
+
+            IEnumerator _MoveAll()
+            {
+                yield return new WaitForSeconds(1f);
+                
+                carManager.MoveAll();
+            }
+        }
 
         if (currentMode == MODE.BUILD)
         {

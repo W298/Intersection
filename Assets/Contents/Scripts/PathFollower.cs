@@ -29,11 +29,13 @@ public class PathFollower : MonoBehaviour
     // Initiate Running
     public void Initiate(int startIndex = 0)
     {
-        if (pathFindData == null) return;
+        if (pathFindData == null) Initiate();
 
         pathFindData.FindPathList();
         pathFindData.SelectPath();
-        
+
+        if (pathFindData.currentPath.Count == 0) Initiate();
+
         // Set First Road
         currentPathIndex = 0;
         SetNextRoad(pathFindData.currentPath[startIndex], false);
