@@ -16,8 +16,8 @@ public class PathFindData
 
     public GameObject targetBuilding;
 
-    public List<Path> preCalculatedData = new List<Path>();
-    public List<Path> pathList;
+    public List<Path> pathData = new List<Path>();
+    public List<Path> pathList = new List<Path>();
     
     public Path currentPath;
     public int currentMode;
@@ -37,6 +37,8 @@ public class PathFindData
         this.currentMode = 0;
 
         this.possesCar = possesCar;
+        
+        PreCalcAllData();
     }
 
     // Constructor
@@ -63,6 +65,54 @@ public class PathFindData
         
         return false;
     }
+
+    public void InitCurrentPath()
+    {
+        currentPath = pathData[currentMode];
+    }
+    
+    public Path SelectPath(List<Path> pL, bool shortestPath, int index)
+    {
+        if (shortestPath)
+        {
+            var minCount = pL.Select(p => p.Count).Min();
+            var shortPathList = pL.Where(p => p.Count == minCount).ToList();
+
+            return shortPathList[index];
+        }
+        else
+        {
+            return pL[index];
+        }
+    }
+
+    public void PreCalcAllData(bool shortestPath = true, int index = 0)
+    {
+        var p1 = PathFinder.Run(exToEnter.Item1, exToEnter.Item2);
+        var p2 = new List<Path>() {new Path() {connectingRoad}};
+        var p3 = PathFinder.Run(exitToEx.Item1, exitToEx.Item2);
+
+        pathData.Add(SelectPath(p1, shortestPath, index));
+        pathData.Add(SelectPath(p2, shortestPath, index));
+        pathData.Add(SelectPath(p3, shortestPath, index));
+    }
+
+    public void PrintData()
+    {
+        UnityEngine.Debug.LogWarning("Ex-Enter : ");
+        UnityEngine.Debug.LogWarning(exToEnter.Item1.name + ", " + exToEnter.Item2.name);
+        
+        UnityEngine.Debug.LogWarning("Exit-Ex : ");
+        UnityEngine.Debug.LogWarning(exitToEx.Item1.name + ", " + exitToEx.Item2.name);
+
+        if (currentPath != null)
+        {
+            UnityEngine.Debug.LogWarning("Current Path : ");
+            UnityEngine.Debug.LogWarning(currentPath.Aggregate("", (current, road) => current + (road.name + ", ")));
+        }
+    }
+    
+    // Below Methods are for dynamic pathfinding ----------------------------------------------
 
     public void FindPathList()
     {
@@ -92,47 +142,6 @@ public class PathFindData
         else
         {
             currentPath = pathList[index];
-        }
-    }
-
-    public Path SelectPath(List<Path> pL, bool shortestPath, int index)
-    {
-        if (shortestPath)
-        {
-            var minCount = pL.Select(p => p.Count).Min();
-            var shortPathList = pL.Where(p => p.Count == minCount).ToList();
-
-            return shortPathList[index];
-        }
-        else
-        {
-            return pL[index];
-        }
-    }
-
-    public void PreCalcAllData(bool shortestPath = true, int index = 0)
-    {
-        var p1 = PathFinder.Run(exToEnter.Item1, exToEnter.Item2);
-        var p2 = new List<Path>() {new Path() {connectingRoad}};
-        var p3 = PathFinder.Run(exitToEx.Item1, exitToEx.Item2);
-
-        preCalculatedData.Add(SelectPath(p1, shortestPath, index));
-        preCalculatedData.Add(SelectPath(p2, shortestPath, index));
-        preCalculatedData.Add(SelectPath(p3, shortestPath, index));
-    }
-
-    public void PrintData()
-    {
-        UnityEngine.Debug.LogWarning("Ex-Enter : ");
-        UnityEngine.Debug.LogWarning(exToEnter.Item1.name + ", " + exToEnter.Item2.name);
-        
-        UnityEngine.Debug.LogWarning("Exit-Ex : ");
-        UnityEngine.Debug.LogWarning(exitToEx.Item1.name + ", " + exitToEx.Item2.name);
-
-        if (currentPath != null)
-        {
-            UnityEngine.Debug.LogWarning("Current Path : ");
-            UnityEngine.Debug.LogWarning(currentPath.Aggregate("", (current, road) => current + (road.name + ", ")));
         }
     }
 }

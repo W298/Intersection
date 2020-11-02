@@ -118,18 +118,6 @@ public partial class SROptions
     {
         get { return carManager.cars.Count; }
     }
-    
-    [Category("Car Manager")]
-    public void IncreaseChosenSplineWeight()
-    {
-        
-    }
-    
-    [Category("Car Manager")]
-    public void DecreaseChosenSplineWeight()
-    {
-        
-    }
 
     [Category("Ground")]
     public bool allConnected

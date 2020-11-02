@@ -29,21 +29,21 @@ public class PathFollower : MonoBehaviour
     // Initiate Running
     public void Initiate(int startIndex = 0)
     {
-        if (pathFindData == null) Initiate();
+        if (pathFindData == null) Initiate();    // Block if pathFindData is null
+        
+        pathFindData.InitCurrentPath();
 
+        // OLD METHOD (CURRENTLY NOT USING)
+        /*
         pathFindData.FindPathList();
         pathFindData.SelectPath();
-
-        if (pathFindData.currentPath.Count == 0) Initiate();
+        */
+            
+        if (pathFindData.currentPath.Count == 0) Initiate();    // Block if currentPath is not set
 
         // Set First Road
         currentPathIndex = 0;
         SetNextRoad(pathFindData.currentPath[startIndex], false);
-
-        if (pathFindData.currentMode == 0)
-        {
-            pathFindData.PreCalcAllData();
-        }
     }
 
     // Set Spline to splineFollower.spline
@@ -68,6 +68,17 @@ public class PathFollower : MonoBehaviour
             switch (_spline.roadLane)
             {
                 case CreatePathManager.ROADLANE.RL1:
+                    switch (_spline.roadMode)
+                    {
+                        case SplineComputer.MODE.FIRST_OPEN:
+                            SetMoveDir(true);
+                            break;
+                        case SplineComputer.MODE.LAST_OPEN:
+                            SetMoveDir(false);
+                            break;
+                    }
+                    break;
+                case CreatePathManager.ROADLANE.RL2:
                     switch (_spline.roadMode)
                     {
                         case SplineComputer.MODE.FIRST_OPEN:
@@ -134,6 +145,24 @@ public class PathFollower : MonoBehaviour
                         splineFollower.direction = Spline.Direction.Backward;
                         splineFollower.startPosition = 1;
                         splineFollower.motion.offset = new Vector2(0, DefY);
+                        
+                        this.isStraight = false;
+                    }
+                    break;
+                case CreatePathManager.ROADLANE.RL2:
+                    if (isSt)
+                    {
+                        splineFollower.direction = Spline.Direction.Forward;
+                        splineFollower.startPosition = 0;
+                        splineFollower.motion.offset = new Vector2(0.65f * 3, DefY);
+
+                        this.isStraight = true;
+                    }
+                    else
+                    {
+                        splineFollower.direction = Spline.Direction.Backward;
+                        splineFollower.startPosition = 1;
+                        splineFollower.motion.offset = new Vector2(-0.65f * 3, DefY);
                         
                         this.isStraight = false;
                     }
@@ -306,7 +335,7 @@ public class PathFollower : MonoBehaviour
         {
             if (curSpline.isFixed)
             {
-                nextSpline = pathFindData.preCalculatedData[pathFindData.currentMode + 1][0];
+                nextSpline = pathFindData.pathData[pathFindData.currentMode + 1][0];
             }
             else if (currentPathIndex == pathFindData.currentPath.Count - 1)
             {
@@ -318,7 +347,7 @@ public class PathFollower : MonoBehaviour
                 }
                 else
                 {
-                    nextSpline = pathFindData.preCalculatedData[pathFindData.currentMode + 1][0];
+                    nextSpline = pathFindData.pathData[pathFindData.currentMode + 1][0];
                 }
             }
             else
