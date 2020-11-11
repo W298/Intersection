@@ -59,7 +59,7 @@ public class PathFinder : MonoBehaviour
             }
         }
         */
-        
+
         var pathList = new List<List<SplineComputer>>();
 
         var path = new List<SplineComputer>();

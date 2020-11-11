@@ -7,6 +7,13 @@ using UnityEngine.PlayerLoop;
 
 public class Crossroad
 {
+    public static Dictionary<int, float> road_offset
+        = new Dictionary<int, float>
+        {
+            {0, 0.65f},
+            {1, 0.65f * 3}
+        };
+    
     private CreatePathManager pathManager;
     
     private Vector3 position;
@@ -77,6 +84,7 @@ public class Crossroad
                     var per_arriv = arrivRoad.Project(GetPosition() + arrivDir / 3f).percent;
                     var arrivPoint = arrivRoad.EvaluatePosition(per_arriv);
 
+                    
                     // If failed to get Point Value, Re-try
                     if (Vector3.Distance(departPoint, arrivPoint) >= 20)
                     {
@@ -96,11 +104,11 @@ public class Crossroad
                     switch (roads[0].roadLane)
                     {
                         case CreatePathManager.ROADLANE.RL1:
-                            rightOffsetList.Add(0.65f);
+                            rightOffsetList.Add(road_offset[0]);
                             break;
                         case CreatePathManager.ROADLANE.RL2:
-                            rightOffsetList.Add(0.65f);
-                            rightOffsetList.Add(0.65f * 3);
+                            rightOffsetList.Add(road_offset[0]);
+                            rightOffsetList.Add(road_offset[1]);
                             break;
                     }
 
@@ -108,6 +116,9 @@ public class Crossroad
                     {
                         foreach (var aRightOffset in rightOffsetList)
                         {
+                            var start_offset = road_offset.FirstOrDefault(x => x.Value == dRightOffset).Key;
+                            var end_offset = road_offset.FirstOrDefault(x => x.Value == aRightOffset).Key;
+                            
                             // Set Point Position by Offset
                             var departPointOA = departPoint + departOffsetDir * dRightOffset;
                             var arrivPointOA = arrivPoint + arrivOffsetDir * aRightOffset;
@@ -132,7 +143,8 @@ public class Crossroad
                             }
 
                             var connectingSpline = pathManager.InsSpline(GetPosition());
-                            connectingSpline.name = departRoad.name + " - " + arrivRoad.name;
+                            connectingSpline.name = departRoad.name + " - " + arrivRoad.name + " / " +
+                                                    start_offset + " - " + end_offset;
                             
                             // Spawn Depart Point
                             connectingSpline.SetPointNormal(0, CreatePathManager.def_normal);
@@ -152,12 +164,12 @@ public class Crossroad
                             var roadConnection = departRoad.roadConnectionList.FirstOrDefault(rc => rc.GetconnectedRoad() == arrivRoad);
                             if (roadConnection != null)
                             {
-                                roadConnection.AddConnectingSpline(connectingSpline);
+                                roadConnection.AddConnector(connectingSpline, start_offset, end_offset);
                             }
                             else
                             {
                                 var rc = new RoadConnection(arrivRoad);
-                                rc.AddConnectingSpline(connectingSpline);
+                                rc.AddConnector(connectingSpline, start_offset, end_offset);
                                 departRoad.roadConnectionList.Add(rc);
                             }
                         }

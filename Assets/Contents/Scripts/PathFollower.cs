@@ -20,6 +20,7 @@ public class PathFollower : MonoBehaviour
     public const float DefY = 0.35f;
 
     public Vector3 checkingPos;
+    public int currentOffset = 0;
 
     public void SetSpeed(float speed = 5.0f)
     {
@@ -29,17 +30,7 @@ public class PathFollower : MonoBehaviour
     // Initiate Running
     public void Initiate(int startIndex = 0)
     {
-        if (pathFindData == null) Initiate();    // Block if pathFindData is null
-        
         pathFindData.InitCurrentPath();
-
-        // OLD METHOD (CURRENTLY NOT USING)
-        /*
-        pathFindData.FindPathList();
-        pathFindData.SelectPath();
-        */
-            
-        if (pathFindData.currentPath.Count == 0) Initiate();    // Block if currentPath is not set
 
         // Set First Road
         currentPathIndex = 0;
@@ -52,7 +43,10 @@ public class PathFollower : MonoBehaviour
         if (toConnectingRoad)
         {
             var roadConnection = splineFollower.spline.roadConnectionList.FirstOrDefault(rc => rc.GetconnectedRoad() == _spline);
-            var cs = roadConnection.GetConnectingSpline(0);
+
+            var cs = roadConnection.GetConnector(true, out var _endO, currentOffset);
+            currentOffset = _endO;
+            
             cs.Rebuild(true);
             
             splineFollower.spline = cs;
@@ -100,7 +94,7 @@ public class PathFollower : MonoBehaviour
     {
         if (splineFollower.spline)
         {
-            if (splineFollower.spline.isConnectingRoad)
+            if (splineFollower.spline.is_connector)
             {
                 splineFollower.direction = Spline.Direction.Forward;
                 splineFollower.startPosition = 0;
@@ -154,15 +148,33 @@ public class PathFollower : MonoBehaviour
                     {
                         splineFollower.direction = Spline.Direction.Forward;
                         splineFollower.startPosition = 0;
-                        splineFollower.motion.offset = new Vector2(0.65f * 3, DefY);
 
+                        switch (currentOffset)
+                        {
+                            case 0:
+                                splineFollower.motion.offset = new Vector2(0.65f, DefY);
+                                break;
+                            case 1:
+                                splineFollower.motion.offset = new Vector2(0.65f * 3, DefY);
+                                break;
+                        }
+                        
                         this.isStraight = true;
                     }
                     else
                     {
                         splineFollower.direction = Spline.Direction.Backward;
                         splineFollower.startPosition = 1;
-                        splineFollower.motion.offset = new Vector2(-0.65f * 3, DefY);
+                        
+                        switch (currentOffset)
+                        {
+                            case 0:
+                                splineFollower.motion.offset = new Vector2(-0.65f, DefY);
+                                break;
+                            case 1:
+                                splineFollower.motion.offset = new Vector2(-0.65f * 3, DefY);
+                                break;
+                        }
                         
                         this.isStraight = false;
                     }
@@ -207,7 +219,7 @@ public class PathFollower : MonoBehaviour
     {
         SplineComputer nextSpline;
             
-        if (splineFollower.spline.isConnectingRoad)
+        if (splineFollower.spline.is_connector)
         {
             var connectingPos = GetConnectingPos();
                 
@@ -342,7 +354,6 @@ public class PathFollower : MonoBehaviour
                 if (pathFindData.currentMode >= 2)
                 {
                     checkingPos = pathFindData.currentPath[currentPathIndex].GetPoints().Last().position;
-                    GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>().debugPointPer(checkingPos);
                     return;
                 }
                 else
@@ -389,7 +400,8 @@ public class PathFollower : MonoBehaviour
                 return;
             }
 
-            checkingPos = crc.GetConnectingSpline().GetPoint(0).position;
+            checkingPos = crc.GetConnector(true, out var _endO, currentOffset).GetPoint(0).position;
+            currentOffset = _endO;
         }
 
         GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>().debugPointPer(checkingPos);

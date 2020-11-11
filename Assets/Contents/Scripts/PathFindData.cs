@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Dreamteck.Splines;
+using JetBrains.Annotations;
 using UnityEngine;
+using MEC;
 
 using StartEndTuple = System.Tuple<Dreamteck.Splines.SplineComputer, Dreamteck.Splines.SplineComputer>;
 using Path = System.Collections.Generic.List<Dreamteck.Splines.SplineComputer>;
@@ -92,9 +94,13 @@ public class PathFindData
         var p2 = new List<Path>() {new Path() {connectingRoad}};
         var p3 = PathFinder.Run(exitToEx.Item1, exitToEx.Item2);
 
-        pathData.Add(SelectPath(p1, shortestPath, index));
-        pathData.Add(SelectPath(p2, shortestPath, index));
-        pathData.Add(SelectPath(p3, shortestPath, index));
+        var ps1 = SelectPath(p1, shortestPath, index);
+        var ps2 = SelectPath(p2, shortestPath, index);
+        var ps3 = SelectPath(p3, shortestPath, index);
+        
+        pathData.Add(ps1);
+        pathData.Add(ps2);
+        pathData.Add(ps3);
     }
 
     public void PrintData()
