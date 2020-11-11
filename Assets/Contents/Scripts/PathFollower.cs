@@ -378,16 +378,30 @@ public class PathFollower : MonoBehaviour
         }
         else if (currentPathIndex == pathFindData.currentPath.Count - 1)
         {
-            int last = curSpline.GetPoints().Length - 1;
+            Vector3 po;
+            Vector3 rightDir;
 
-            var po = curSpline.GetPoint(last).position;
+            var isStCon = nextSpline.GetPoint(0).position == curSpline.GetPoints().Last().position;
+            
+            if (isStCon)
+            {
+                var last = curSpline.GetPoints().Length - 1;
+                po = curSpline.GetPoint(last).position;
 
-            var dir = curSpline.GetPoint(last).position - curSpline.GetPoint(last - 1).position;
-            var rightDir = Quaternion.AngleAxis(90, Vector3.up) * dir;
-            rightDir.Normalize();
+                var dir = po - curSpline.GetPoint(last - 1).position;
+                rightDir = Quaternion.AngleAxis(90, Vector3.up) * dir;
+                rightDir.Normalize();
+            }
+            else
+            {
+                po = curSpline.GetPoint(0).position;
 
-            po += rightDir * 0.65f;
+                var dir = po - curSpline.GetPoint(1).position;
+                rightDir = Quaternion.AngleAxis(90, Vector3.up) * dir;
+                rightDir.Normalize();
+            }
 
+            po += rightDir * Crossroad.road_offset[currentOffset];
             checkingPos = po;
         }
         else

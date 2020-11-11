@@ -13,7 +13,7 @@ public class CarAI : MonoBehaviour
 
     public void RunDTBehavior(DTBuilding dt)
     {
-        
+        Debug.LogWarning(gameObject.name + " is now in " + dt.gameObject.name);
     }
 
     void Start()
