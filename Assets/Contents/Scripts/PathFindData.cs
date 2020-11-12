@@ -62,7 +62,7 @@ public class PathFindData
         
         if (currentMode == 1)
         {
-            possesCar.GetComponent<CarAI>().RunDTBehavior(targetBuilding.GetComponent<DTBuilding>());
+            // DT Behavior
         }
         
         return false;

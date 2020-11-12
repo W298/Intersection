@@ -18,13 +18,18 @@ public class PathFollower : MonoBehaviour
 
     public bool isStraight = true;
     public const float DefY = 0.35f;
+    public float minSpeed = 0.0f;
+    public float maxSpeed = 5.0f;
+    public float acc = 3.0f;
+    public enum MOVESTAT {DECEASE, INCREASE, ZERO}
+    public MOVESTAT moveStat = MOVESTAT.ZERO;
 
     public Vector3 checkingPos;
     public int currentOffset = 0;
 
     public void SetSpeed(float speed = 5.0f)
     {
-        splineFollower.followSpeed = speed;
+        maxSpeed = speed;
     }
 
     // Initiate Running
@@ -191,12 +196,13 @@ public class PathFollower : MonoBehaviour
     public void Run()
     {
         splineFollower.follow = true;
+        moveStat = MOVESTAT.INCREASE;
     }
 
     // Disable following
     public void Stop()
     {
-        splineFollower.follow = false;
+        moveStat = MOVESTAT.DECEASE;
     }
 
     private void OnEnd()
@@ -434,12 +440,10 @@ public class PathFollower : MonoBehaviour
         {
             if (isStraight)
             {
-                UnityEngine.Debug.LogWarning("END");
                 OnEnd();
             }
             else
             {
-                UnityEngine.Debug.LogWarning("BEGIN");
                 OnBegin();
             }
         }
@@ -457,15 +461,29 @@ public class PathFollower : MonoBehaviour
 
     void Update()
     {
-        if (splineFollower.follow)
+        switch (moveStat)
         {
-            splineFollower.followSpeed = Mathf.Lerp(splineFollower.followSpeed, 5, Time.deltaTime);
+            case MOVESTAT.ZERO:
+                break;
+            case MOVESTAT.INCREASE:
+                splineFollower.followSpeed = Mathf.Lerp(splineFollower.followSpeed, maxSpeed, Time.deltaTime * acc);
+                if (Mathf.Abs(splineFollower.followSpeed - maxSpeed) <= 0.1)
+                {
+                    moveStat = MOVESTAT.ZERO;
+                }
+                
+                break;
+            case MOVESTAT.DECEASE:
+                splineFollower.followSpeed = Mathf.Lerp(splineFollower.followSpeed, minSpeed, Time.deltaTime * acc);
+                if (Mathf.Abs(splineFollower.followSpeed - minSpeed) <= 0.1)
+                {
+                    splineFollower.follow = false;
+                    moveStat = MOVESTAT.ZERO;
+                }
+                
+                break;
         }
-        else
-        {
-            splineFollower.followSpeed = Mathf.Lerp(splineFollower.followSpeed, 0, Time.deltaTime);
-        }
-        
+
         EndBeginEventChecker();
     }
 }
