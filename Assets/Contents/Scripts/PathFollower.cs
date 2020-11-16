@@ -11,7 +11,7 @@ using UnityEngine.EventSystems;
 
 public class PathFollower : MonoBehaviour
 {
-    private SplineFollower splineFollower;
+    public SplineFollower splineFollower;
     
     public PathFindData pathFindData;
     public int currentPathIndex;
@@ -19,8 +19,8 @@ public class PathFollower : MonoBehaviour
     public bool isStraight = true;
     public const float DefY = 0.35f;
     public float minSpeed = 0.0f;
-    public float maxSpeed = 5.0f;
-    public float acc = 3.0f;
+    public float maxSpeed = 4.0f;
+    public float acc = 8.0f;
     public enum MOVESTAT {DECEASE, INCREASE, ZERO}
     public MOVESTAT moveStat = MOVESTAT.ZERO;
 
@@ -43,10 +43,12 @@ public class PathFollower : MonoBehaviour
     }
 
     // Set Spline to splineFollower.spline
-    public void SetNextRoad(SplineComputer _spline, bool toConnectingRoad)
+    public void SetNextRoad(SplineComputer _spline, bool toConnector)
     {
-        if (toConnectingRoad)
+        if (toConnector)
         {
+            moveStat = MOVESTAT.INCREASE;
+            maxSpeed = 2.0f;
             var roadConnection = splineFollower.spline.roadConnectionList.FirstOrDefault(rc => rc.GetconnectedRoad() == _spline);
 
             var cs = roadConnection.GetConnector(true, out var _endO, currentOffset);
@@ -62,6 +64,8 @@ public class PathFollower : MonoBehaviour
         }
         else
         {
+            moveStat = MOVESTAT.INCREASE;
+            maxSpeed = 4.0f;
             splineFollower.spline = _spline;
 
             switch (_spline.roadLane)

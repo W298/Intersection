@@ -16,6 +16,8 @@ public class CarAI : MonoBehaviour
     public TriggerSensor carSensor;
     public TextMesh indicator;
 
+    private bool isWaiting = false;
+
     public void EnterDT(DTBuilding dt)
     {
         dtBuilding = dt;
@@ -36,7 +38,10 @@ public class CarAI : MonoBehaviour
         StartCoroutine(_End());
         IEnumerator _End()
         {
+            isWaiting = true;
             yield return new WaitForSeconds(5f);
+            isWaiting = false;
+            
             pathFollower.SetSpeed(2.5f);
             pathFollower.Run();
         }
@@ -50,7 +55,10 @@ public class CarAI : MonoBehaviour
         StartCoroutine(_End());
         IEnumerator _End()
         {
+            isWaiting = true;
             yield return new WaitForSeconds(5f);
+            isWaiting = false;
+            
             pathFollower.SetSpeed();
             pathFollower.Run();
         }
@@ -68,15 +76,42 @@ public class CarAI : MonoBehaviour
 
     void OnDetected(GameObject obj, Sensor sensor)
     {
-        if (carSensor.DetectedObjects.Count != 0)
+        if (!IsCarSameWay(obj))
         {
-            pathFollower.Stop();
+            if (CheckWhoGoFirst(obj))
+            {
+                pathFollower.Run();
+            }
+            else
+            {
+                obj.GetComponent<PathFollower>().Run();
+            }
         }
+        
+        pathFollower.Stop();
+    }
+
+    bool IsCarSameWay(GameObject obj)
+    {
+        if (pathFollower.splineFollower.spline == obj.GetComponent<PathFollower>().splineFollower.spline)
+            return true;
+        
+        var a = Vector3.Angle(gameObject.transform.forward, obj.transform.forward) <= 30;
+        return a;
+    }
+
+    bool CheckWhoGoFirst(GameObject obj)
+    {
+        // True - I go
+        // False - You go
+
+        var r = Random.Range(0, 2);
+        return r != 0;
     }
 
     void OnLost(GameObject obj, Sensor sensor)
     {
-        if (carSensor.DetectedObjects.Count == 0)
+        if (carSensor.DetectedObjects.Count == 0 && !isWaiting)
         {
             pathFollower.Run();
         }
@@ -84,6 +119,20 @@ public class CarAI : MonoBehaviour
 
     void Update()
     {
-        indicator.text = carStat.ToString();
+        // indicator.text = carStat.ToString();
+
+        if (carSensor.DetectedObjects.Count != 0)
+        {
+            if (carSensor.DetectedObjects[0] == gameObject && CheckWhoGoFirst(carSensor.DetectedObjects[0]))
+            {
+                pathFollower.Run();
+                indicator.text = "I GO";
+            }
+            else
+            {
+                carSensor.DetectedObjects[0].GetComponent<PathFollower>().Run();
+                indicator.text = "You GO";
+            }
+        }
     }
 }
