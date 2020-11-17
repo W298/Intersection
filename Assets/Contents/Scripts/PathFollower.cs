@@ -27,6 +27,20 @@ public class PathFollower : MonoBehaviour
     public Vector3 checkingPos;
     public int currentOffset = 0;
 
+    public double percent
+    {
+        get
+        {
+            var per = splineFollower.spline.Project(gameObject.transform.position).percent;
+            if (!isStraight)
+            {
+                per = 1 - per;
+            }
+
+            return per;
+        }
+    }
+
     public void SetSpeed(float speed = 5.0f)
     {
         maxSpeed = speed;
@@ -465,6 +479,15 @@ public class PathFollower : MonoBehaviour
 
     void Update()
     {
+        if (pathFindData.currentMode == 2 && 
+            currentPathIndex == pathFindData.currentPath.Count - 1 && 
+            !splineFollower.spline.is_connector &&
+            percent >= 0.7)
+        {
+            Destroy(this.gameObject);
+            return;
+        }
+        
         switch (moveStat)
         {
             case MOVESTAT.ZERO:

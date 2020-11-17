@@ -18,6 +18,9 @@ public class CarAI : MonoBehaviour
     public TriggerSensor carSensor;
     public TextMesh indicator;
 
+    public int passCount = 0;
+    public int passLimit = 2;
+
     public List<GameObject> excludeCars = new List<GameObject>();
     public List<GameObject> detectedCars => carSensor.DetectedObjects.Except(excludeCars).ToList();
 
@@ -25,6 +28,8 @@ public class CarAI : MonoBehaviour
     {
         get
         {
+            if (detectedCars.Count == 0) return null;
+            
             GameObject closestCar;
             var distAry = new float[detectedCars.Count];
             var counter = 0;
@@ -36,7 +41,6 @@ public class CarAI : MonoBehaviour
                 distAry[counter] = dist;
                 counter++;
             }
-            
             var minIndex = Array.IndexOf(distAry, distAry.Min());
             closestCar = detectedCars[minIndex];
 
@@ -107,28 +111,8 @@ public class CarAI : MonoBehaviour
         carSensor = GetComponentInChildren<TriggerSensor>();
         indicator = GetComponentInChildren<TextMesh>();
         
-        // carSensor.OnDetected.AddListener(OnDetected);
         carSensor.OnLostDetection.AddListener(OnLost);
     }
-
-    /*
-    void OnDetected(GameObject obj, Sensor sensor)
-    {
-        if (!IsCarSameWay(obj))
-        {
-            if (CheckWhoGoFirst(obj))
-            {
-                AddExcludeCar(obj);
-            }
-            else
-            {
-                obj.GetComponent<CarAI>().AddExcludeCar(this.gameObject);
-            }
-        }
-        
-        pathFollower.Stop();
-    }
-    */
 
     bool IsCarSameWay(GameObject obj)
     {
@@ -137,8 +121,7 @@ public class CarAI : MonoBehaviour
             return true;
 
         var a = Vector3.Angle(gameObject.transform.forward, obj.transform.forward);
-        indicator.text = a.ToString();
-        return a <= 70;
+        return a <= 50;
     }
 
     bool CheckWhoGoFirst(GameObject obj)
@@ -146,9 +129,9 @@ public class CarAI : MonoBehaviour
         // True - I go
         // False - You go
 
-        var thisPer = pathFollower.splineFollower.spline.Project(this.gameObject.transform.position).percent;
-        var oppPer = obj.GetComponent<PathFollower>().splineFollower.spline.Project(obj.transform.position).percent;
-
+        var thisPer = pathFollower.percent;
+        var oppPer = obj.GetComponent<PathFollower>().percent;
+        
         return thisPer >= oppPer;
     }
 
@@ -173,6 +156,25 @@ public class CarAI : MonoBehaviour
         return false;
     }
 
+    bool CheckPass()
+    {
+        var thisRoad = pathFollower.splineFollower.spline;
+        var oppRoad = detected_ClosestCar.GetComponent<PathFollower>().splineFollower.spline;
+
+        if (thisRoad.is_connector && oppRoad.is_connector)
+        {
+            return thisRoad.GetPoints().Last().position != oppRoad.GetPoints().Last().position;
+        }
+
+        if (!thisRoad.is_connector && !oppRoad.is_connector)
+        {
+            return pathFollower.splineFollower.direction !=
+                   detected_ClosestCar.GetComponent<PathFollower>().splineFollower.direction;
+        }
+
+        return false;
+    }
+
     void Update()
     {
         if (detectedCars.Count != 0)
@@ -181,20 +183,34 @@ public class CarAI : MonoBehaviour
             {
                 if (!IsCarSameWay(detected_ClosestCar))
                 {
-                    if (detected_ClosestCar.GetComponent<CarAI>().detected_ClosestCar == gameObject)
+                    if (!CheckPass())
                     {
-                        if (CheckWhoGoFirst(detected_ClosestCar))
+                        if (detected_ClosestCar.GetComponent<CarAI>().detected_ClosestCar == gameObject)
                         {
-                            AddExcludeCar(detected_ClosestCar);
+                            if (CheckWhoGoFirst(detected_ClosestCar))
+                            {
+                                this.indicator.text = "I Go";
+                                var oppPF = detected_ClosestCar.GetComponent<CarAI>();
+                                if (oppPF.passCount <= oppPF.passLimit)
+                                {
+                                    detected_ClosestCar.GetComponent<CarAI>().passCount++;
+                                    AddExcludeCar(detected_ClosestCar);
+                                }
+                                else
+                                {
+                                    oppPF.AddExcludeCar(this.gameObject);
+                                    passCount = 0;
+                                }
+                            }
+                            else
+                            {
+                                this.indicator.text = "You Go" + passCount.ToString();
+                            }
                         }
                         else
                         {
-                            detected_ClosestCar.GetComponent<CarAI>().AddExcludeCar(this.gameObject);
+                            pathFollower.Stop();
                         }
-                    }
-                    else
-                    {
-                        pathFollower.Stop();
                     }
                 }
                 else
