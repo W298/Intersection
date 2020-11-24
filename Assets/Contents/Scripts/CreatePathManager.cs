@@ -68,6 +68,8 @@ public class CreatePathManager : MonoBehaviour
     public GameObject debugobj2;
     public GameObject textObj;
     public GameObject Pillar;
+    
+    public SplineComputer Converter;
 
     private Camera cm;
     private SplineComputer SplinePrefab;
@@ -580,7 +582,7 @@ public class CreatePathManager : MonoBehaviour
 
         if (spline)
         {
-            spline.Rebuild();
+            spline.Rebuild(true);
         }
     }
 
@@ -1429,161 +1431,215 @@ public class CreatePathManager : MonoBehaviour
         }
     }
 
-    SplineComputer MergeSplines(SplineComputer s1, SplineComputer s2)
+    SplineComputer MergeSplines(SplineComputer predator, SplineComputer victim)
     {
         var mergemode = MERGEMODE.NONE;
 
-        if (s1.GetPoints().Last().position == s2.GetPoints().First().position &&
-            s1.GetPoints().First().position == s2.GetPoints().Last().position) mergemode = MERGEMODE.LOOP;
-        else if (s1.GetPoints().Last().position == s2.GetPoints().Last().position) mergemode = MERGEMODE.LL;
-        else if (s1.GetPoints().First().position == s2.GetPoints().First().position) mergemode = MERGEMODE.FF;
-        else if (s1.GetPoints().Last().position == s2.GetPoints().First().position) mergemode = MERGEMODE.LF;
-        else if (s1.GetPoints().First().position == s2.GetPoints().Last().position) mergemode = MERGEMODE.FL;
+        if (predator.GetPoints().Last().position == victim.GetPoints().First().position &&
+            predator.GetPoints().First().position == victim.GetPoints().Last().position) mergemode = MERGEMODE.LOOP;
+        else if (predator.GetPoints().Last().position == victim.GetPoints().Last().position) mergemode = MERGEMODE.LL;
+        else if (predator.GetPoints().First().position == victim.GetPoints().First().position) mergemode = MERGEMODE.FF;
+        else if (predator.GetPoints().Last().position == victim.GetPoints().First().position) mergemode = MERGEMODE.LF;
+        else if (predator.GetPoints().First().position == victim.GetPoints().Last().position) mergemode = MERGEMODE.FL;
 
         if (mergemode == MERGEMODE.LL)
         {
-            UnityEngine.Debug.LogWarning("LL");
-            var index = s1.GetPoints().Length;
-
-            var points = s2.GetPoints();
-            for (var i = points.Length - 2; i >= 0; i--)
+            if (predator.roadLane == victim.roadLane)
             {
-                s1.SetPoint(index, points[i]);
-                index++;
+                UnityEngine.Debug.LogWarning("LL");
+                var index = predator.GetPoints().Length;
+
+                var points = victim.GetPoints();
+                for (var i = points.Length - 2; i >= 0; i--)
+                {
+                    predator.SetPoint(index, points[i]);
+                    index++;
+                }
+
+                var refCrossroad = crossroads.FirstOrDefault(cros => cros.GetRoads().Contains(victim));
+                if (refCrossroad != null)
+                {
+                    refCrossroad.RemoveRoad(victim);
+                    refCrossroad.AddRoad(predator);
+                }
+
+                Destroy(victim.gameObject);
+                return predator;
             }
 
-            var refCrossroad = crossroads.FirstOrDefault(cros => cros.GetRoads().Contains(s2));
-            if (refCrossroad != null)
+            if (predator.roadLane == ROADLANE.RL1 && victim.roadLane == ROADLANE.RL2 ||
+                victim.roadLane == ROADLANE.RL1 && predator.roadLane == ROADLANE.RL2)
             {
-                refCrossroad.RemoveRoad(s2);
-                refCrossroad.AddRoad(s1);
+                var spline_1L = predator.roadLane == ROADLANE.RL1 ? predator : victim;
+                var spline_2L = predator.roadLane == ROADLANE.RL2 ? predator : victim;
+
+                var converter_ins = Instantiate(roadPrefabs[0], Vector3.zero, Quaternion.identity);
+
+                RemovePoint(spline_1L, spline_1L.GetPoints().Length - 1);
+
+                converter_ins.SetPointNormal(0, def_normal);
+                converter_ins.SetPointSize(0, 1);
+                converter_ins.SetPointPosition(0, spline_1L.GetPoints().Last().position);
+            
+                converter_ins.SetPointNormal(1, def_normal);
+                converter_ins.SetPointSize(1, 1.8f);
+                converter_ins.SetPointPosition(1, spline_2L.GetPoints().Last().position);
+
+                StartCoroutine(DelayExecute());
+                IEnumerator DelayExecute()
+                {
+                    yield return new WaitForSeconds(0.05f);
+                    spline_1L.Rebuild(true);
+                }
+            }
+            else
+            {
+                var spline_05L = predator.roadLane == ROADLANE.RL05 ? predator : victim;
+                var spline_1L = predator.roadLane == ROADLANE.RL1 ? predator : victim;
+                
+                var converter_ins = Instantiate(roadPrefabs[4], Vector3.zero, Quaternion.identity);
+                
+                RemovePoint(spline_05L, spline_05L.GetPoints().Length - 1);
+                
+                converter_ins.SetPointNormal(0, def_normal);
+                converter_ins.SetPointSize(0, 1);
+                converter_ins.SetPointPosition(0, spline_05L.GetPoints().Last().position);
+            
+                converter_ins.SetPointNormal(1, def_normal);
+                converter_ins.SetPointSize(1, 1.68f);
+                converter_ins.SetPointPosition(1, spline_1L.GetPoints().Last().position);
+
+                StartCoroutine(DelayExecute());
+                IEnumerator DelayExecute()
+                {
+                    yield return new WaitForSeconds(0.05f);
+                    spline_1L.Rebuild(true);
+                }
             }
 
-            Destroy(s2.gameObject);
-            return s1;
         }
         else if (mergemode == MERGEMODE.FF)
         {
             UnityEngine.Debug.LogWarning("FF");
-            var points = s1.GetPoints();
-            var points2 = s2.GetPoints();
+            var points = predator.GetPoints();
+            var points2 = victim.GetPoints();
 
             var index = 0;
 
             for (var i = 0; i < points.Length; i++)
             {
-                s1.SetPoint(i + points2.Length - 1, points[i]);
+                predator.SetPoint(i + points2.Length - 1, points[i]);
             }
 
             for (var i = points2.Length - 1; i >= 1; i--)
             {
-                s1.SetPoint(index, points2[i]);
+                predator.SetPoint(index, points2[i]);
                 index++;
             }
 
-            var refCrossroad = crossroads.FirstOrDefault(cros => cros.GetRoads().Contains(s2));
+            var refCrossroad = crossroads.FirstOrDefault(cros => cros.GetRoads().Contains(victim));
             if (refCrossroad != null)
             {
-                refCrossroad.RemoveRoad(s2);
-                refCrossroad.AddRoad(s1);
+                refCrossroad.RemoveRoad(victim);
+                refCrossroad.AddRoad(predator);
             }
 
-            Destroy(s2.gameObject);
-            return s1;
+            Destroy(victim.gameObject);
+            return predator;
         }
         else if (mergemode == MERGEMODE.LF)
         {
             UnityEngine.Debug.LogWarning("LF");
-            var index = s1.GetPoints().Length;
+            var index = predator.GetPoints().Length;
 
-            var points = s2.GetPoints();
+            var points = victim.GetPoints();
             for (var i = 1; i < points.Length; i++)
             {
-                s1.SetPoint(index, points[i]);
+                predator.SetPoint(index, points[i]);
                 index++;
             }
 
-            var refCrossroad = crossroads.FirstOrDefault(cros => cros.GetRoads().Contains(s2));
+            var refCrossroad = crossroads.FirstOrDefault(cros => cros.GetRoads().Contains(victim));
             if (refCrossroad != null)
             {
-                refCrossroad.RemoveRoad(s2);
-                refCrossroad.AddRoad(s1);
+                refCrossroad.RemoveRoad(victim);
+                refCrossroad.AddRoad(predator);
             }
 
-            Destroy(s2.gameObject);
-            return s1;
+            Destroy(victim.gameObject);
+            return predator;
         }
         else if (mergemode == MERGEMODE.FL)
         {
             UnityEngine.Debug.LogWarning("FL");
-            var index = s2.GetPoints().Length;
+            var index = victim.GetPoints().Length;
 
-            var points = s1.GetPoints();
+            var points = predator.GetPoints();
 
             for (var i = 1; i <= points.Length - 1; i++)
             {
-                s2.SetPoint(index, points[i]);
+                victim.SetPoint(index, points[i]);
                 index++;
             }
 
-            var refCrossroad = crossroads.FirstOrDefault(cros => cros.GetRoads().Contains(s1));
+            var refCrossroad = crossroads.FirstOrDefault(cros => cros.GetRoads().Contains(predator));
             if (refCrossroad != null)
             {
-                refCrossroad.RemoveRoad(s1);
-                refCrossroad.AddRoad(s2);
+                refCrossroad.RemoveRoad(predator);
+                refCrossroad.AddRoad(victim);
             }
 
-            Destroy(s1.gameObject);
-            return s2;
+            Destroy(predator.gameObject);
+            return victim;
         }
         else if (mergemode == MERGEMODE.LOOP)
         {
-            var refCrossroad = crossroads.FirstOrDefault(cros => cros.GetRoads().Contains(s1));
+            var refCrossroad = crossroads.FirstOrDefault(cros => cros.GetRoads().Contains(predator));
 
-            if (s1.GetPoints().Last().position == refCrossroad.GetPosition())
+            if (predator.GetPoints().Last().position == refCrossroad.GetPosition())
             {
                 // FL
                 UnityEngine.Debug.LogWarning("LOOP - FL");
-                var index = s2.GetPoints().Length;
+                var index = victim.GetPoints().Length;
 
-                var points = s1.GetPoints();
+                var points = predator.GetPoints();
 
                 for (var i = 1; i <= points.Length - 1; i++)
                 {
-                    s2.SetPoint(index, points[i]);
+                    victim.SetPoint(index, points[i]);
                     index++;
                 }
 
                 if (refCrossroad != null)
                 {
-                    refCrossroad.RemoveRoad(s1);
-                    refCrossroad.AddRoad(s2);
+                    refCrossroad.RemoveRoad(predator);
+                    refCrossroad.AddRoad(victim);
                 }
 
-                Destroy(s1.gameObject);
-                return s2;
+                Destroy(predator.gameObject);
+                return victim;
             }
-            else if (s1.GetPoint(0).position == refCrossroad.GetPosition())
+            else if (predator.GetPoint(0).position == refCrossroad.GetPosition())
             {
                 // LF
                 UnityEngine.Debug.LogWarning("LOOP - LF");
-                var index = s1.GetPoints().Length;
+                var index = predator.GetPoints().Length;
 
-                var points = s2.GetPoints();
+                var points = victim.GetPoints();
                 for (var i = 1; i < points.Length; i++)
                 {
-                    s1.SetPoint(index, points[i]);
+                    predator.SetPoint(index, points[i]);
                     index++;
                 }
 
                 if (refCrossroad != null)
                 {
-                    refCrossroad.RemoveRoad(s2);
-                    refCrossroad.AddRoad(s1);
+                    refCrossroad.RemoveRoad(victim);
+                    refCrossroad.AddRoad(predator);
                 }
 
-                Destroy(s2.gameObject);
-                return s1;
+                Destroy(victim.gameObject);
+                return predator;
             }
         }
         else if (mergemode == MERGEMODE.NONE)

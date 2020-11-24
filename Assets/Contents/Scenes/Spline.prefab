@@ -48,9 +48,10 @@ MonoBehaviour:
   drawThinckness: 0
   billboardThickness: 1
   isNewlyCreated: 0
+  isFixed: 0
   roadLane: 0
   pillars: []
-  connectedSplineList: []
+  is_connector: 0
   multithreaded: 0
   rebuildOnAwake: 0
   updateMode: 0

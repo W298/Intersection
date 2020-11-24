@@ -88,7 +88,7 @@ public class Crossroad
                     // If failed to get Point Value, Re-try
                     if (Vector3.Distance(departPoint, arrivPoint) >= 20)
                     {
-                        ConnectRoad();
+                        // ConnectRoad();
                         return false;
                     }
                     
