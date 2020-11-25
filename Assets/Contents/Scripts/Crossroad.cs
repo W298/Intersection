@@ -10,8 +10,9 @@ public class Crossroad
     public static Dictionary<int, float> road_offset
         = new Dictionary<int, float>
         {
-            {0, 0.65f},
-            {1, 0.65f * 3}
+            {0, 0},
+            {1, 0.65f},
+            {2, 0.65f * 3}
         };
     
     private CreatePathManager pathManager;
@@ -77,18 +78,48 @@ public class Crossroad
                         arrivOffsetDir = Quaternion.AngleAxis(90, Vector3.up) * arrivDir;
                     }
 
+                    
+                    float depart_divider = 0;
+                    float arriv_divider = 0;
 
-                    var per_depart = departRoad.Project(GetPosition() - departDir / 3f).percent;
+                    switch (departRoad.roadLane)
+                    {
+                        case CreatePathManager.ROADLANE.RL05:
+                            depart_divider = 1.5f;
+                            break;
+                        case CreatePathManager.ROADLANE.RL1:
+                            depart_divider = 3f;
+                            break;
+                        case CreatePathManager.ROADLANE.RL2:
+                            depart_divider = 3f;
+                            break;
+                    }
+                    
+                    switch (arrivRoad.roadLane)
+                    {
+                        case CreatePathManager.ROADLANE.RL05:
+                            arriv_divider = 1.5f;
+                            break;
+                        case CreatePathManager.ROADLANE.RL1:
+                            arriv_divider = 3f;
+                            break;
+                        case CreatePathManager.ROADLANE.RL2:
+                            arriv_divider = 3f;
+                            break;
+                    }
+
+
+                    var per_depart = departRoad.Project(GetPosition() - departDir / depart_divider).percent;
                     var departPoint = departRoad.EvaluatePosition(per_depart);
 
-                    var per_arriv = arrivRoad.Project(GetPosition() + arrivDir / 3f).percent;
+                    var per_arriv = arrivRoad.Project(GetPosition() + arrivDir / arriv_divider).percent;
                     var arrivPoint = arrivRoad.EvaluatePosition(per_arriv);
 
                     
                     // If failed to get Point Value, Re-try
                     if (Vector3.Distance(departPoint, arrivPoint) >= 20)
                     {
-                        // ConnectRoad();
+                        ConnectRoad();
                         return false;
                     }
                     
@@ -99,22 +130,40 @@ public class Crossroad
 
                     
                     // Offset List
-                    var rightOffsetList = new List<float>();
+                    var departOffsetList = new List<float>();
+                    var arrivOffsetList = new List<float>();
                     
-                    switch (roads[0].roadLane)
+                    switch (departRoad.roadLane)
                     {
+                        case CreatePathManager.ROADLANE.RL05:
+                            departOffsetList.Add(road_offset[0]);
+                            break;
                         case CreatePathManager.ROADLANE.RL1:
-                            rightOffsetList.Add(road_offset[0]);
+                            departOffsetList.Add(road_offset[1]);
                             break;
                         case CreatePathManager.ROADLANE.RL2:
-                            rightOffsetList.Add(road_offset[0]);
-                            rightOffsetList.Add(road_offset[1]);
+                            departOffsetList.Add(road_offset[1]);
+                            departOffsetList.Add(road_offset[2]);
                             break;
                     }
 
-                    foreach (var dRightOffset in rightOffsetList)
+                    switch (arrivRoad.roadLane)
                     {
-                        foreach (var aRightOffset in rightOffsetList)
+                        case CreatePathManager.ROADLANE.RL05:
+                            arrivOffsetList.Add(road_offset[0]);
+                            break;
+                        case CreatePathManager.ROADLANE.RL1:
+                            arrivOffsetList.Add(road_offset[1]);
+                            break;
+                        case CreatePathManager.ROADLANE.RL2:
+                            arrivOffsetList.Add(road_offset[1]);
+                            arrivOffsetList.Add(road_offset[2]);
+                            break;
+                    }
+
+                    foreach (var dRightOffset in departOffsetList)
+                    {
+                        foreach (var aRightOffset in arrivOffsetList)
                         {
                             var start_offset = road_offset.FirstOrDefault(x => x.Value == dRightOffset).Key;
                             var end_offset = road_offset.FirstOrDefault(x => x.Value == aRightOffset).Key;

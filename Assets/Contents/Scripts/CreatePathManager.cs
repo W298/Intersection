@@ -439,7 +439,7 @@ public class CreatePathManager : MonoBehaviour
 
     public SplineComputer InsPath(Vector3 pos, ROADLANE roadlane)
     {
-        var prefab = roadPrefabs[(int) currentRoadLane];
+        var prefab = roadPrefabs[(int) roadlane];
 
         var spline = Instantiate(prefab, pos, Quaternion.identity);
         spline.name = splineNameList[0].ToString();
@@ -1728,9 +1728,6 @@ public class CreatePathManager : MonoBehaviour
         
         RayTrace();
 
-        if (currentSpline)
-            UnityEngine.Debug.LogWarning(currentSpline.roadMode);
-
         if (!useSnapToGridPoint)
         {
             snapPos = new Vector3(SnapGrid(pos.x, snapsize), height * 2, SnapGrid(pos.z, snapsize));
@@ -2108,14 +2105,17 @@ public class CreatePathManager : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             currentRoadLane = ROADLANE.RL1;
+            snapsize = 10;
         }
         else if (Input.GetKeyDown(KeyCode.Alpha2))
         {
             currentRoadLane = ROADLANE.RL2;
+            snapsize = 10;
         }
         else if (Input.GetKeyDown(KeyCode.Alpha5))
         {
             currentRoadLane = ROADLANE.RL05;
+            snapsize = 5;
         }
         else if (Input.GetKeyDown(KeyCode.RightBracket))
         {

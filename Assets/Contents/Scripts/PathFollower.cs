@@ -174,10 +174,10 @@ public class PathFollower : MonoBehaviour
 
                         switch (currentOffset)
                         {
-                            case 0:
+                            case 1:
                                 splineFollower.motion.offset = new Vector2(0.65f, DefY);
                                 break;
-                            case 1:
+                            case 2:
                                 splineFollower.motion.offset = new Vector2(0.65f * 3, DefY);
                                 break;
                         }
@@ -191,10 +191,10 @@ public class PathFollower : MonoBehaviour
                         
                         switch (currentOffset)
                         {
-                            case 0:
+                            case 1:
                                 splineFollower.motion.offset = new Vector2(-0.65f, DefY);
                                 break;
-                            case 1:
+                            case 2:
                                 splineFollower.motion.offset = new Vector2(-0.65f * 3, DefY);
                                 break;
                         }
