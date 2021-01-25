@@ -61,19 +61,23 @@ public class RoadConnection
         }
     }
     
-    public SplineComputer GetConnector(bool randomSelection, out int endO, int startOffset = 0, int endOffset = 0)
+    public SplineComputer GetConnector(bool randomSelection, out int endO, int startOffset = 1, int endOffset = 1)
     {
-        endO = 0;
+        endO = 1;
         
         if (randomSelection)
         {
             var connectorCand = connectorList.Where(con => con.startOffset == startOffset).ToList();
 
-            if (connectorCand.Count == 0) return null;
-            
+            if (connectorCand.Count == 0)
+            {
+                Debug.LogError("Connector is not found!");
+                return null;
+            }
+
             var index = Random.Range(0, connectorCand.Count);
 
-            endO = index;
+            endO = index + 1;
             return connectorCand[index].spline;
         }
         else
@@ -84,6 +88,10 @@ public class RoadConnection
             {
                 endO = endOffset;
                 return connector.spline;
+            }
+            else
+            {
+                Debug.LogError("Connector is not found!");
             }
         }
 

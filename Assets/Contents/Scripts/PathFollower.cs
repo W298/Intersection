@@ -25,7 +25,7 @@ public class PathFollower : MonoBehaviour
     public MOVESTAT moveStat = MOVESTAT.ZERO;
 
     public Vector3 checkingPos;
-    public int currentOffset = 0;
+    public int currentOffset = 1;
 
     public double percent
     {
@@ -66,8 +66,12 @@ public class PathFollower : MonoBehaviour
             var roadConnection = splineFollower.spline.roadConnectionList.FirstOrDefault(rc => rc.GetconnectedRoad() == _spline);
 
             var cs = roadConnection.GetConnector(true, out var _endO, currentOffset);
-            currentOffset = _endO;
             
+            if (cs == null)
+                Debug.LogError("Connection is not found!");
+            
+            currentOffset = _endO;    // Change Current Offset to last End Offset
+
             cs.Rebuild(true);
             
             splineFollower.spline = cs;
@@ -438,7 +442,15 @@ public class PathFollower : MonoBehaviour
                 return;
             }
 
-            checkingPos = crc.GetConnector(true, out var _endO, currentOffset).GetPoint(0).position;
+            var connector = crc.GetConnector(true, out var _endO, currentOffset);
+
+            if (connector == null)
+            {
+                Debug.LogError("Connector is not found!");
+                return;
+            }
+
+            checkingPos = connector.GetPoint(0).position;
             currentOffset = _endO;
         }
 
@@ -479,6 +491,8 @@ public class PathFollower : MonoBehaviour
 
     void Update()
     {
+        if (pathFindData == null) return;
+        
         if (pathFindData.currentMode == 2 && 
             currentPathIndex == pathFindData.currentPath.Count - 1 && 
             !splineFollower.spline.is_connector &&
