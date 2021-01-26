@@ -61,7 +61,7 @@ public class RoadConnection
         }
     }
     
-    public SplineComputer GetConnector(bool randomSelection, out int endO, int startOffset = 1, int endOffset = 1)
+    public SplineComputer GetConnector(bool randomSelection, out int endO, int startOffset, int endOffset = 1)
     {
         endO = 1;
         
@@ -76,8 +76,12 @@ public class RoadConnection
             }
 
             var index = Random.Range(0, connectorCand.Count);
+            foreach (var con in connectorCand)
+            {
+                Debug.LogWarning(con.spline.name);
+            }
 
-            endO = index + 1;
+            endO = connectorCand[index].endOffset;
             return connectorCand[index].spline;
         }
         else

@@ -50,6 +50,11 @@ public class PathFindData
         this.exitToEx = exitToEx;
         this.targetBuilding = targetBuilding;
         this.currentMode = 0;
+        /*    [MODE]
+         *    0 : External -> Building
+         *    1 : Inside Building
+         *    2 : Building -> External
+         */
     }
 
     public bool IncreaseMode()

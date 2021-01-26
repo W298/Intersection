@@ -451,7 +451,7 @@ public class PathFollower : MonoBehaviour
             }
 
             checkingPos = connector.GetPoint(0).position;
-            currentOffset = _endO;
+            // currentOffset = _endO;
         }
 
         GameObject.FindGameObjectWithTag("Player").GetComponent<CreatePathManager>().debugPointPer(checkingPos);
@@ -496,7 +496,7 @@ public class PathFollower : MonoBehaviour
         if (pathFindData.currentMode == 2 && 
             currentPathIndex == pathFindData.currentPath.Count - 1 && 
             !splineFollower.spline.is_connector &&
-            percent >= 0.7)
+            percent >= 0.9)
         {
             Destroy(this.gameObject);
             return;
