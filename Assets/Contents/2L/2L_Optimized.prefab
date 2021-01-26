@@ -19,6 +19,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7700269737332976400, guid: 96614301abe54d942b07fc21a0fae7ca,
         type: 3}
+      propertyPath: m_RootOrder
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7700269737332976400, guid: 96614301abe54d942b07fc21a0fae7ca,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7700269737332976400, guid: 96614301abe54d942b07fc21a0fae7ca,
+        type: 3}
       propertyPath: m_LocalPosition.x
       value: -36.59
       objectReference: {fileID: 0}
@@ -31,6 +41,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalPosition.z
       value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 7700269737332976400, guid: 96614301abe54d942b07fc21a0fae7ca,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7700269737332976400, guid: 96614301abe54d942b07fc21a0fae7ca,
         type: 3}
@@ -49,16 +64,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7700269737332976400, guid: 96614301abe54d942b07fc21a0fae7ca,
         type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7700269737332976400, guid: 96614301abe54d942b07fc21a0fae7ca,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7700269737332976400, guid: 96614301abe54d942b07fc21a0fae7ca,
-        type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
@@ -72,16 +77,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7700269737332976400, guid: 96614301abe54d942b07fc21a0fae7ca,
-        type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
-        type: 3}
-      propertyPath: sampleCollection.sampleMode
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
         type: 3}
       propertyPath: mesh
@@ -89,23 +84,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
         type: 3}
-      propertyPath: channels.Array.data[6].meshes.Array.data[0].bounds.center.x
+      propertyPath: sampleCollection.sampleMode
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
+        type: 3}
+      propertyPath: channels.Array.data[6]._autoCount
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
         type: 3}
-      propertyPath: channels.Array.data[6].meshes.Array.data[0].bounds.center.z
+      propertyPath: channels.Array.data[7]._autoCount
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
-        type: 3}
-      propertyPath: channels.Array.data[6].meshes.Array.data[0].bounds.extents.x
-      value: 0.03816063
-      objectReference: {fileID: 0}
-    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
-        type: 3}
-      propertyPath: channels.Array.data[6].meshes.Array.data[0].bounds.extents.z
-      value: 0.40737492
       objectReference: {fileID: 0}
     - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
         type: 3}
@@ -129,36 +119,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
         type: 3}
-      propertyPath: channels.Array.data[6].meshes.Array.data[0].bounds.size.x
-      value: 0.07632126
-      objectReference: {fileID: 0}
-    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
-        type: 3}
-      propertyPath: channels.Array.data[6].meshes.Array.data[0].bounds.size.z
-      value: 0.81474984
-      objectReference: {fileID: 0}
-    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
-        type: 3}
-      propertyPath: channels.Array.data[7].meshes.Array.data[0].bounds.center.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
-        type: 3}
-      propertyPath: channels.Array.data[7].meshes.Array.data[0].bounds.center.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
-        type: 3}
-      propertyPath: channels.Array.data[7].meshes.Array.data[0].bounds.extents.x
-      value: 0.03816063
-      objectReference: {fileID: 0}
-    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
-        type: 3}
-      propertyPath: channels.Array.data[7].meshes.Array.data[0].bounds.extents.z
-      value: 0.40737492
-      objectReference: {fileID: 0}
-    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
-        type: 3}
       propertyPath: channels.Array.data[7].meshes.Array.data[0].bounds.max.x
       value: 0.03816063
       objectReference: {fileID: 0}
@@ -179,6 +139,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
         type: 3}
+      propertyPath: channels.Array.data[6].meshes.Array.data[0].bounds.size.x
+      value: 0.07632126
+      objectReference: {fileID: 0}
+    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
+        type: 3}
+      propertyPath: channels.Array.data[6].meshes.Array.data[0].bounds.size.z
+      value: 0.81474984
+      objectReference: {fileID: 0}
+    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
+        type: 3}
       propertyPath: channels.Array.data[7].meshes.Array.data[0].bounds.size.x
       value: 0.07632126
       objectReference: {fileID: 0}
@@ -186,6 +156,46 @@ PrefabInstance:
         type: 3}
       propertyPath: channels.Array.data[7].meshes.Array.data[0].bounds.size.z
       value: 0.81474984
+      objectReference: {fileID: 0}
+    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
+        type: 3}
+      propertyPath: channels.Array.data[6].meshes.Array.data[0].bounds.center.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
+        type: 3}
+      propertyPath: channels.Array.data[6].meshes.Array.data[0].bounds.center.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
+        type: 3}
+      propertyPath: channels.Array.data[7].meshes.Array.data[0].bounds.center.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
+        type: 3}
+      propertyPath: channels.Array.data[7].meshes.Array.data[0].bounds.center.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
+        type: 3}
+      propertyPath: channels.Array.data[6].meshes.Array.data[0].bounds.extents.x
+      value: 0.03816063
+      objectReference: {fileID: 0}
+    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
+        type: 3}
+      propertyPath: channels.Array.data[6].meshes.Array.data[0].bounds.extents.z
+      value: 0.40737492
+      objectReference: {fileID: 0}
+    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
+        type: 3}
+      propertyPath: channels.Array.data[7].meshes.Array.data[0].bounds.extents.x
+      value: 0.03816063
+      objectReference: {fileID: 0}
+    - target: {fileID: 7700269737332976401, guid: 96614301abe54d942b07fc21a0fae7ca,
+        type: 3}
+      propertyPath: channels.Array.data[7].meshes.Array.data[0].bounds.extents.z
+      value: 0.40737492
       objectReference: {fileID: 0}
     - target: {fileID: 7700269737332976403, guid: 96614301abe54d942b07fc21a0fae7ca,
         type: 3}
